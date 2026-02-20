@@ -1,0 +1,15 @@
+{
+  "description": "Cross-project skill/command cache on session start",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/dist/index.js"
+          }
+        ]
+      }
+    ]
+  }
+}

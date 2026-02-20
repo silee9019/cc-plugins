@@ -1,0 +1,5 @@
+node_modules/
+dist/
+skills/[0-9a-f]*/
+commands/[0-9a-f]*/
+.orphaned_at
