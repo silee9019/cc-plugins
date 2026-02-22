@@ -31,6 +31,17 @@
       "license": "MIT",
       "keywords": ["guidelines", "best-practices", "coding", "karpathy"],
       "category": "workflow"
+    },
+    {
+      "name": "git-init",
+      "source": "./git-init",
+      "description": "GitHub repository initialization workflow (directory, gh repo create, .gitignore, initial commit)",
+      "version": "1.0.0",
+      "author": {
+        "name": "silee9019"
+      },
+      "keywords": ["git", "github", "init", "scaffold"],
+      "category": "workflow"
     }
   ]
 }
