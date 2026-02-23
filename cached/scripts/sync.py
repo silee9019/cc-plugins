@@ -208,6 +208,49 @@ def _scan_commands_recursive(
     return commands
 
 
+# ─── Collector ───────────────────────────────────────────────────────────────
+
+
+def collect_all_items(meta: dict) -> tuple[list[dict], list[dict]]:
+    """Collect all skills/commands from metadata with cachedAt timestamp."""
+    all_skills: list[dict] = []
+    all_commands: list[dict] = []
+    for phash, entry in meta.get("projects", {}).items():
+        cached_at = entry.get("cachedAt", 0)
+        project_path = entry.get("path", "")
+        for s in entry.get("skills", []):
+            all_skills.append(
+                {
+                    "name": s["name"],
+                    "content": s["content"],
+                    "projectPath": project_path,
+                    "projectHash": phash,
+                    "cachedAt": cached_at,
+                }
+            )
+        for c in entry.get("commands", []):
+            all_commands.append(
+                {
+                    "name": c["name"],
+                    "content": c["content"],
+                    "projectPath": project_path,
+                    "projectHash": phash,
+                    "cachedAt": cached_at,
+                }
+            )
+    return all_skills, all_commands
+
+
+def deduplicate_by_name(items: list[dict]) -> list[dict]:
+    """Keep only the most recently cached item per name."""
+    best: dict[str, dict] = {}
+    for item in items:
+        name = item["name"]
+        if name not in best or item["cachedAt"] > best[name]["cachedAt"]:
+            best[name] = item
+    return list(best.values())
+
+
 # ─── Writer ───────────────────────────────────────────────────────────────────
 
 
@@ -215,9 +258,6 @@ def write_skill(skill: dict) -> None:
     skill_dir = PLUGIN_ROOT / "skills" / f"{skill['projectHash']}_{skill['name']}"
     skill_dir.mkdir(parents=True, exist_ok=True)
     data, body = parse_frontmatter(skill["content"])
-    desc = data.get("description", "")
-    data["name"] = skill["name"]
-    data["description"] = f"[{skill['projectPath']}] {desc}" if desc else f"[{skill['projectPath']}]"
     data.pop("model", None)
     (skill_dir / "SKILL.md").write_text(stringify_frontmatter(data, body), encoding="utf-8")
 
@@ -226,8 +266,6 @@ def write_command(cmd: dict) -> None:
     cmd_dir = PLUGIN_ROOT / "commands" / cmd["projectHash"]
     cmd_dir.mkdir(parents=True, exist_ok=True)
     data, body = parse_frontmatter(cmd["content"])
-    desc = data.get("description", "")
-    data["description"] = f"[{cmd['projectPath']}] {desc}" if desc else f"[{cmd['projectPath']}]"
     data.pop("model", None)
     (cmd_dir / f"{cmd['name']}.md").write_text(stringify_frontmatter(data, body), encoding="utf-8")
 
@@ -235,25 +273,27 @@ def write_command(cmd: dict) -> None:
 # ─── Cleanup ──────────────────────────────────────────────────────────────────
 
 
-def cleanup_project_files(phash: str) -> None:
+def cleanup_all_materialized() -> None:
+    """Remove all cached skill/command files for a full rebuild."""
     skills_dir = PLUGIN_ROOT / "skills"
     if skills_dir.is_dir():
         for d in skills_dir.iterdir():
-            if d.is_dir() and d.name.startswith(f"{phash}_"):
+            if d.is_dir() and not d.name.startswith("."):
                 shutil.rmtree(d, ignore_errors=True)
-    cmd_dir = PLUGIN_ROOT / "commands" / phash
-    if cmd_dir.is_dir():
-        shutil.rmtree(cmd_dir, ignore_errors=True)
+    cmds_dir = PLUGIN_ROOT / "commands"
+    if cmds_dir.is_dir():
+        for d in cmds_dir.iterdir():
+            if d.is_dir() and not d.name.startswith("."):
+                shutil.rmtree(d, ignore_errors=True)
 
 
 def purge_expired(meta: dict, ttl: int) -> dict:
+    """Remove metadata entries older than TTL."""
     now = int(time.time() * 1000)
     valid = {}
     for h, entry in meta.get("projects", {}).items():
         if now - entry.get("cachedAt", 0) <= ttl:
             valid[h] = entry
-        else:
-            cleanup_project_files(h)
     return {**meta, "projects": valid}
 
 
@@ -267,32 +307,43 @@ def main() -> None:
     cwd = os.getcwd()
     phash = project_hash(cwd)
 
-    # Scan
+    # 1. Scan current project → metadata only
     skills = scan_skills(cwd, phash)
     commands = scan_commands(cwd, phash)
-
-    scanned = False
     if skills or commands:
-        cleanup_project_files(phash)
-        for s in skills:
-            write_skill(s)
-        for c in commands:
-            write_command(c)
         meta["projects"][phash] = {
             "path": cwd,
             "cachedAt": int(time.time() * 1000),
             "skills": [{"name": s["name"], "content": s["content"]} for s in skills],
             "commands": [{"name": c["name"], "content": c["content"]} for c in commands],
         }
-        scanned = True
 
-    # Purge
+    # 2. Purge expired entries
     meta = purge_expired(meta, config.get("cacheTTL", CACHE_TTL_MS))
+
+    # 3. Collect all items → deduplicate by name
+    all_skills, all_commands = collect_all_items(meta)
+    unique_skills = deduplicate_by_name(all_skills)
+    unique_commands = deduplicate_by_name(all_commands)
+
+    # 4. Full rebuild: clean all → write deduplicated
+    cleanup_all_materialized()
+    for s in unique_skills:
+        write_skill(s)
+    for c in unique_commands:
+        write_command(c)
+
+    # 5. Save
     save_metadata(meta)
 
-    if scanned:
-        duration = int((time.time() - start) * 1000)
-        print(f"[skill-cache] cached {len(skills)} skills, {len(commands)} commands ({duration}ms)")
+    duration = int((time.time() - start) * 1000)
+    total_raw = len(all_skills) + len(all_commands)
+    total_deduped = len(unique_skills) + len(unique_commands)
+    print(
+        f"[skill-cache] {total_deduped} items materialized"
+        f" (deduped from {total_raw})"
+        f" ({duration}ms)"
+    )
 
 
 if __name__ == "__main__":
