@@ -22,7 +22,7 @@ Git 커밋 데이터를 기반으로 기간별 업무 보고서를 자동 생성
 | 기간 | 시작~종료 날짜 (자연어 또는 YYYY-MM-DD) | O | - |
 | 레포 | 대상 저장소 목록 | X | 현재 레포 |
 | 작성자 | Git author 이메일 | X | `git config user.email` |
-| 출력 경로 | 보고서 파일 경로 | X | `docs/weekly-report-{start}-{end}.md` |
+| 출력 경로 | 보고서 파일 경로 | X | Obsidian vault `01 Weekly Notes/yyyy/yyyy Week-ww.md` |
 
 **사용 예시**:
 ```
@@ -120,7 +120,35 @@ cd {repo_path} && git log --all --author="{author}" \
 
 ### Step 5: 파일 저장
 
-Write tool로 보고서를 `docs/weekly-report-{start}-{end}.md`에 저장합니다.
+Obsidian vault의 Weekly Notes 폴더에 저장합니다.
+
+**경로 규칙**: `{obsidian_vault}/01 Weekly Notes/{yyyy}/{yyyy} Week-{ww}.md`
+- `{yyyy}`: 연도 (예: 2026)
+- `{ww}`: ISO 주 번호, 2자리 zero-padded (예: 08)
+- ISO 주 번호는 `date -j -f "%Y-%m-%d" "{start_date}" "+%V"` 로 계산
+
+**Obsidian vault 위치 탐색**: `find ~ -maxdepth 4 -name ".obsidian" -type d`
+
+**Obsidian frontmatter** (YAML): 보고서 본문 상단에 반드시 포함
+
+```yaml
+---
+created: {today}
+period_start: {start_date}
+period_end: {end_date}
+author: {author_email}
+repositories:
+  - {repo_1}
+  - {repo_2}
+total_commits: {count}
+total_tickets: {count}
+tickets:
+  - {ticket_1}
+  - {ticket_2}
+tags:
+  - weekly-report
+---
+```
 
 ## Do / Don't
 
