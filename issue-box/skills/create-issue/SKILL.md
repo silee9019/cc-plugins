@@ -1,10 +1,6 @@
 ---
 name: create-issue
-description: |
-  세션 대화에서 이슈를 분석·추출하여 Obsidian vault inbox에 보고서로 저장.
-  나중에 처리할 이슈를 보관(defer)하는 트리아지 도구.
-  This skill should be used when the user asks to "이슈 정리", "inbox에 넣어", "triage", "이슈 보관", "나중에 처리", "defer", "이슈 추출", "문제 기록", "이슈 발견", "나중에 볼 것".
-  `/inbox`, `/triage` alias로도 호출 가능.
+description: "세션 대화에서 이슈를 분석·추출하여 Obsidian vault inbox에 상세 보고서로 저장. 지금 처리하지 않고 나중에 다룰 이슈를 보관(defer)하는 트리아지 도구. 사용자가 \"이슈 정리\", \"inbox\", \"triage\", \"이슈 보관\", \"나중에 처리\", \"defer\", \"이슈 추출\", \"문제 기록\", \"이슈 발견\", \"나중에 볼 것\" 언급 시 트리거."
 ---
 
 # Issue Box — 이슈 추출 및 Obsidian Inbox 보관
