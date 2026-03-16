@@ -1,5 +1,5 @@
 import { loadSession, createSession, cleanupOldSessions, reactivateSession, recordPrompt, completeSession } from "../src/session.js";
-import { fetchCostsSync } from "../src/cost.js";
+import { refreshCostCacheAsync } from "../src/cost.js";
 import { isHookEvent } from "../src/types.js";
 
 async function main(): Promise<void> {
@@ -32,9 +32,7 @@ async function main(): Promise<void> {
         createSession(session_id, cwd, branch);
       }
       cleanupOldSessions(7);
-      try { fetchCostsSync(); } catch (err) {
-        console.error(`[claude-statusline:hook] cost cache warming failed: ${(err as Error).message}`);
-      }
+      refreshCostCacheAsync();
       break;
     }
 
