@@ -129,11 +129,6 @@ export function buildLine1(input: StatuslineInput, termWidth: number): string {
   }
   segments.push(seg(dim(`v${input.version}`), 20)); // 버전: 낮은 priority
 
-  // 모델명 + 프로그레스바를 세퍼레이터 없이 하나의 세그먼트로 결합
-  const model = formatModelShort(input.model.display_name);
-  const contextBar = formatContextBar(input.context_window.current_usage, input.context_window.context_window_size);
-  segments.push(seg(dim(`${model} ${contextBar}`), 70));
-
   return fitSegments(segments, termWidth, SEP);
 }
 
@@ -157,6 +152,11 @@ export function buildLine2(
   } else if (session) {
     segments.push(seg(dim("(no purpose)"), 10));
   }
+
+  // 모델명 + 프로그레스바 (세퍼레이터 없이 결합)
+  const model = formatModelShort(input.model.display_name);
+  const contextBar = formatContextBar(input.context_window.current_usage, input.context_window.context_window_size);
+  segments.push(seg(dim(`${model} ${contextBar}`), 70));
 
   // 비용 (모델별 일일 → 주간 → 월간, 우선도 낮은 순으로 제거)
   segments.push(seg(dim(formatDailyModels(costs)), 40));
