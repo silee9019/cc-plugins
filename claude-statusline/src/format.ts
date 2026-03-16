@@ -149,7 +149,8 @@ export function buildLine2(
   // Purpose
   if (session?.purpose) {
     const maxPurposeCols = Math.min(Math.floor(termWidth * 0.4), 50);
-    segments.push(seg(bold(truncate(session.purpose, maxPurposeCols)), 50));
+    const purposeText = `${ANSI.reset}${ANSI.bold}${truncate(session.purpose, maxPurposeCols)}${ANSI.reset}`;
+    segments.push(seg(purposeText, 50));
   } else if (session) {
     segments.push(seg(dim("(no purpose)"), 10));
   }
