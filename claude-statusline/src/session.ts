@@ -110,14 +110,21 @@ export function recordPrompt(session: SessionState, prompt: string | undefined, 
   updated.promptCount += 1;
   updated.lastActivityAt = new Date().toISOString();
 
-  if (prompt) {
-    updated.lastUserPrompt = prompt.replace(/[\n\t\r]/g, " ").slice(0, 200);
+  const cleaned = prompt?.replace(/[\n\t\r]/g, " ");
+  const isSlashCmd = cleaned ? /^\/\S/.test(cleaned.trim()) : true;
+
+  if (cleaned && !isSlashCmd) {
+    updated.lastUserPrompt = cleaned.slice(0, 200);
   }
 
-  // 첫 프롬프트로 자동 purpose 설정
-  if (updated.promptCount === 1 && !updated.purpose && prompt) {
-    updated.purpose = prompt.replace(/[\n\t\r]/g, " ").slice(0, 60);
-    updated.purposeSource = "auto";
+  // 자동 purpose: 첫 유효 프롬프트 또는 10턴마다 갱신 (manual 제외)
+  if (cleaned && !isSlashCmd && updated.purposeSource !== "manual") {
+    const isFirst = !updated.purpose;
+    const isInterval = updated.promptCount % 10 === 0;
+    if (isFirst || isInterval) {
+      updated.purpose = cleaned.slice(0, 60);
+      updated.purposeSource = "auto";
+    }
   }
 
   updated.branch = getGitBranch(cwd) ?? updated.branch;
