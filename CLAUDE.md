@@ -7,10 +7,12 @@ Claude Code 플러그인 모노레포.
 ```
 cc-plugins/
 ├── .claude-plugin/marketplace.json   ← 중앙 카탈로그 (모든 플러그인 등록)
-├── git-init/                         ← command 타입: GitHub 저장소 초기화
-├── weekly-report/                    ← skill 타입: Git 커밋 기반 업무 보고서
-├── andrej-karpathy-skills/           ← skill 타입: LLM 코딩 실수 방지 가이드라인
-└── cached/                           ← hook 타입: 크로스 프로젝트 skill/command 캐시
+├── git-init/                         ← command: GitHub 저장소 초기화
+├── weekly-report/                    ← skill: Git 커밋 기반 업무 보고서
+├── andrej-karpathy-skills/           ← skill: LLM 코딩 실수 방지 가이드라인
+├── cached/                           ← hook: 크로스 프로젝트 skill/command 캐시
+├── claude-statusline/                ← hook+command: 3줄 HUD statusline
+└── backup/                           ← 기존 statusline 백업
 ```
 
 각 플러그인은 독립 디렉토리에 `.claude-plugin/plugin.json` + 컴포넌트(command/skill/hook)로 구성.
@@ -138,3 +140,109 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 - [ ] marketplace.json version **동기화** (plugin.json과 일치)
 - [ ] marketplace.json description이 plugin.json과 일치
 - [ ] 커밋 메시지 컨벤션 준수: `<type>(<scope>): <summary>`
+- [ ] **버전 업그레이드 필수**: 플러그인 내용 수정 후 푸시 시 변경사항에 따라 major/minor/patch 버전 업그레이드. 버전 미변경 시 캐시가 갱신되지 않아 변경사항이 적용되지 않음.
+
+## C. 플러그인 카탈로그
+
+| 플러그인 | 버전 | 카테고리 | 컴포넌트 | 런타임 | 외부 의존성 |
+|----------|------|----------|----------|--------|-------------|
+| git-init | 1.2.0 | workflow | command | — | gh, curl |
+| weekly-report | 1.0.0 | workflow | skill | — | git, Obsidian vault |
+| andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
+| cached | 1.0.0 | utility | hook | Python 3 | 없음 |
+| claude-statusline | 1.2.4 | utility | hook+command | Bun + TS | ccusage, claude CLI |
+
+### git-init
+
+```
+git-init/
+├── .claude-plugin/plugin.json
+└── commands/git-init.md        ← 10단계 워크플로우
+```
+
+- **수정 시**: `git-init.md`의 Step 순서 변경 시 번호 정합성 확인
+- **테스트**: `/git-init test-repo` 실행 후 GitHub에서 생성 확인, `gh repo delete`로 정리
+- **의존성**: `gh` CLI (인증 필요), `curl` (gitignore.io)
+
+### weekly-report
+
+```
+weekly-report/
+├── .claude-plugin/plugin.json
+└── skills/weekly-report/SKILL.md   ← 트리거 키워드 + 5단계 워크플로우
+```
+
+- **수정 시**: 트리거 키워드 변경 시 description의 키워드 목록도 동기화
+- **테스트**: "이번 주 주간 보고서 작성해줘" 프롬프트로 트리거 확인
+- **의존성**: git (커밋 이력), Obsidian vault (출력 경로)
+- **주의**: Obsidian vault 경로를 `find`로 자동 탐색 — vault가 없으면 현재 디렉토리에 저장
+
+### andrej-karpathy-skills
+
+```
+andrej-karpathy-skills/
+├── .claude-plugin/plugin.json
+├── skills/karpathy-guidelines/SKILL.md
+├── EXAMPLES.md
+└── README.md
+```
+
+- **수정 시**: SKILL.md의 4가지 원칙 변경 시 README.md, EXAMPLES.md도 동기화
+- **테스트**: 코드 리뷰 요청 시 가이드라인이 적용되는지 확인
+- **의존성**: 없음 (순수 가이드라인 문서)
+
+### cached
+
+```
+cached/
+├── .claude-plugin/plugin.json
+├── hooks/hooks.json            ← SessionStart 훅
+├── scripts/sync.py             ← Python 3 캐시 동기화
+└── .cache/                     ← 런타임 캐시 (gitignore)
+```
+
+- **수정 시**: `sync.py`의 `CACHE_VERSION` 변경 시 기존 캐시 무효화됨
+- **테스트**: 새 세션 시작 후 `.cache/` 디렉토리 갱신 확인
+- **의존성**: Python 3 (표준 라이브러리만)
+- **주의**: hooks.json은 auto-discovery — plugin.json에 hooks 필드 선언 금지
+
+### claude-statusline
+
+```
+claude-statusline/
+├── .claude-plugin/plugin.json
+├── commands/{setup,cost,list,purpose}.md
+├── hooks/hooks.json            ← SessionStart/UserPromptSubmit/SessionEnd
+├── scripts/
+│   ├── statusline.ts           ← stdin JSON → 3줄 HUD (settings.json에서 호출)
+│   ├── hook-handler.ts         ← 세션 상태 갱신
+│   ├── refresh-cost.ts         ← ccusage 백그라운드 실행 → 캐시
+│   └── refresh-purpose.ts      ← claude -p 백그라운드 실행 → purpose AI 요약
+├── src/
+│   ├── types.ts, format.ts, session.ts, cost.ts
+│   ├── cjk.ts, shorten.ts, git.ts
+└── data/                       ← 런타임 (gitignore)
+    ├── sessions/{id}.json
+    └── cost-cache.json
+```
+
+- **수정 시**:
+  - `settings.json`의 statusLine 경로에 버전이 하드코딩됨 → 버전 변경 시 `/setup` 재실행 필수
+  - hooks.json은 auto-discovery → plugin.json에 hooks 필드 선언 금지 (중복 로딩 에러)
+  - `src/` 수정 후 `scripts/`에서 import 경로 확인 (`.js` 확장자 필수)
+- **테스트**:
+  ```bash
+  # 훅 테스트
+  echo '{"hook_event_name":"SessionStart","session_id":"test","cwd":"/tmp","prompt":""}' \
+    | bun run scripts/hook-handler.ts
+  # statusline 렌더링 테스트
+  echo '{"session_id":"test","workspace":{"current_dir":"/tmp"},...}' \
+    | bun run scripts/statusline.ts 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g'
+  ```
+- **의존성**:
+  - Bun (TypeScript 직접 실행)
+  - ccusage (`bun install -g ccusage`, 비용 데이터, ~26초 소요 → 동기 호출 금지)
+  - claude CLI (`~/.local/bin/claude`, purpose AI 요약)
+- **주의**:
+  - ccusage는 `refresh-cost.ts` detached 프로세스로만 실행 (캐시 TTL 5분)
+  - UserPromptSubmit마다 캐시 만료 체크 → 만료 시 백그라운드 갱신
