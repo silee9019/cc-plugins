@@ -117,7 +117,11 @@ export function buildLine1(input: StatuslineInput, termWidth: number): string {
     segments.push(seg(magenta(`【${shortenBranch(branch)}】`), 80));
   }
   segments.push(seg(dim(`v${input.version}`), 20)); // 버전: 낮은 priority
-  segments.push(seg(dim(formatModelShort(input.model.display_name)), 70));
+
+  // 모델명 + 프로그레스바를 세퍼레이터 없이 하나의 세그먼트로 결합
+  const model = formatModelShort(input.model.display_name);
+  const contextBar = formatContextBar(input.context_window.current_usage, input.context_window.context_window_size);
+  segments.push(seg(dim(`${model} ${contextBar}`), 70));
 
   return fitSegments(segments, termWidth, SEP);
 }
@@ -142,11 +146,6 @@ export function buildLine2(
   } else if (session) {
     segments.push(seg(dim("(no purpose)"), 10));
   }
-
-  // 컨텍스트 바
-  segments.push(
-    seg(dim(formatContextBar(input.context_window.current_usage, input.context_window.context_window_size)), 85),
-  );
 
   // 비용 (개별 세그먼트로 분리: 월간 → 주간 순으로 먼저 제거)
   const sessionCost = input.cost?.total_cost_usd ?? costs.sessionCost;
@@ -178,5 +177,6 @@ export function buildStatusLine(
   const line1 = buildLine1(input, termWidth);
   const line2 = buildLine2(input, session, costs, termWidth);
   const line3 = buildLine3(session, termWidth);
-  return [line1, line2, line3].filter(Boolean).join("\n");
+  return [line1, line2, line3].filter(Boolean).join("\n")
+    .replace(/  +/g, " ");
 }
