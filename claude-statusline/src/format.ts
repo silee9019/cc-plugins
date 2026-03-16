@@ -4,6 +4,7 @@ import { getGitBranch } from "./git.js";
 import { ANSI, type StatuslineInput, type SessionState, type CostData } from "./types.js";
 
 const dim = (s: string) => `${ANSI.dim}${s}${ANSI.reset}`;
+const bold = (s: string) => `${ANSI.bold}${s}${ANSI.reset}`;
 const magenta = (s: string) => `${ANSI.magenta}${s}${ANSI.reset}`;
 const SEP = dim(" | ");
 
@@ -148,7 +149,7 @@ export function buildLine2(
   // Purpose
   if (session?.purpose) {
     const maxPurposeCols = Math.min(Math.floor(termWidth * 0.4), 50);
-    segments.push(seg(truncate(session.purpose, maxPurposeCols), 50));
+    segments.push(seg(bold(truncate(session.purpose, maxPurposeCols)), 50));
   } else if (session) {
     segments.push(seg(dim("(no purpose)"), 10));
   }

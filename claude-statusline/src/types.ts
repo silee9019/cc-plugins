@@ -54,6 +54,7 @@ export interface CostData {
 export const ANSI = {
   reset: "\x1b[0m",
   dim: "\x1b[2m",
+  bold: "\x1b[1m",
   blue: "\x1b[34m",
   magenta: "\x1b[35m",
 } as const;

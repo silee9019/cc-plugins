@@ -93,6 +93,41 @@ export function createSession(sessionId: string, cwd: string, branch: string): S
   return state;
 }
 
+// ─── Purpose 빌더 ──────────────────────────────────────
+
+const TICKET_RE = /\b[A-Z]{2,10}-\d+\b/;
+const HASH_TICKET_RE = /#\d+\b/;
+const MAX_PURPOSE_LEN = 25;
+
+function extractTicketId(text: string): string | null {
+  const match = text.match(TICKET_RE) || text.match(HASH_TICKET_RE);
+  return match ? match[0] : null;
+}
+
+function buildPurpose(prompt: string): string {
+  const ticketId = extractTicketId(prompt);
+  // 프롬프트에서 티켓 ID를 제거한 나머지를 요약 텍스트로 사용
+  const body = ticketId
+    ? prompt.replace(ticketId, "").replace(/\s+/g, " ").trim()
+    : prompt.trim();
+  const maxBody = ticketId ? MAX_PURPOSE_LEN - ticketId.length - 1 : MAX_PURPOSE_LEN;
+  const truncated = body.slice(0, maxBody);
+  return ticketId ? `${ticketId} ${truncated}` : truncated;
+}
+
+function refreshPurposeAsync(sessionId: string, prompt: string): void {
+  try {
+    const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT ?? import.meta.dir.replace("/src", "");
+    const script = join(pluginRoot, "scripts", "refresh-purpose.ts");
+    Bun.spawn(["bun", "run", script, sessionId, prompt], {
+      env: { ...process.env, CLAUDE_PLUGIN_ROOT: pluginRoot },
+      stdio: ["ignore", "ignore", "ignore"],
+    }).unref();
+  } catch (err) {
+    console.error(`[claude-statusline] refresh-purpose spawn failed: ${(err as Error).message}`);
+  }
+}
+
 // ─── 상태 전이 함수 ────────────────────────────────────
 
 export function reactivateSession(session: SessionState, cwd: string): SessionState {
@@ -121,9 +156,14 @@ export function recordPrompt(session: SessionState, prompt: string | undefined, 
   if (cleaned && !isSlashCmd && updated.purposeSource !== "manual") {
     const isFirst = !updated.purpose;
     const isInterval = updated.promptCount % 10 === 0;
-    if (isFirst || isInterval) {
-      updated.purpose = cleaned.slice(0, 60);
+    if (isFirst) {
+      // 첫 프롬프트: 즉시 휴리스틱 설정 + 백그라운드 AI 요약
+      updated.purpose = buildPurpose(cleaned);
       updated.purposeSource = "auto";
+      refreshPurposeAsync(updated.sessionId, cleaned);
+    } else if (isInterval) {
+      // 10턴마다: AI 요약으로 갱신
+      refreshPurposeAsync(updated.sessionId, cleaned);
     }
   }
 
