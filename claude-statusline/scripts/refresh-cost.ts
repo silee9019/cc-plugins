@@ -4,7 +4,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 
-const CACHE_TTL_MS = 300_000;
+const CACHE_TTL_MS = 300_000; // 5분
 
 interface CostData {
   sessionCost: number;

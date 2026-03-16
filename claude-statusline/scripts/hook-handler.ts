@@ -40,6 +40,7 @@ async function main(): Promise<void> {
       const session = loadSession(session_id);
       if (!session) break;
       recordPrompt(session, prompt, cwd);
+      refreshCostCacheAsync(); // 캐시 만료 시 백그라운드 갱신
       break;
     }
 
