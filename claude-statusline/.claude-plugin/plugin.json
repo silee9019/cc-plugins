@@ -6,6 +6,5 @@
     "name": "silee9019"
   },
   "keywords": ["statusline", "hud", "session", "cost", "context"],
-  "commands": ["./commands"],
-  "hooks": "./hooks/hooks.json"
+  "commands": ["./commands"]
 }

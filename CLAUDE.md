@@ -40,10 +40,11 @@ cc-plugins/
   "keywords": ["..."],              // 선택
   "license": "MIT",                 // 선택 (외부 기여 시)
   "commands": ["./commands"],       // command 타입만
-  "skills": ["./skills/<name>"],    // skill 타입만
-  "hooks": "./hooks/hooks.json"     // hook 타입만
+  "skills": ["./skills/<name>"]     // skill 타입만
 }
 ```
+
+hook 타입은 `hooks/hooks.json` 존재만으로 자동 인식됨 — plugin.json에 선언하면 중복 로딩 에러 발생.
 
 ### 3. 컴포넌트 작성
 
