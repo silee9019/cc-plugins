@@ -97,7 +97,7 @@ export function createSession(sessionId: string, cwd: string, branch: string): S
 
 const TICKET_RE = /\b[A-Z]{2,10}-\d+\b/;
 const HASH_TICKET_RE = /#\d+\b/;
-const MAX_PURPOSE_LEN = 25;
+const MAX_PURPOSE_LEN = 30;
 
 function extractTicketId(text: string): string | null {
   const match = text.match(TICKET_RE) || text.match(HASH_TICKET_RE);
@@ -106,16 +106,15 @@ function extractTicketId(text: string): string | null {
 
 function buildPurpose(prompt: string): string {
   const ticketId = extractTicketId(prompt);
-  // 프롬프트에서 티켓 ID를 제거한 나머지를 요약 텍스트로 사용
-  const body = ticketId
-    ? prompt.replace(ticketId, "").replace(/\s+/g, " ").trim()
-    : prompt.trim();
+  // 티켓 ID를 본문에서 제거 후 특수문자 제거: 알파벳, 숫자, 한글, 공백만 유지
+  const withoutTicket = ticketId ? prompt.replace(ticketId, "") : prompt;
+  const stripped = withoutTicket.replace(/[^a-zA-Z0-9가-힣\s]/g, "").replace(/\s+/g, " ").trim();
   const maxBody = ticketId ? MAX_PURPOSE_LEN - ticketId.length - 1 : MAX_PURPOSE_LEN;
-  const truncated = body.slice(0, maxBody);
+  const truncated = stripped.slice(0, maxBody);
   return ticketId ? `${ticketId} ${truncated}` : truncated;
 }
 
-function refreshPurposeAsync(sessionId: string, prompt: string): void {
+function summarizePurposeAsync(sessionId: string, prompt: string): void {
   try {
     const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT ?? import.meta.dir.replace("/src", "");
     const script = join(pluginRoot, "scripts", "refresh-purpose.ts");
@@ -124,7 +123,7 @@ function refreshPurposeAsync(sessionId: string, prompt: string): void {
       stdio: ["ignore", "ignore", "ignore"],
     }).unref();
   } catch (err) {
-    console.error(`[claude-statusline] refresh-purpose spawn failed: ${(err as Error).message}`);
+    console.error(`[claude-statusline] summarize-purpose spawn failed: ${(err as Error).message}`);
   }
 }
 
@@ -152,19 +151,11 @@ export function recordPrompt(session: SessionState, prompt: string | undefined, 
     updated.lastUserPrompt = cleaned.slice(0, 200);
   }
 
-  // 자동 purpose: 첫 유효 프롬프트 또는 10턴마다 갱신 (manual 제외)
-  if (cleaned && !isSlashCmd && updated.purposeSource !== "manual") {
-    const isFirst = !updated.purpose;
-    const isInterval = updated.promptCount % 10 === 0;
-    if (isFirst) {
-      // 첫 프롬프트: 즉시 휴리스틱 설정 + 백그라운드 AI 요약
-      updated.purpose = buildPurpose(cleaned);
-      updated.purposeSource = "auto";
-      refreshPurposeAsync(updated.sessionId, cleaned);
-    } else if (isInterval) {
-      // 10턴마다: AI 요약으로 갱신
-      refreshPurposeAsync(updated.sessionId, cleaned);
-    }
+  // 자동 purpose: 첫 유효 프롬프트에서만 설정 (manual 제외)
+  if (cleaned && !isSlashCmd && updated.purposeSource !== "manual" && !updated.purpose) {
+    updated.purpose = buildPurpose(cleaned);
+    updated.purposeSource = "auto";
+    summarizePurposeAsync(updated.sessionId, cleaned);
   }
 
   updated.branch = getGitBranch(cwd) ?? updated.branch;
