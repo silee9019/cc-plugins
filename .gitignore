@@ -10,6 +10,10 @@ commands/[0-9a-f]*/
 # Plugin orphaned state marker
 .orphaned_at
 
+# Plugin runtime data
+**/data/sessions/
+**/data/cost-cache.json
+
 # === Auto-generated (gi node,macos,windows,linux,visualstudiocode,vim,emacs,sublimetext,jetbrains+all) ===
 
 # Created by https://www.toptal.com/developers/gitignore/api/node,macos,windows,linux,visualstudiocode,vim,emacs,sublimetext,jetbrains+all
