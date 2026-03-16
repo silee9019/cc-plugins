@@ -1,7 +1,7 @@
 {
   "name": "claude-statusline",
   "description": "3줄 HUD statusline: 환경 모니터링 + 세션 추적 + 비용 표시",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "author": {
     "name": "silee9019"
   },

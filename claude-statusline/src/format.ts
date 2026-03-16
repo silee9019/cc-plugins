@@ -64,6 +64,17 @@ function formatSessionCost(cost: number, available?: boolean): string {
   return `$${cost < 0.01 ? "0.00" : cost.toFixed(2)}`;
 }
 
+function formatDailyModels(costs: CostData): string {
+  if (costs.available === false) return "$--";
+  if (!costs.dailyModels) return "$0";
+  const parts: string[] = [];
+  const { opus, sonnet, haiku } = costs.dailyModels;
+  if (opus > 0) parts.push(`Opus $${Math.round(opus)}`);
+  if (sonnet > 0) parts.push(`Sonnet $${Math.round(sonnet)}`);
+  if (haiku > 0) parts.push(`Haiku $${Math.round(haiku)}`);
+  return parts.length > 0 ? parts.join(" ") : "$0";
+}
+
 function formatWeeklyCost(cost: number, available?: boolean): string {
   if (available === false) return "W$--";
   return `W$${Math.round(cost)}`;
@@ -147,9 +158,8 @@ export function buildLine2(
     segments.push(seg(dim("(no purpose)"), 10));
   }
 
-  // 비용 (개별 세그먼트로 분리: 월간 → 주간 순으로 먼저 제거)
-  const sessionCost = input.cost?.total_cost_usd ?? costs.sessionCost;
-  segments.push(seg(dim(formatSessionCost(sessionCost, costs.available)), 40));
+  // 비용 (모델별 일일 → 주간 → 월간, 우선도 낮은 순으로 제거)
+  segments.push(seg(dim(formatDailyModels(costs)), 40));
   segments.push(seg(dim(formatWeeklyCost(costs.weeklyCost, costs.available)), 20));
   segments.push(seg(dim(formatMonthlyCost(costs.monthlyCost, costs.available)), 10));
 
