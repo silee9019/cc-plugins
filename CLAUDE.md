@@ -12,6 +12,7 @@ cc-plugins/
 ├── andrej-karpathy-skills/           ← skill: LLM 코딩 실수 방지 가이드라인
 ├── cached/                           ← hook: 크로스 프로젝트 skill/command 캐시
 ├── claude-statusline/                ← hook+command: 3줄 HUD statusline
+├── issue-box/                        ← skill: 세션 이슈 추출 → Obsidian inbox 보관
 └── backup/                           ← 기존 statusline 백업
 ```
 
@@ -151,6 +152,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
 | claude-statusline | 1.2.4 | utility | hook+command | Bun + TS | ccusage, claude CLI |
+| issue-box | 1.0.0 | workflow | skill | — | obsidian CLI |
 
 ### git-init
 
@@ -246,3 +248,16 @@ claude-statusline/
 - **주의**:
   - ccusage는 `refresh-cost.ts` detached 프로세스로만 실행 (캐시 TTL 5분)
   - UserPromptSubmit마다 캐시 만료 체크 → 만료 시 백그라운드 갱신
+
+### issue-box
+
+```
+issue-box/
+├── .claude-plugin/plugin.json
+└── skills/create-issue/SKILL.md   ← 6단계 워크플로우 (이슈 추출 → Obsidian inbox 저장)
+```
+
+- **수정 시**: 트리거 키워드 변경 시 description의 키워드 목록도 동기화
+- **테스트**: `/inbox` 또는 `/triage`로 트리거 확인, Obsidian에서 생성된 노트 확인
+- **의존성**: `obsidian` CLI (`brew install obsidian-cli`)
+- **주의**: vault 탐색은 `obsidian vaults verbose`, inbox 폴더 탐색은 `obsidian vault="<name>" folders` 사용
