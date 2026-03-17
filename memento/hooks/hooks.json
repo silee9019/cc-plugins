@@ -1,0 +1,15 @@
+{
+  "description": "Memento 메모리 초기화 + @import 세션 주입 (세션 시작 시)",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/init.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

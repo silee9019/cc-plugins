@@ -13,6 +13,7 @@ cc-plugins/
 ├── cached/                           ← hook: 크로스 프로젝트 skill/command 캐시
 ├── claude-statusline/                ← hook+command: 3줄 HUD statusline
 ├── issue-box/                        ← skill: 세션 이슈 추출 → Obsidian inbox 보관
+├── memento/                          ← skill+hook+command: 3-tier 에이전트 메모리 시스템
 └── backup/                           ← 기존 statusline 백업
 ```
 
@@ -153,6 +154,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
 | claude-statusline | 1.3.0 | utility | hook+command | Bun + TS | ccusage |
 | issue-box | 1.0.0 | workflow | skill | — | obsidian CLI |
+| memento | 1.0.0 | utility | skill+hook+command | Bun | qmd |
 
 ### git-init
 
@@ -259,3 +261,36 @@ issue-box/
 - **테스트**: `/inbox` 또는 `/triage`로 트리거 확인, Obsidian에서 생성된 노트 확인
 - **의존성**: `obsidian` CLI (`brew install obsidian-cli`)
 - **주의**: vault 탐색은 `obsidian vaults verbose`, inbox 폴더 탐색은 `obsidian vault="<name>" folders` 사용
+
+### memento
+
+```
+memento/
+├── .claude-plugin/plugin.json
+├── commands/setup.md               ← /memento-setup: qmd 설치 확인
+├── skills/
+│   ├── memento-core/SKILL.md       ← 세션 라이프사이클 + 체크포인트
+│   ├── memento-compaction/SKILL.md ← 5-level 컴팩션 트리
+│   ├── memento-flush/SKILL.md      ← 수동 메모리 플러시
+│   └── memento-search/SKILL.md     ← 트리 탐색 기반 검색
+├── hooks/hooks.json                ← SessionStart: 프로젝트 ID + @import 세션 주입
+├── scripts/
+│   ├── init.sh                     ← 프로젝트 ID 결정 + 디렉토리 생성 + @import 출력
+│   └── compact.mjs                 ← 기계적 컴팩션 (Bun)
+└── templates/                      ← 초기 메모리 파일 템플릿
+```
+
+- **원본**: [hipocampus](https://github.com/kevin-hs-sohn/hipocampus) v0.1.6 (MIT)
+- **수정 시**:
+  - 스킬 경로는 `~/.claude/memento/projects/<project-id>/` 기반
+  - init.sh의 프로젝트 ID 로직 변경 시 compact.mjs의 동일 로직도 동기화
+  - hooks.json은 auto-discovery → plugin.json에 hooks 필드 선언 금지
+- **테스트**:
+  - 새 세션 시작 → `~/.claude/memento/projects/<id>/` 디렉토리 생성 확인
+  - `/memento-setup` → qmd 설치 확인
+  - `bun run scripts/compact.mjs` → 에러 없이 완료 확인
+- **의존성**: Bun, qmd (`npm install -g qmd`)
+- **주의**:
+  - 메모리 데이터는 `~/.claude/memento/projects/` (유저 스코프, 프로젝트별 격리)
+  - 스킬/스크립트/템플릿은 플러그인 디렉토리 (프로젝트 데이터 아님)
+  - SessionStart hook stdout이 세션 컨텍스트에 @import로 주입됨
