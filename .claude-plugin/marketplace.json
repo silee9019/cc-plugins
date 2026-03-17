@@ -89,10 +89,10 @@
       "category": "utility"
     },
     {
-      "name": "claude-auth",
-      "source": "./claude-auth",
+      "name": "claude-auth-mode",
+      "source": "./claude-auth-mode",
       "description": "Claude Code 인증 모드 전환 (subscription ↔ Azure AI Foundry). sops+age 기반 API key 관리.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "silee9019"
       },

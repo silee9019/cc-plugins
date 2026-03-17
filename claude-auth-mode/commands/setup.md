@@ -23,6 +23,6 @@ CHANGE_ME가 남아있으면 "다음 단계" 안내가 출력된다.
 
 셋업 완료 후 사용자에게 다음을 안내한다:
 
-- `foundry.sops.env` 편집이 필요하면: 실제 값 입력 후 `sops --encrypt --in-place` 실행
-- 이미 암호화되어 있으면: `source ~/.zshrc && claude-mode status`로 확인
-- `claude-mode.zsh` 업데이트 시: `/claude-auth-setup` 재실행
+- `foundry.sops.env` 편집이 필요하면: `sops-env ~/.claude-auth/foundry.sops.env`
+- 이미 암호화되어 있으면: `source ~/.zshrc && camst`로 확인
+- `claude-auth-mode.zsh` 업데이트 시: `/claude-auth-mode:setup` 재실행

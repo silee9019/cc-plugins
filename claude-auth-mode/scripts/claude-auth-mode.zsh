@@ -1,7 +1,7 @@
-# claude-mode: Claude Code 인증 모드 전환 (subscription ↔ Azure AI Foundry)
-# 설치: source ~/.claude-auth/claude-mode.zsh (setup.sh가 자동 연동)
+# claude-auth-mode: Claude Code 인증 모드 전환 (subscription ↔ Azure AI Foundry)
+# 설치: source ~/.claude-auth/claude-auth-mode.zsh (setup.sh가 자동 연동)
 
-claude-mode() {
+claude-auth-mode() {
   local auth_dir="$HOME/.claude-auth"
   local mode="${1:-status}"
 
@@ -36,16 +36,20 @@ claude-mode() {
       fi
       ;;
     *)
-      echo "Usage: claude-mode [foundry|sub|status]" >&2
+      echo "Usage: claude-auth-mode [foundry|sub|status]" >&2
       return 1
       ;;
   esac
 }
 
+alias camf='claude-auth-mode foundry'
+alias cams='claude-auth-mode sub'
+alias camst='claude-auth-mode status'
+
 # 셸 시작 시 저장된 모드 자동 로드
-_claude_mode_init() {
+_claude_auth_mode_init() {
   local active
   active=$(cat "$HOME/.claude-auth/active" 2>/dev/null)
-  [[ "$active" == "foundry" ]] && claude-mode foundry >/dev/null 2>&1
+  [[ "$active" == "foundry" ]] && claude-auth-mode foundry >/dev/null 2>&1
 }
-_claude_mode_init
+_claude_auth_mode_init

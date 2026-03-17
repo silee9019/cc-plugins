@@ -14,7 +14,7 @@ cc-plugins/
 ├── claude-statusline/                ← hook+command: 3줄 HUD statusline
 ├── issue-box/                        ← skill: 세션 이슈 추출 → Obsidian inbox 보관
 ├── memento/                          ← skill+hook+command: 3-tier 에이전트 메모리 시스템
-├── claude-auth/                      ← command: 인증 모드 전환 (subscription ↔ Foundry)
+├── claude-auth-mode/                 ← command: 인증 모드 전환 (subscription ↔ Foundry)
 └── backup/                           ← 기존 statusline 백업
 ```
 
@@ -156,7 +156,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | claude-statusline | 1.3.0 | utility | hook+command | Bun + TS | ccusage |
 | issue-box | 1.0.0 | workflow | skill | — | obsidian CLI |
 | memento | 1.0.0 | utility | skill+hook+command | Bun | qmd |
-| claude-auth | 1.0.0 | utility | command | — | sops, age |
+| claude-auth-mode | 2.0.0 | utility | command | — | sops, age |
 
 ### git-init
 
@@ -297,22 +297,22 @@ memento/
   - 스킬/스크립트/템플릿은 플러그인 디렉토리 (프로젝트 데이터 아님)
   - SessionStart hook stdout이 세션 컨텍스트에 @import로 주입됨
 
-### claude-auth
+### claude-auth-mode
 
 ```
-claude-auth/
+claude-auth-mode/
 ├── .claude-plugin/plugin.json
-├── commands/setup.md              ← /claude-auth-setup: sops+age 초기 설정
+├── commands/setup.md              ← /claude-auth-mode:setup: sops+age 초기 설정
 ├── scripts/
 │   ├── setup.sh                   ← idempotent 셋업 (디렉토리, sops, zshrc 연동)
-│   └── claude-mode.zsh            ← 원본 zsh function (setup 시 ~/.claude-auth/로 복사)
+│   └── claude-auth-mode.zsh      ← 원본 zsh function (setup 시 ~/.claude-auth/로 복사)
 └── templates/
     ├── .sops.yaml                 ← age creation rule 템플릿
     └── foundry.env.template       ← 환경변수 플레이스홀더
 ```
 
-- **수정 시**: `claude-mode.zsh` 변경 후 `/claude-auth-setup` 재실행으로 반영
-- **테스트**: `claude-mode foundry && env | grep FOUNDRY`, `claude-mode sub && env | grep FOUNDRY`
+- **수정 시**: `claude-auth-mode.zsh` 변경 후 `/claude-auth-mode:setup` 재실행으로 반영
+- **테스트**: `camf && env | grep FOUNDRY`, `cams && env | grep FOUNDRY`
 - **의존성**: sops (`brew install sops`), age (`brew install age`)
 - **주의**:
   - 런타임 데이터는 `~/.claude-auth/` (sops 암호화 파일, active 상태)
