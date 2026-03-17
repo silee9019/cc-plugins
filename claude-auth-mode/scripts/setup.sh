@@ -74,7 +74,8 @@ info "claude-auth-mode.zsh 설치 완료"
 
 # ── Step 6: .zshrc 연동 ──
 echo "[6/8] .zshrc 연동"
-ZSHRC="$HOME/.zshrc"
+# 심볼릭 링크 resolve (sed -i는 symlink에서 실패)
+ZSHRC="$(readlink -f "$HOME/.zshrc" 2>/dev/null || echo "$HOME/.zshrc")"
 SOURCE_LINE='[[ -f "$HOME/.claude-auth/claude-auth-mode.zsh" ]] && source "$HOME/.claude-auth/claude-auth-mode.zsh"'
 if grep -qF 'claude-auth/claude-auth-mode.zsh' "$ZSHRC" 2>/dev/null; then
   skip ".zshrc에 이미 등록됨"
