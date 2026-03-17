@@ -35,16 +35,24 @@ claude-auth-mode() {
         echo "  셸: subscription"
       fi
       ;;
+    toggle|t)
+      local active
+      active=$(cat "$auth_dir/active" 2>/dev/null || echo "subscription")
+      if [[ "$active" == "foundry" ]]; then
+        claude-auth-mode sub
+      else
+        claude-auth-mode foundry
+      fi
+      ;;
     *)
-      echo "Usage: claude-auth-mode [foundry|sub|status]" >&2
+      echo "Usage: claude-auth-mode [toggle|foundry|sub|status]" >&2
       return 1
       ;;
   esac
 }
 
-alias camf='claude-auth-mode foundry'
-alias cams='claude-auth-mode sub'
-alias camst='claude-auth-mode status'
+alias camt='claude-auth-mode toggle'
+alias cams='claude-auth-mode status'
 
 # 셸 시작 시 저장된 모드 자동 로드
 _claude_auth_mode_init() {

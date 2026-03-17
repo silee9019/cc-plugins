@@ -156,7 +156,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | claude-statusline | 1.3.0 | utility | hook+command | Bun + TS | ccusage |
 | issue-box | 1.0.0 | workflow | skill | — | obsidian CLI |
 | memento | 1.0.0 | utility | skill+hook+command | Bun | qmd |
-| claude-auth-mode | 2.0.0 | utility | command | — | sops, age |
+| claude-auth-mode | 2.0.1 | utility | command | — | sops, age |
 
 ### git-init
 
@@ -312,7 +312,7 @@ claude-auth-mode/
 ```
 
 - **수정 시**: `claude-auth-mode.zsh` 변경 후 `/claude-auth-mode:setup` 재실행으로 반영
-- **테스트**: `camf && env | grep FOUNDRY`, `cams && env | grep FOUNDRY`
+- **테스트**: `camt && env | grep FOUNDRY`, `cams`
 - **의존성**: sops (`brew install sops`), age (`brew install age`)
 - **주의**:
   - 런타임 데이터는 `~/.claude-auth/` (sops 암호화 파일, active 상태)

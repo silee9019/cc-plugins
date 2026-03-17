@@ -126,12 +126,10 @@ if grep -q 'CHANGE_ME' "$AUTH_DIR/foundry.sops.env" 2>/dev/null; then
   echo "     sops-env ~/.claude-auth/foundry.sops.env"
   echo ""
   echo "  2. 셸 재시작 후 모드 전환:"
-  echo "     camf    # claude-auth-mode foundry"
-  echo "     cams    # claude-auth-mode sub"
-  echo "     camst   # claude-auth-mode status"
+  echo "     camt   # 모드 토글 (subscription ↔ foundry)"
+  echo "     cams   # 현재 상태 확인"
 else
   echo "사용법:"
-  echo "  camf    # claude-auth-mode foundry"
-  echo "  cams    # claude-auth-mode sub"
-  echo "  camst   # claude-auth-mode status"
+  echo "  camt   # 모드 토글 (subscription ↔ foundry)"
+  echo "  cams   # 현재 상태 확인"
 fi
