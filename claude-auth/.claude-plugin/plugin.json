@@ -1,0 +1,10 @@
+{
+  "name": "claude-auth",
+  "description": "Claude Code 인증 모드 전환 (subscription ↔ Azure AI Foundry). sops+age 기반 API key 관리.",
+  "version": "1.0.0",
+  "author": {
+    "name": "silee9019"
+  },
+  "keywords": ["auth", "foundry", "subscription", "sops", "mode-switch"],
+  "commands": ["./commands"]
+}
