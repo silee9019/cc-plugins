@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, unlinkSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, renameSync, statSync, unlinkSync, writeFileSync, closeSync } from "fs";
 import { join } from "path";
 import { getGitBranch } from "./git.js";
 import { type SessionState, isValidSession } from "./types.js";
@@ -23,6 +23,8 @@ export function loadSession(sessionId: string): SessionState | null {
       console.error(`[claude-statusline] invalid session schema: ${path}`);
       return null;
     }
+    // 마이그레이션: ticketId 필드가 없는 기존 세션
+    if (!("ticketId" in data)) data.ticketId = "";
     return data;
   } catch (err) {
     console.error(`[claude-statusline] session load failed (${path}): ${(err as Error).message}`);
@@ -79,6 +81,7 @@ export function createSession(sessionId: string, cwd: string, branch: string): S
   const now = new Date().toISOString();
   const state: SessionState = {
     sessionId,
+    ticketId: "",
     purpose: "",
     purposeSource: "auto",
     lastUserPrompt: "",
@@ -93,38 +96,40 @@ export function createSession(sessionId: string, cwd: string, branch: string): S
   return state;
 }
 
-// ─── Purpose 빌더 ──────────────────────────────────────
+// ─── Ticket ID 추출 ──────────────────────────────────────
 
 const TICKET_RE = /\b[A-Z]{2,10}-\d+\b/;
 const HASH_TICKET_RE = /#\d+\b/;
-const MAX_PURPOSE_LEN = 30;
 
-function extractTicketId(text: string): string | null {
+function extractTicketId(text: string): string {
   const match = text.match(TICKET_RE) || text.match(HASH_TICKET_RE);
-  return match ? match[0] : null;
+  return match ? match[0] : "";
 }
 
-function buildPurpose(prompt: string): string {
-  const ticketId = extractTicketId(prompt);
-  // 티켓 ID를 본문에서 제거 후 특수문자 제거: 알파벳, 숫자, 한글, 공백만 유지
-  const withoutTicket = ticketId ? prompt.replace(ticketId, "") : prompt;
-  const stripped = withoutTicket.replace(/[^a-zA-Z0-9가-힣\s]/g, "").replace(/\s+/g, " ").trim();
-  const maxBody = ticketId ? MAX_PURPOSE_LEN - ticketId.length - 1 : MAX_PURPOSE_LEN;
-  const truncated = stripped.slice(0, maxBody);
-  return ticketId ? `${ticketId} ${truncated}` : truncated;
-}
+// ─── Custom Title (transcript에서 읽기) ──────────────────
 
-function summarizePurposeAsync(sessionId: string, prompt: string): void {
+function findCustomTitle(transcriptPath: string): string | null {
   try {
-    const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT ?? import.meta.dir.replace("/src", "");
-    const script = join(pluginRoot, "scripts", "refresh-purpose.ts");
-    Bun.spawn(["bun", "run", script, sessionId, prompt], {
-      env: { ...process.env, CLAUDE_PLUGIN_ROOT: pluginRoot },
-      stdio: ["ignore", "ignore", "ignore"],
-    }).unref();
-  } catch (err) {
-    console.error(`[claude-statusline] summarize-purpose spawn failed: ${(err as Error).message}`);
-  }
+    const fd = openSync(transcriptPath, "r");
+    const size = statSync(transcriptPath).size;
+    const readSize = Math.min(size, 32768);
+    const buf = Buffer.alloc(readSize);
+    readSync(fd, buf, 0, readSize, Math.max(0, size - readSize));
+    closeSync(fd);
+
+    const lines = buf.toString("utf-8").split("\n").reverse();
+    for (const line of lines) {
+      if (line.includes("custom-title")) {
+        try {
+          const parsed = JSON.parse(line);
+          if (parsed.type === "custom-title" && typeof parsed.title === "string") {
+            return parsed.title;
+          }
+        } catch { /* not valid JSON */ }
+      }
+    }
+  } catch { /* transcript not readable */ }
+  return null;
 }
 
 // ─── 상태 전이 함수 ────────────────────────────────────
@@ -138,7 +143,12 @@ export function reactivateSession(session: SessionState, cwd: string): SessionSt
   return updated;
 }
 
-export function recordPrompt(session: SessionState, prompt: string | undefined, cwd: string): SessionState {
+export function recordPrompt(
+  session: SessionState,
+  prompt: string | undefined,
+  cwd: string,
+  transcriptPath?: string,
+): SessionState {
   if (session.status === "completed") return session;
   const updated = { ...session };
   updated.promptCount += 1;
@@ -153,9 +163,18 @@ export function recordPrompt(session: SessionState, prompt: string | undefined, 
 
   // 자동 purpose: 첫 유효 프롬프트에서만 설정 (manual 제외)
   if (cleaned && !isSlashCmd && updated.purposeSource !== "manual" && !updated.purpose) {
-    updated.purpose = buildPurpose(cleaned);
+    updated.purpose = cleaned.slice(0, 60);
+    updated.ticketId = extractTicketId(cleaned);
     updated.purposeSource = "auto";
-    summarizePurposeAsync(updated.sessionId, cleaned);
+  }
+
+  // custom-title: transcript에서 읽어 purpose 덮어쓰기 (manual 제외)
+  if (transcriptPath && updated.purposeSource !== "manual") {
+    const customTitle = findCustomTitle(transcriptPath);
+    if (customTitle) {
+      updated.purpose = customTitle;
+      updated.purposeSource = "rename";
+    }
   }
 
   updated.branch = getGitBranch(cwd) ?? updated.branch;

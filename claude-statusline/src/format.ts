@@ -145,6 +145,11 @@ export function buildLine2(
     segments.push(seg(dim(formatElapsed(session.lastActivityAt || session.createdAt)), 60));
   }
 
+  // Ticket ID (purpose 앞, 없으면 생략)
+  if (session?.ticketId) {
+    segments.push(seg(dim(session.ticketId), 55));
+  }
+
   // Purpose
   if (session?.purpose) {
     const maxPurposeCols = Math.min(Math.floor(termWidth * 0.4), 50);

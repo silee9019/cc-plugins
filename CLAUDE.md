@@ -151,7 +151,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | weekly-report | 1.0.0 | workflow | skill | — | git, Obsidian vault |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
-| claude-statusline | 1.2.4 | utility | hook+command | Bun + TS | ccusage, claude CLI |
+| claude-statusline | 1.3.0 | utility | hook+command | Bun + TS | ccusage |
 | issue-box | 1.0.0 | workflow | skill | — | obsidian CLI |
 
 ### git-init
@@ -218,8 +218,7 @@ claude-statusline/
 ├── scripts/
 │   ├── statusline.ts           ← stdin JSON → 3줄 HUD (settings.json에서 호출)
 │   ├── hook-handler.ts         ← 세션 상태 갱신
-│   ├── refresh-cost.ts         ← ccusage 백그라운드 실행 → 캐시
-│   └── refresh-purpose.ts      ← claude -p 백그라운드 실행 → purpose AI 요약
+│   └── refresh-cost.ts         ← ccusage 백그라운드 실행 → 캐시
 ├── src/
 │   ├── types.ts, format.ts, session.ts, cost.ts
 │   ├── cjk.ts, shorten.ts, git.ts
@@ -244,7 +243,6 @@ claude-statusline/
 - **의존성**:
   - Bun (TypeScript 직접 실행)
   - ccusage (`bun install -g ccusage`, 비용 데이터, ~26초 소요 → 동기 호출 금지)
-  - claude CLI (`~/.local/bin/claude`, purpose AI 요약)
 - **주의**:
   - ccusage는 `refresh-cost.ts` detached 프로세스로만 실행 (캐시 TTL 5분)
   - UserPromptSubmit마다 캐시 만료 체크 → 만료 시 백그라운드 갱신

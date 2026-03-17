@@ -18,7 +18,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const { hook_event_name, session_id, cwd, prompt } = event;
+  const { hook_event_name, session_id, cwd, prompt, transcript_path } = event;
   if (!session_id) process.exit(0);
 
   switch (hook_event_name) {
@@ -39,8 +39,8 @@ async function main(): Promise<void> {
     case "UserPromptSubmit": {
       const session = loadSession(session_id);
       if (!session) break;
-      recordPrompt(session, prompt, cwd);
-      refreshCostCacheAsync(); // 캐시 만료 시 백그라운드 갱신
+      recordPrompt(session, prompt, cwd, transcript_path);
+      refreshCostCacheAsync();
       break;
     }
 

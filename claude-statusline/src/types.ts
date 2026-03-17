@@ -18,8 +18,9 @@ export interface StatuslineInput {
 // 세션 상태 (JSON 파일 저장)
 export interface SessionState {
   sessionId: string;
+  ticketId: string;
   purpose: string;
-  purposeSource: "auto" | "manual";
+  purposeSource: "auto" | "manual" | "rename";
   lastUserPrompt: string;
   promptCount: number;
   createdAt: string;
@@ -35,6 +36,7 @@ export interface HookEvent {
   session_id: string;
   cwd: string;
   prompt?: string;
+  transcript_path?: string;
 }
 
 // 비용 데이터
