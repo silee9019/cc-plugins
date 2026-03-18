@@ -11,7 +11,7 @@ cc-plugins/
 ├── weekly-report/                    ← skill: Git 커밋 기반 업무 보고서
 ├── andrej-karpathy-skills/           ← skill: LLM 코딩 실수 방지 가이드라인
 ├── cached/                           ← hook: 크로스 프로젝트 skill/command 캐시
-├── claude-statusline/                ← hook+command: 3줄 HUD statusline
+├── claude-statusline/                ← hook: 2줄 HUD statusline
 ├── issue-box/                        ← skill: 세션 이슈 추출 → Obsidian inbox 보관
 ├── memento/                          ← skill+hook+command: 3-tier 에이전트 메모리 시스템
 └── backup/                           ← 기존 statusline 백업
@@ -152,7 +152,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | weekly-report | 1.0.0 | workflow | skill | — | git, Obsidian vault |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
-| claude-statusline | 1.3.0 | utility | hook+command | Bun + TS | ccusage |
+| claude-statusline | 2.0.0 | utility | hook | Bash + Bun(ccusage) | jq, ccusage |
 | issue-box | 1.0.0 | workflow | skill | — | obsidian CLI |
 | memento | 1.0.0 | utility | skill+hook+command | Bun | qmd |
 
@@ -215,39 +215,32 @@ cached/
 ```
 claude-statusline/
 ├── .claude-plugin/plugin.json
-├── commands/{setup,cost,list,purpose}.md
-├── hooks/hooks.json            ← SessionStart/UserPromptSubmit/SessionEnd
+├── hooks/hooks.json            ← SessionStart + Stop
 ├── scripts/
-│   ├── statusline.ts           ← stdin JSON → 3줄 HUD (settings.json에서 호출)
-│   ├── hook-handler.ts         ← 세션 상태 갱신
-│   └── refresh-cost.ts         ← ccusage 백그라운드 실행 → 캐시
-├── src/
-│   ├── types.ts, format.ts, session.ts, cost.ts
-│   ├── cjk.ts, shorten.ts, git.ts
+│   ├── statusline.sh           ← stdin JSON → 2줄 HUD (settings.json에서 호출)
+│   ├── hook-handler.sh         ← 세션 추적 + auto-setup
+│   └── refresh-cost.ts         ← ccusage 백그라운드 실행 → 캐시 (Bun)
 └── data/                       ← 런타임 (gitignore)
-    ├── sessions/{id}.json
+    ├── sessions/{id}/prompt-count
     └── cost-cache.json
 ```
 
 - **수정 시**:
-  - `settings.json`의 statusLine 경로에 버전이 하드코딩됨 → 버전 변경 시 `/setup` 재실행 필수
-  - hooks.json은 auto-discovery → plugin.json에 hooks 필드 선언 금지 (중복 로딩 에러)
-  - `src/` 수정 후 `scripts/`에서 import 경로 확인 (`.js` 확장자 필수)
+  - hooks.json은 auto-discovery → plugin.json에 hooks 필드 선언 금지
+  - SessionStart 훅에서 `settings.json` statusLine 경로를 자동 갱신 (버전 변경 시 자동 적용)
 - **테스트**:
   ```bash
   # 훅 테스트
-  echo '{"hook_event_name":"SessionStart","session_id":"test","cwd":"/tmp","prompt":""}' \
-    | bun run scripts/hook-handler.ts
+  echo '{"hook_event_name":"SessionStart","session_id":"test","cwd":"/tmp"}' \
+    | bash scripts/hook-handler.sh
   # statusline 렌더링 테스트
-  echo '{"session_id":"test","workspace":{"current_dir":"/tmp"},...}' \
-    | bun run scripts/statusline.ts 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g'
+  echo '{"session_id":"test","workspace":{"current_dir":"/tmp"},"model":{"display_name":"Claude Opus 4.6"},"context_window":{"current_usage":{"input_tokens":1000,"cache_creation_input_tokens":0,"cache_read_input_tokens":0},"context_window_size":200000},"version":"1.0.0"}' \
+    | bash scripts/statusline.sh 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g'
   ```
-- **의존성**:
-  - Bun (TypeScript 직접 실행)
-  - ccusage (`bun install -g ccusage`, 비용 데이터, ~26초 소요 → 동기 호출 금지)
+- **의존성**: jq (JSON 파싱), Bun + ccusage (비용 데이터, refresh-cost.ts에서만 사용)
 - **주의**:
   - ccusage는 `refresh-cost.ts` detached 프로세스로만 실행 (캐시 TTL 5분)
-  - UserPromptSubmit마다 캐시 만료 체크 → 만료 시 백그라운드 갱신
+  - 세션 데이터는 `data/sessions/{id}/prompt-count` 단일 plain text 파일
 
 ### issue-box
 

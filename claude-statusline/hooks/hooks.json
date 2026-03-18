@@ -6,30 +6,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/scripts/hook-handler.ts",
+            "command": "sh ${CLAUDE_PLUGIN_ROOT}/scripts/hook-handler.sh",
             "timeout": 5
           }
         ]
       }
     ],
-    "UserPromptSubmit": [
+    "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/scripts/hook-handler.ts",
+            "command": "sh ${CLAUDE_PLUGIN_ROOT}/scripts/hook-handler.sh",
             "timeout": 3
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/scripts/hook-handler.ts",
-            "timeout": 5
           }
         ]
       }
