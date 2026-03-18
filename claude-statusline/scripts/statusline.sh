@@ -5,10 +5,12 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 
 # --- ANSI ---
 DIM=$(printf '\033[2m')
-BLUE=$(printf '\033[34m')
 MAGENTA=$(printf '\033[35m')
 RST=$(printf '\033[0m')
 SEP="${DIM} | ${RST}"
+
+# --- 축약 스크립트 ---
+SHORTEN_CMD="$PLUGIN_ROOT/scripts/shorten.sh"
 
 # --- stdin JSON (한번에 파싱) ---
 input=$(cat)
@@ -30,47 +32,19 @@ plain_len() {
 }
 
 shorten_path() {
-  local p="$1" home="${HOME:-}"
-  case "$p" in "$home"*) p="~${p#"$home"}" ;; esac
-  local count
-  count=$(printf '%s\n' "$p" | tr '/' '\n' | grep -c . || true)
-  if [ "$count" -le 3 ]; then
-    printf '%s%s%s' "$DIM" "$p" "$RST"
-    return
+  if [ -x "$SHORTEN_CMD" ]; then
+    "$SHORTEN_CMD" --ansi path "$1"
+  else
+    printf '%s%s%s' "$DIM" "$1" "$RST"
   fi
-  local first second_last last_part
-  case "$p" in
-    "~"*) first="~" ;;
-    *)    first="/$(printf '%s' "$p" | cut -d'/' -f2)" ;;
-  esac
-  second_last=$(basename "$(dirname "$p")")
-  last_part=$(basename "$p")
-  printf '%s%s%s/%s…%s/%s%s%s/%s%s%s' \
-    "$DIM" "$first" "$RST" "$DIM" "$RST" \
-    "$BLUE" "$second_last" "$RST" \
-    "$BLUE" "$last_part" "$RST"
 }
 
 shorten_branch() {
-  local b="$1" prefix=""
-  case "$b" in
-    feature/*|hotfix/*|bugfix/*|release/*|change/*)
-      prefix="${b%%/*}/"
-      b="${b#*/}"
-      ;;
-  esac
-  local wc
-  wc=$(printf '%s\n' "$b" | tr '-' '\n' | grep -c . || true)
-  if [ "$wc" -gt 4 ]; then
-    local first second last2 last1 skipped
-    first=$(printf '%s' "$b" | cut -d'-' -f1)
-    second=$(printf '%s' "$b" | cut -d'-' -f2)
-    last1=$(printf '%s' "$b" | rev | cut -d'-' -f1 | rev)
-    last2=$(printf '%s' "$b" | rev | cut -d'-' -f2 | rev)
-    skipped=$((wc - 4))
-    b="${first}-${second}-↪${skipped}-${last2}-${last1}"
+  if [ -x "$SHORTEN_CMD" ]; then
+    "$SHORTEN_CMD" --ansi branch "$1"
+  else
+    printf '%s' "$1"
   fi
-  printf '%s%s' "$prefix" "$b"
 }
 
 format_model() {
