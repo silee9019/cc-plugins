@@ -9,7 +9,6 @@ const CACHE_TTL_MS = 300_000; // 5분
 const LOCK_STALE_MS = 120_000; // 2분 (ccusage timeout 60s + 여유)
 
 interface CostData {
-  sessionCost: number;
   weeklyCost: number;
   monthlyCost: number;
   dailyModels?: { opus: number; sonnet: number; haiku: number };
@@ -136,7 +135,7 @@ try {
     .reduce((sum: number, d: { totalCost: number }) => sum + d.totalCost, 0);
 
   const data: CostData = {
-    sessionCost: 0, weeklyCost, monthlyCost, dailyModels,
+    weeklyCost, monthlyCost, dailyModels,
     available: true,
     cachedAt: new Date().toISOString(),
   };

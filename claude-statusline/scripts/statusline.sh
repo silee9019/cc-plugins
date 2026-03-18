@@ -9,7 +9,6 @@ BLUE=$(printf '\033[34m')
 MAGENTA=$(printf '\033[35m')
 RST=$(printf '\033[0m')
 SEP="${DIM} | ${RST}"
-SEP_WIDTH=3
 
 # --- stdin JSON (한번에 파싱) ---
 input=$(cat)
