@@ -66,17 +66,18 @@ fi
 #   - Rest: dim
 shorten_path() {
   local full_path="$1"
+  local home="${HOME:-}"
   local is_home_path=false
   local display_path="$full_path"
 
   # 1. Replace home directory with ~
   case "$full_path" in
-    "$HOME"*) display_path="~${full_path#"$HOME"}"; is_home_path=true ;;
+    "$home"*) display_path="~${full_path#"$home"}"; is_home_path=true ;;
   esac
 
   # 2. Collect all git repo names (traverse up from current path)
   local git_repos="" check_path="$full_path"
-  while [ "$check_path" != "/" ] && [ "$check_path" != "$HOME" ]; do
+  while [ "$check_path" != "/" ] && [ "$check_path" != "$home" ]; do
     if [ -d "$check_path/.git" ] || [ -f "$check_path/.git" ]; then
       local repo_name
       repo_name=$(basename "$check_path")
@@ -223,8 +224,10 @@ shorten_branch() {
   # Split slug by - using positional parameters
   local old_ifs="${IFS}"
   IFS='-'
+  set -f
   # shellcheck disable=SC2086
   set -- $slug
+  set +f
   IFS="${old_ifs}"
   local word_count=$#
 

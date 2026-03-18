@@ -35,6 +35,7 @@ shorten_path() {
   if [ -x "$SHORTEN_CMD" ]; then
     "$SHORTEN_CMD" --ansi path "$1"
   else
+    printf '%s not executable, using fallback\n' "$SHORTEN_CMD" >&2
     printf '%s%s%s' "$DIM" "$1" "$RST"
   fi
 }
@@ -43,6 +44,7 @@ shorten_branch() {
   if [ -x "$SHORTEN_CMD" ]; then
     "$SHORTEN_CMD" --ansi branch "$1"
   else
+    printf '%s not executable, using fallback\n' "$SHORTEN_CMD" >&2
     printf '%s' "$1"
   fi
 }
