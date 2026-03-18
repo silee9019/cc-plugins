@@ -215,13 +215,12 @@ cached/
 ```
 claude-statusline/
 ├── .claude-plugin/plugin.json
-├── hooks/hooks.json            ← SessionStart + Stop
+├── hooks/hooks.json            ← SessionStart
 ├── scripts/
 │   ├── statusline.sh           ← stdin JSON → 2줄 HUD (settings.json에서 호출)
-│   ├── hook-handler.sh         ← 세션 추적 + auto-setup
+│   ├── hook-handler.sh         ← 비용 갱신 + auto-setup
 │   └── refresh-cost.ts         ← ccusage 백그라운드 실행 → 캐시 (Bun)
 └── data/                       ← 런타임 (gitignore)
-    ├── sessions/{id}/prompt-count
     └── cost-cache.json
 ```
 
@@ -240,7 +239,6 @@ claude-statusline/
 - **의존성**: jq (JSON 파싱), Bun + ccusage (비용 데이터, refresh-cost.ts에서만 사용)
 - **주의**:
   - ccusage는 `refresh-cost.ts` detached 프로세스로만 실행 (캐시 TTL 5분)
-  - 세션 데이터는 `data/sessions/{id}/prompt-count` 단일 plain text 파일
 
 ### issue-box
 

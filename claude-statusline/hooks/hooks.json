@@ -1,5 +1,5 @@
 {
-  "description": "Claude Statusline session tracking hooks",
+  "description": "Claude Statusline session hooks",
   "hooks": {
     "SessionStart": [
       {
@@ -8,17 +8,6 @@
             "type": "command",
             "command": "sh ${CLAUDE_PLUGIN_ROOT}/scripts/hook-handler.sh",
             "timeout": 5
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh ${CLAUDE_PLUGIN_ROOT}/scripts/hook-handler.sh",
-            "timeout": 3
           }
         ]
       }

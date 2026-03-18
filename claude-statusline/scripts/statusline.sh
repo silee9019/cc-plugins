@@ -14,7 +14,6 @@ SEP_WIDTH=3
 # --- stdin JSON (한번에 파싱) ---
 input=$(cat)
 eval "$(printf '%s' "$input" | jq -r '
-  @sh "session_id=\(.session_id // "")",
   @sh "cwd=\(.workspace.current_dir // "")",
   @sh "model_display=\(.model.display_name // "")",
   @sh "version=\(.version // "")",
@@ -131,12 +130,6 @@ if [ -f "$cost_cache" ]; then
   fi
 fi
 
-# --- 세션 데이터 ---
-prompt_count=0
-if [ -n "$session_id" ] && [ -f "$PLUGIN_ROOT/data/sessions/$session_id/prompt-count" ]; then
-  prompt_count=$(cat "$PLUGIN_ROOT/data/sessions/$session_id/prompt-count" 2>/dev/null || echo 0)
-fi
-
 # --- git branch ---
 branch=""
 if [ -n "$cwd" ] && [ -d "$cwd" ]; then
@@ -145,16 +138,15 @@ if [ -n "$cwd" ] && [ -d "$cwd" ]; then
 fi
 
 # --- 세그먼트 조립 ---
-# Line 1: #턴수 hh:mm | 경로 브랜치
+# Line 1: hh:mm | 경로 브랜치
 # Line 2: CLI버전 | 모델+컨텍스트 | 비용
 
-seg_turns="${DIM}#${prompt_count}${RST}"
 time_seg="${DIM}$(date +%H:%M)${RST}"
 path_seg=$(shorten_path "$cwd")
 branch_part=""
 [ -n "$branch" ] && branch_part=" ${MAGENTA}【$(shorten_branch "$branch")】${RST}"
 
-line1="${seg_turns}${SEP}${time_seg}${SEP}${path_seg}${branch_part}"
+line1="${time_seg}${SEP}${path_seg}${branch_part}"
 
 model_str=$(format_model "$model_display")
 context_bar=$(format_context_bar)
