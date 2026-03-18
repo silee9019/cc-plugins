@@ -19,6 +19,29 @@ cc-plugins/
 
 각 플러그인은 독립 디렉토리에 `.claude-plugin/plugin.json` + 컴포넌트(command/skill/hook)로 구성.
 
+## Coding Guide
+
+### Shell Script: POSIX sh 호환성
+
+플러그인의 모든 shell script는 **POSIX sh** 호환으로 작성한다.
+
+- shebang: `#!/bin/sh`
+- `set -eu` 필수
+- **금지 문법** (bash/zsh 전용):
+  - `[[ ]]` → `[ ]` 또는 `case` 사용
+  - 배열 (`arr=()`, `${arr[@]}`) → 위치 매개변수(`$@`) 또는 문자열 분리 사용
+  - `BASH_REMATCH` / `=~` → `expr`, `sed`, `case` 패턴으로 대체
+  - `read -ra` → `IFS= read -r` + 수동 분리
+  - `local -a` → `local` (배열 선언 불가)
+  - `${var,,}` / `${var^^}` → `tr` 사용
+  - `<<<` (here string) → `printf '%s' "$var" | ...`
+  - `(( ))` 산술 → `$((  ))` 또는 `[ "$a" -gt "$b" ]`
+  - `function foo()` → `foo()` (function 키워드 생략)
+- **허용 문법**:
+  - `local` (POSIX 표준은 아니나 모든 주요 sh 구현에서 지원)
+  - `$(command)` 명령 치환
+  - `${var#pattern}`, `${var%pattern}` 파라미터 확장
+
 ## A. 새 플러그인 추가 절차
 
 ### 1. 디렉토리 생성
