@@ -1,3 +1,0 @@
-creation_rules:
-  - path_regex: '\.sops\.env$'
-    age: '__AGE_PUBLIC_KEY__'
