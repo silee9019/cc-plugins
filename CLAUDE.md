@@ -12,7 +12,7 @@ cc-plugins/
 ├── andrej-karpathy-skills/           ← skill: LLM 코딩 실수 방지 가이드라인
 ├── cached/                           ← hook: 크로스 프로젝트 skill/command 캐시
 ├── claude-statusline/                ← hook: 2줄 HUD statusline
-├── issue-box/                        ← skill: 세션 이슈 추출 → Obsidian inbox 보관
+├── issue-box/                        ← skill+command: 세션 이슈 추출 → Obsidian 보관
 ├── memento/                          ← skill+hook+command: 3-tier 에이전트 메모리 시스템
 └── backup/                           ← 기존 statusline 백업
 ```
@@ -176,7 +176,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
 | claude-statusline | 2.0.3 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
-| issue-box | 1.0.0 | workflow | skill | — | obsidian CLI |
+| issue-box | 2.0.0 | workflow | skill + command | — | obsidian CLI |
 | memento | 1.0.0 | utility | skill+hook+command | Bun | qmd |
 
 ### git-init
@@ -267,14 +267,21 @@ claude-statusline/
 
 ```
 issue-box/
-├── .claude-plugin/plugin.json
-└── skills/create-issue/SKILL.md   ← 6단계 워크플로우 (이슈 추출 → Obsidian inbox 저장)
+├── .claude-plugin/plugin.json          ← v2.0.0
+├── commands/
+│   └── setup.md                        ← vault/폴더/파일명 설정
+└── skills/
+    └── defer-issue/                    ← 이슈 추출 → Obsidian 보관
+        ├── SKILL.md                    ← 설정 로드, 경로 변경, reference 참조
+        ├── obsidian-cli-reference.md   ← CLI 사용법
+        └── report-format.md            ← 보고서 포맷
 ```
 
 - **수정 시**: 트리거 키워드 변경 시 description의 키워드 목록도 동기화
-- **테스트**: `/inbox` 또는 `/triage`로 트리거 확인, Obsidian에서 생성된 노트 확인
+- **테스트**: `/issue-box:defer-issue`로 트리거 확인, `/issue-box:setup`으로 설정 확인
 - **의존성**: `obsidian` CLI (`brew install obsidian-cli`)
-- **주의**: vault 탐색은 `obsidian vaults verbose`, inbox 폴더 탐색은 `obsidian vault="<name>" folders` 사용
+- **설정**: `~/.claude/plugins/data/issue-box-cc-plugins/config.md` (vault, folder_path, file_title_format)
+- **주의**: config.md 존재 시 vault/폴더 CLI 탐색 단계 스킵. 일자별 하위 폴더 `{YYYY-MM-DD}` 자동 생성
 
 ### memento
 

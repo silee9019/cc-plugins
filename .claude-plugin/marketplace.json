@@ -68,12 +68,12 @@
     {
       "name": "issue-box",
       "source": "./issue-box",
-      "description": "세션 대화에서 이슈를 분석·추출하여 Obsidian vault inbox에 보고서로 저장. 나중에 처리할 이슈를 보관(defer)하는 트리아지 도구.",
-      "version": "1.0.1",
+      "description": "세션 대화에서 이슈를 분석·추출하여 Obsidian vault에 보고서로 저장. 나중에 처리할 이슈를 보관(defer)하는 트리아지 도구.",
+      "version": "2.0.0",
       "author": {
         "name": "silee9019"
       },
-      "keywords": ["issue", "inbox", "triage", "obsidian", "defer"],
+      "keywords": ["issue", "obsidian", "defer", "triage"],
       "category": "workflow"
     },
     {
