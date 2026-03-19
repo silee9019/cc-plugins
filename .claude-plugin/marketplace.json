@@ -87,6 +87,17 @@
       "license": "MIT",
       "keywords": ["memory", "compaction", "checkpoint", "session"],
       "category": "utility"
+    },
+    {
+      "name": "agentic-workflow",
+      "source": "./agentic-workflow",
+      "description": "GitHub 저장소에 에이전틱 워크플로우를 설치. 저장소 분석 → 계획서 생성 → 승인 → 파일 생성.",
+      "version": "1.0.0",
+      "author": {
+        "name": "silee9019"
+      },
+      "keywords": ["agentic", "workflow", "github-actions", "automation", "scaffold"],
+      "category": "workflow"
     }
   ]
 }

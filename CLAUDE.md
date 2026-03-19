@@ -14,6 +14,7 @@ cc-plugins/
 ├── claude-statusline/                ← hook: 2줄 HUD statusline
 ├── issue-box/                        ← skill+command: 세션 이슈 추출 → Obsidian 보관
 ├── memento/                          ← skill+hook+command: 3-tier 에이전트 메모리 시스템
+├── agentic-workflow/                 ← skill+command: 에이전틱 워크플로우 scaffold
 └── backup/                           ← 기존 statusline 백업
 ```
 
@@ -178,6 +179,27 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | claude-statusline | 2.0.3 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
 | issue-box | 2.0.0 | workflow | skill + command | — | obsidian CLI |
 | memento | 1.0.0 | utility | skill+hook+command | Bun | qmd |
+| agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
+
+### agentic-workflow
+
+```
+agentic-workflow/
+├── .claude-plugin/plugin.json
+├── commands/setup.md                     ← 환경 탐지 + config 생성
+└── skills/agentic-workflow/
+    ├── SKILL.md                          ← Phase 선택 → 계획서 → 파일 생성
+    ├── phase-reference.md                ← Phase 1-5 상세 사양
+    └── templates/phase-{1..5}/           ← 생성할 파일 템플릿
+```
+
+- **수정 시**: 템플릿 변수 `{{name}}` 추가/변경 시 SKILL.md의 치환 변수 매핑과 phase-reference.md의 변수 표도 동기화
+- **테스트**: 임의의 git 저장소에서 `/agentic-workflow:setup` → Phase 선택 → 파일 생성 확인
+- **의존성**: `gh` CLI (인증 필요)
+- **주의**:
+  - Agent CLI 비종속 (Claude Code, Codex, Gemini CLI 등)
+  - config.md 경로: `~/.claude/plugins/data/agentic-workflow-<repo>/config.md`
+  - `installed_phases` 배열로 점진적 설치 추적
 
 ### git-init
 
