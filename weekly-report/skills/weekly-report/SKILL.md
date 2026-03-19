@@ -21,14 +21,14 @@ Git 커밋 데이터를 기반으로 기간별 업무 보고서를 자동 생성
 |------|------|------|--------|
 | 기간 | 시작~종료 날짜 (자연어 또는 YYYY-MM-DD) | O | - |
 | 레포 | 대상 저장소 목록 | X | 현재 레포 |
-| 작성자 | Git author 이메일 | X | `git config user.email` |
+| 작성자 | Git author 이메일 | X | 후보군(캐시, git config local/global)에서 사용자 선택 |
 | 출력 경로 | 보고서 파일 경로 | X | Obsidian vault `01 Weekly Notes/yyyy/yyyy Week-ww.md` |
 
 **사용 예시**:
 ```
 /weekly-report 2월 21일부터 27일까지
 /weekly-report 이번 주 connect-monorepo, eks, terraform-aws
-/weekly-report 지난 2주 silee@imagoworks.ai
+/weekly-report 지난 2주 user@company.com
 ```
 
 ## 워크플로우
@@ -39,8 +39,16 @@ Git 커밋 데이터를 기반으로 기간별 업무 보고서를 자동 생성
 
 - 날짜가 자연어("이번 주", "지난 2주")면 실제 날짜로 변환
 - 레포가 지정되지 않으면 현재 디렉토리의 레포 사용
-- 작성자가 지정되지 않으면 `git config user.email` 사용
 - 추가 working directory가 있으면 해당 레포도 포함 가능
+- **작성자 결정**:
+  - 인자로 명시적 지정된 경우 → 그대로 사용
+  - 미지정 시 후보군 수집 + 사용자 선택:
+    1. 후보 수집 (중복 제거):
+       - 이 파일의 플러그인 루트(`skills/weekly-report/`의 상위 디렉토리) 하위 `data/user-config.json`의 `authorEmail` (캐시)
+       - `git config user.email` (현재 레포)
+       - `git config --global user.email` (글로벌)
+    2. AskUserQuestion(select)으로 후보 목록 제시 + "직접 입력" 옵션. 캐시값이 있으면 기본 선택
+    3. 선택 결과를 `data/user-config.json`에 캐시 저장/업데이트: `{"authorEmail": "<선택된 이메일>"}`
 
 ### Step 2: 커밋 데이터 수집
 

@@ -171,8 +171,8 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 
 | 플러그인 | 버전 | 카테고리 | 컴포넌트 | 런타임 | 외부 의존성 |
 |----------|------|----------|----------|--------|-------------|
-| git-init | 1.2.0 | workflow | command | — | gh, curl |
-| weekly-report | 1.0.0 | workflow | skill | — | git, Obsidian vault |
+| git-init | 1.3.0 | workflow | command | — | gh, curl |
+| weekly-report | 1.1.0 | workflow | skill | — | git, Obsidian vault |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
 | claude-statusline | 2.0.3 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |

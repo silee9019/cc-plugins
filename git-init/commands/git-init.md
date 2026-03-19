@@ -42,22 +42,43 @@ AskUserQuestion 한 번에 아래 항목을 **모두** 묻습니다 (최대 4개
 
 컨텍스트에서 기술 스택이 명확히 판단되면 확인만 받고, 불명확하면 반드시 질문합니다.
 
-### Step 3: GitHub 계정 및 Git Author 설정
+### Step 3: 사용자 설정 로드 + GitHub 계정 선택
 
-`gh auth status`로 현재 로그인된 GitHub 계정을 확인하고 결과를 출력합니다.
+**캐시 로드**: 이 파일의 플러그인 루트(`commands/`의 상위 디렉토리) 하위 `data/user-config.json`을 Read로 읽는다. 파일이 없으면 빈 설정(`{}`)으로 시작.
 
-AskUserQuestion으로 git author 정보를 확인합니다:
+**후보 수집**:
+1. `gh auth status` 실행 → 로그인된 GitHub 계정 목록 파싱
+2. `git config --global user.name` / `git config --global user.email` 실행
 
-- **Git Author Name**: 기본값 `silee9019`
-- **Git Author Email**: 기본값 `silee9019@gmail.com`
+**AskUserQuestion 한 번에 4개 항목 질문** (캐시값이 있으면 기본값으로 표시):
+- **GitHub 계정** (select): gh 로그인 계정 목록 제시. 캐시의 `github.account`가 있으면 기본 선택
+- **Git repo 기본 폴더 경로** (text): 캐시의 `github.repoBasePath` 또는 빈칸. 레포를 clone할 상위 디렉토리 경로
+- **Git Author Name** (text): 캐시의 `git.authorName` > `git config --global user.name`
+- **Git Author Email** (text): 캐시의 `git.authorEmail` > `git config --global user.email`
 
-이 값은 Step 9에서 `git config user.name` / `git config user.email`로 적용됩니다.
+**캐시 저장**: 응답을 `data/user-config.json`에 Write:
+```json
+{
+  "github": {
+    "account": "<선택된 계정>",
+    "repoBasePath": "<입력된 경로>"
+  },
+  "git": {
+    "authorName": "<입력된 이름>",
+    "authorEmail": "<입력된 이메일>"
+  }
+}
+```
+
+**계정 전환**: 선택한 계정이 현재 active가 아니면 `gh auth switch --user <account>` 실행.
+
+이 값은 Step 4(레포 생성), Step 9(`git config`), Step 10(안내)에서 사용됩니다.
 
 ### Step 4: 디렉토리 생성 + GitHub 레포 생성
 
 ```bash
-cd /Users/silee/ResilioSync/silee-drive/Repositories/silee9019/
-gh repo create silee9019/<repo-name> --<visibility> --clone --description "<프로젝트 설명 영문>"
+cd <repoBasePath>/
+gh repo create <account>/<repo-name> --<visibility> --clone --description "<프로젝트 설명 영문>"
 ```
 
 ### Step 5: `.gitignore` 생성
@@ -200,8 +221,8 @@ git push -u origin main
 
 완료 후 아래 안내를 출력합니다:
 
-- 레포 URL: `https://github.com/silee9019/<repo-name>`
-- 로컬 경로: `/Users/silee/ResilioSync/silee-drive/Repositories/silee9019/<repo-name>`
+- 레포 URL: `https://github.com/<account>/<repo-name>`
+- 로컬 경로: `<repoBasePath>/<repo-name>`
 - Git Author: `<author-name> <author-email>`
 - symlink 필요 시 (zsh 플러그인 등): 명령어 안내
 
