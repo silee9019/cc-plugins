@@ -1,9 +1,9 @@
 {
   "name": "issue-box",
-  "description": "세션 대화에서 이슈를 분석·추출하여 Obsidian vault에 보고서로 저장. 나중에 처리할 이슈를 보관(defer)하는 트리아지 도구.",
-  "version": "2.1.0",
+  "description": "세션 대화에서 이슈를 분석·추출하여 Obsidian vault에 보고서로 저장. 이슈를 보관(defer)하고 선택·착수(pick)하는 트리아지 도구.",
+  "version": "3.0.0",
   "author": { "name": "silee9019" },
-  "keywords": ["issue", "obsidian", "defer", "triage", "review"],
+  "keywords": ["issue", "obsidian", "defer", "triage", "pick"],
   "commands": ["./commands"],
-  "skills": ["./skills/defer-issue", "./skills/review-issue"]
+  "skills": ["./skills/defer-issue", "./skills/pick-issue"]
 }

@@ -177,7 +177,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
 | claude-statusline | 2.0.3 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
-| issue-box | 2.1.0 | workflow | skill + command | — | obsidian CLI |
+| issue-box | 3.0.0 | workflow | skill + command | — | obsidian CLI |
 | memento | 1.1.0 | utility | skill+hook+command | Bun | qmd |
 | agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
 
@@ -289,26 +289,28 @@ claude-statusline/
 
 ```
 issue-box/
-├── .claude-plugin/plugin.json          ← v2.1.0
+├── .claude-plugin/plugin.json          ← v3.0.0
 ├── commands/
-│   └── setup.md                        ← vault/폴더/파일명 설정
+│   └── setup.md                        ← vault/4개 폴더/파일명 설정 + 마이그레이션
 └── skills/
     ├── reference/
     │   └── obsidian-cli-reference.md   ← CLI 사용법 (공유 리소스)
     ├── defer-issue/                    ← 이슈 추출 → Obsidian 보관
     │   ├── SKILL.md                    ← 설정 로드, 경로 변경, reference 참조
     │   └── report-format.md            ← 보고서 포맷
-    └── review-issue/                   ← 이슈 리뷰 → 상태 관리
-        └── SKILL.md                    ← 조회, 필터링, 상태 변경
+    └── pick-issue/                     ← 이슈 선택 → 작업 시작 → 완료 처리
+        └── SKILL.md                    ← 목록, 선택, 상태 전환, 폴더 이동
 ```
 
 - **수정 시**: 트리거 키워드 변경 시 description의 키워드 목록도 동기화
-- **테스트**: `/issue-box:defer-issue`로 추출 확인, `/issue-box:review-issue`로 리뷰 확인, `/issue-box:setup`으로 설정 확인
+- **테스트**: `/issue-box:defer-issue`로 추출 확인, `/issue-box:pick-issue`로 선택·완료 확인, `/issue-box:setup`으로 설정 확인
 - **의존성**: `obsidian` CLI (`brew install obsidian-cli`)
-- **설정**: `~/.claude/plugins/data/issue-box-cc-plugins/config.md` (vault, folder_path, file_title_format)
+- **설정**: `~/.claude/plugins/data/issue-box-cc-plugins/config.md` (vault, inbox_folder_path, in_progress_folder_path, resolved_folder_path, dismissed_folder_path, file_title_format)
+- **상태 라이프사이클**: `open → in-progress → resolved | dismissed` (각 상태별 폴더 이동)
 - **주의**:
   - config.md 존재 시 vault/폴더 CLI 탐색 단계 스킵. 일자별 하위 폴더 `{YYYY-MM-DD}` 자동 생성
-  - `obsidian-cli-reference.md`는 `skills/reference/`에 위치 (defer-issue, review-issue 공유)
+  - v2.x config(`folder_path`)는 `inbox_folder_path`로 읽기 호환. `/issue-box:setup` 재실행으로 마이그레이션
+  - `obsidian-cli-reference.md`는 `skills/reference/`에 위치 (defer-issue, pick-issue 공유)
 
 ### memento
 
