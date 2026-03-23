@@ -178,7 +178,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
 | claude-statusline | 2.0.3 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
 | issue-box | 2.0.0 | workflow | skill + command | — | obsidian CLI |
-| memento | 1.0.0 | utility | skill+hook+command | Bun | qmd |
+| memento | 1.1.0 | utility | skill+hook+command | Bun | qmd |
 | agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
 
 ### agentic-workflow
@@ -316,9 +316,9 @@ memento/
 │   ├── memento-compaction/SKILL.md ← 5-level 컴팩션 트리
 │   ├── memento-flush/SKILL.md      ← 수동 메모리 플러시
 │   └── memento-search/SKILL.md     ← 트리 탐색 기반 검색
-├── hooks/hooks.json                ← SessionStart: 프로젝트 ID + @import 세션 주입
+├── hooks/hooks.json                ← SessionStart + PreCompact + TaskCompleted
 ├── scripts/
-│   ├── init.sh                     ← 프로젝트 ID 결정 + 디렉토리 생성 + @import 출력
+│   ├── session-start.sh            ← 프로젝트 ID 결정 + 디렉토리 생성 + 프로토콜 전문 stdout
 │   └── compact.mjs                 ← 기계적 컴팩션 (Bun)
 └── templates/                      ← 초기 메모리 파일 템플릿
 ```
@@ -326,7 +326,7 @@ memento/
 - **원본**: [hipocampus](https://github.com/kevin-hs-sohn/hipocampus) v0.1.6 (MIT)
 - **수정 시**:
   - 스킬 경로는 `~/.claude/memento/projects/<project-id>/` 기반
-  - init.sh의 프로젝트 ID 로직 변경 시 compact.mjs의 동일 로직도 동기화
+  - session-start.sh의 프로젝트 ID 로직 변경 시 compact.mjs의 동일 로직도 동기화
   - hooks.json은 auto-discovery → plugin.json에 hooks 필드 선언 금지
 - **테스트**:
   - 새 세션 시작 → `~/.claude/memento/projects/<id>/` 디렉토리 생성 확인
@@ -336,5 +336,5 @@ memento/
 - **주의**:
   - 메모리 데이터는 `~/.claude/memento/projects/` (유저 스코프, 프로젝트별 격리)
   - 스킬/스크립트/템플릿은 플러그인 디렉토리 (프로젝트 데이터 아님)
-  - SessionStart hook stdout이 세션 컨텍스트에 @import로 주입됨
+  - SessionStart hook stdout이 프로토콜 전문으로 세션 컨텍스트에 주입됨
 

@@ -1,9 +1,11 @@
 ---
-description: Memento 메모리 시스템 초기 설정 (qmd 설치 확인 + 디렉토리 생성)
+description: Memento 메모리 시스템 초기 설정 (qmd 설치 확인 + 디렉토리 생성 + qmd collection 등록)
 allowed-tools: Bash, Read, Write, AskUserQuestion
 ---
 
 # Memento Setup
+
+모든 단계는 멱등(idempotent) — 여러 번 실행해도 동일한 결과.
 
 ## Workflow
 
@@ -18,14 +20,29 @@ which qmd
 
 ### Step 2: 디렉토리 초기화
 
-init.sh를 실행하여 현재 프로젝트의 memento 디렉토리를 생성:
+session-start.sh를 실행하여 현재 프로젝트의 memento 디렉토리를 생성:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/init.sh
+echo '{}' | bash ${CLAUDE_PLUGIN_ROOT}/scripts/session-start.sh > /dev/null
 ```
 
-### Step 3: 완료 확인
+session-start.sh는 `mkdir -p` + 템플릿 복사(`[ ! -f ]` 가드)로 이미 존재하는 파일을 덮어쓰지 않음.
+
+### Step 3: qmd collection 등록
+
+프로젝트 디렉토리를 qmd collection으로 등록 (이미 등록된 경우 no-op):
+
+```bash
+cd ~/.claude/memento/projects/<project-id> && qmd collection add .
+```
+
+project-id는 session-start.sh의 프로젝트 ID 결정 로직과 동일:
+- git remote → `org-repo` (lowercase)
+- fallback → CWD 경로 (/ → -, lowercase)
+
+### Step 4: 완료 확인
 
 - 생성된 프로젝트 디렉토리 경로 출력
 - qmd 설치 상태 출력
 - Layer 1 파일 존재 확인 (SCRATCHPAD.md, WORKING.md, TASK-QUEUE.md, memory/ROOT.md)
+- qmd collection 등록 상태 확인

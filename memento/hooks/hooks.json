@@ -1,12 +1,35 @@
 {
-  "description": "Memento 메모리 초기화 + @import 세션 주입 (세션 시작 시)",
+  "description": "Memento 메모리 프로토콜 주입 + 컴팩션 트리거",
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/init.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/session-start.sh\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/compact.mjs\"",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/compact.mjs\"",
+            "timeout": 30000
           }
         ]
       }
