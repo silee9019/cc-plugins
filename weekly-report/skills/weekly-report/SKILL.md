@@ -67,7 +67,31 @@ cd {repo_path} && git log --all --author="{author}" \
 
 **모든 레포를 동시에 실행** (Task tool의 병렬 호출 활용).
 
-### Step 3: 커밋 데이터 분석
+### Step 3: 이슈 현황 수집 (선택적)
+
+issue-box 플러그인이 보관한 이슈 중 보고 기간 내 생성된 것을 수집한다.
+이 Step은 issue-box가 미설치이거나 설정이 없으면 **자동으로 건너뛴다** (경고 없이 조용히 skip).
+
+> Step 2와 Step 3은 독립적이므로 **병렬 실행 가능**.
+
+**수집 절차**:
+
+1. `~/.claude/plugins/data/issue-box-cc-plugins/config.md` 읽기 시도
+   - 파일 없음 → 이 Step 건너뛰고 Step 4로 진행
+   - 파일 있음 → YAML frontmatter에서 `vault`, `folder_path` 추출
+
+2. `obsidian vaults verbose` 실행하여 vault 이름 → 파일시스템 경로 매핑
+   - obsidian CLI 미설치 또는 vault 미발견 → 조용히 skip
+
+3. `{vault_path}/{folder_path}/` 하위 일자별 폴더 탐색
+   - 폴더명(`{YYYY-MM-DD}`)으로 1차 날짜 필터 (보고 기간 범위)
+   - 각 `.md` 파일의 YAML frontmatter 파싱: `created`, `category`, `priority`, `status`, `source_project`
+   - frontmatter `created` 값으로 2차 날짜 필터 (정확한 기간 검증)
+   - 본문에서 `# {제목}` (h1)과 `## 요약` 섹션 내용 추출
+
+4. 이슈가 0건이면 이슈 현황 섹션을 보고서에 포함하지 않음
+
+### Step 4: 커밋 데이터 분석
 
 수집된 데이터에서:
 
@@ -80,7 +104,7 @@ cd {repo_path} && git log --all --author="{author}" \
    - `.claude/**`, `scripts/**` → DevTooling
 4. **투입 비율 계산**: 카테고리별 변경 파일 수 기반 비율 산출
 
-### Step 4: 보고서 생성
+### Step 5: 보고서 생성
 
 아래 구조의 마크다운 보고서를 생성합니다:
 
@@ -125,10 +149,34 @@ cd {repo_path} && git log --all --author="{author}" \
   - 각 역량에 경력기술서 활용 문구 (이탤릭) — 리더십, 아키텍처 의사결정, 기술 방향성 강조
   - 잘한 점/아쉬운 점은 사용자가 직접 작성하는 영역 (스킬에서 생성하지 않음)
 
+## Part C — 이슈 현황 (Step 3에서 수집된 경우에만)
+
+### 요약 통계
+| 카테고리 | 건수 |
+|----------|------|
+| bug | N |
+| tech-debt | N |
+| enhancement | N |
+| risk | N |
+| follow-up | N |
+| **합계** | **N** |
+
+### 이슈 목록
+| # | 제목 | 카테고리 | 우선순위 | 상태 | 프로젝트 | 생성일 |
+|---|------|----------|----------|------|----------|--------|
+| 1 | {제목} | {category} | {priority} | {status} | {source_project} | {created} |
+
+### 주요 이슈 상세 (high 우선순위만)
+> 우선순위 high인 이슈의 요약 섹션 내용을 포함.
+
+#### {이슈 제목}
+- **카테고리**: {category} | **우선순위**: {priority} | **상태**: {status}
+- **요약**: {요약 섹션 내용}
+
 ## 부록: 커밋 전체 목록
 ```
 
-### Step 5: 파일 저장
+### Step 6: 파일 저장
 
 Obsidian vault의 Weekly Notes 폴더에 저장합니다.
 
@@ -157,6 +205,14 @@ tickets:
   - {ticket_2}
 tags:
   - weekly-report
+# issue-box 이슈가 있는 경우에만 아래 필드 포함
+issue_count: {총 이슈 수}
+issue_categories:
+  bug: {N}
+  tech-debt: {N}
+  enhancement: {N}
+  risk: {N}
+  follow-up: {N}
 ---
 ```
 

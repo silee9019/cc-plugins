@@ -8,6 +8,7 @@ created: {YYYY-MM-DD}
 category: {bug|tech-debt|enhancement|risk|follow-up}
 priority: {high|medium|low}
 status: open
+resolved_at:                              # status → resolved/dismissed 변경 시 {YYYY-MM-DD} 기록
 source_project: {cwd 기반 프로젝트명}
 tags:
   - issue-box

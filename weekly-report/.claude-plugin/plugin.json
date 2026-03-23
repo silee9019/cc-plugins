@@ -1,7 +1,7 @@
 {
   "name": "weekly-report",
   "description": "Git 커밋 기반 주간/기간별 업무 보고서 자동 생성. 다수 레포의 커밋을 수집하여 날짜별/티켓별 정리 및 다각도 리뷰 포함.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "silee9019"
   },

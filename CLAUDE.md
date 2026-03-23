@@ -173,11 +173,11 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | 플러그인 | 버전 | 카테고리 | 컴포넌트 | 런타임 | 외부 의존성 |
 |----------|------|----------|----------|--------|-------------|
 | git-init | 1.3.0 | workflow | command | — | gh, curl |
-| weekly-report | 1.1.0 | workflow | skill | — | git, Obsidian vault |
+| weekly-report | 1.2.0 | workflow | skill | — | git, Obsidian vault, obsidian CLI (선택) |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
 | claude-statusline | 2.0.3 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
-| issue-box | 2.0.0 | workflow | skill + command | — | obsidian CLI |
+| issue-box | 2.1.0 | workflow | skill + command | — | obsidian CLI |
 | memento | 1.1.0 | utility | skill+hook+command | Bun | qmd |
 | agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
 
@@ -218,7 +218,7 @@ git-init/
 ```
 weekly-report/
 ├── .claude-plugin/plugin.json
-└── skills/weekly-report/SKILL.md   ← 트리거 키워드 + 5단계 워크플로우
+└── skills/weekly-report/SKILL.md   ← 트리거 키워드 + 6단계 워크플로우
 ```
 
 - **수정 시**: 트리거 키워드 변경 시 description의 키워드 목록도 동기화
@@ -289,21 +289,26 @@ claude-statusline/
 
 ```
 issue-box/
-├── .claude-plugin/plugin.json          ← v2.0.0
+├── .claude-plugin/plugin.json          ← v2.1.0
 ├── commands/
 │   └── setup.md                        ← vault/폴더/파일명 설정
 └── skills/
-    └── defer-issue/                    ← 이슈 추출 → Obsidian 보관
-        ├── SKILL.md                    ← 설정 로드, 경로 변경, reference 참조
-        ├── obsidian-cli-reference.md   ← CLI 사용법
-        └── report-format.md            ← 보고서 포맷
+    ├── reference/
+    │   └── obsidian-cli-reference.md   ← CLI 사용법 (공유 리소스)
+    ├── defer-issue/                    ← 이슈 추출 → Obsidian 보관
+    │   ├── SKILL.md                    ← 설정 로드, 경로 변경, reference 참조
+    │   └── report-format.md            ← 보고서 포맷
+    └── review-issue/                   ← 이슈 리뷰 → 상태 관리
+        └── SKILL.md                    ← 조회, 필터링, 상태 변경
 ```
 
 - **수정 시**: 트리거 키워드 변경 시 description의 키워드 목록도 동기화
-- **테스트**: `/issue-box:defer-issue`로 트리거 확인, `/issue-box:setup`으로 설정 확인
+- **테스트**: `/issue-box:defer-issue`로 추출 확인, `/issue-box:review-issue`로 리뷰 확인, `/issue-box:setup`으로 설정 확인
 - **의존성**: `obsidian` CLI (`brew install obsidian-cli`)
 - **설정**: `~/.claude/plugins/data/issue-box-cc-plugins/config.md` (vault, folder_path, file_title_format)
-- **주의**: config.md 존재 시 vault/폴더 CLI 탐색 단계 스킵. 일자별 하위 폴더 `{YYYY-MM-DD}` 자동 생성
+- **주의**:
+  - config.md 존재 시 vault/폴더 CLI 탐색 단계 스킵. 일자별 하위 폴더 `{YYYY-MM-DD}` 자동 생성
+  - `obsidian-cli-reference.md`는 `skills/reference/`에 위치 (defer-issue, review-issue 공유)
 
 ### memento
 

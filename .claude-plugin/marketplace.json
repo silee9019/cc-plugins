@@ -47,7 +47,7 @@
       "name": "weekly-report",
       "source": "./weekly-report",
       "description": "Git 커밋 기반 주간/기간별 업무 보고서 자동 생성. 다수 레포의 커밋을 수집하여 날짜별/티켓별 정리 및 다각도 리뷰 포함.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": {
         "name": "silee9019"
       },
@@ -68,12 +68,12 @@
     {
       "name": "issue-box",
       "source": "./issue-box",
-      "description": "세션 대화에서 이슈를 분석·추출하여 Obsidian vault에 보고서로 저장. 나중에 처리할 이슈를 보관(defer)하는 트리아지 도구.",
-      "version": "2.0.0",
+      "description": "세션 대화에서 이슈를 분석·추출하여 Obsidian vault에 보고서로 저장. 나중에 처리할 이슈를 보관(defer)하고 리뷰·상태 관리하는 트리아지 도구.",
+      "version": "2.1.0",
       "author": {
         "name": "silee9019"
       },
-      "keywords": ["issue", "obsidian", "defer", "triage"],
+      "keywords": ["issue", "obsidian", "defer", "triage", "review"],
       "category": "workflow"
     },
     {
