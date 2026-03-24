@@ -88,13 +88,8 @@ gh repo create <account>/<repo-name> --<visibility> --clone --description "<í”„ë
 ```gitignore
 # === Project-specific (manual) ===
 
-# Claude Code (whitelist)
-.claude/*
-!.claude/settings.json
-!.claude/agents/
-!.claude/commands/
-!.claude/hooks/
-!.claude/skills/
+# Claude Code
+.claude/settings.local.json
 
 # Environment / Secrets
 .env
