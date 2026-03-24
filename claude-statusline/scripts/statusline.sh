@@ -84,7 +84,7 @@ format_context_bar() {
     fi
     i=$((i + 1))
   done
-  printf '%s %3d%%' "$bar" "$pct"
+  printf '%s %d%%' "$bar" "$pct"
 }
 
 # --- 비용 데이터 ---
@@ -172,9 +172,11 @@ branch_part=""
 seg_gh=$(format_gh)
 seg_aws=$(format_aws)
 
-line1="${time_seg}${SEP}${path_seg}${branch_part}"
-[ -n "$seg_gh" ] && line1="${line1}${SEP}${seg_gh}"
-[ -n "$seg_aws" ] && line1="${line1}${SEP}${seg_aws}"
+line1="${time_seg} ${path_seg}${branch_part}"
+seg_credentials=""
+[ -n "$seg_gh" ] && seg_credentials="${seg_gh}"
+[ -n "$seg_aws" ] && { [ -n "$seg_credentials" ] && seg_credentials="${seg_credentials} ${seg_aws}" || seg_credentials="${seg_aws}"; }
+[ -n "$seg_credentials" ] && line1="${line1}${SEP}${seg_credentials}"
 
 model_str=$(format_model "$model_display")
 context_bar=$(format_context_bar)
