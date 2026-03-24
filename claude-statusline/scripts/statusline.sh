@@ -172,9 +172,9 @@ branch_part=""
 seg_gh=$(format_gh)
 seg_aws=$(format_aws)
 
-line1="${time_seg} ${path_seg}${branch_part}"
-[ -n "$seg_gh" ] && line1="${line1} ${seg_gh}"
-[ -n "$seg_aws" ] && line1="${line1} ${seg_aws}"
+line1="${time_seg}${SEP}${path_seg}${branch_part}"
+[ -n "$seg_gh" ] && line1="${line1}${SEP}${seg_gh}"
+[ -n "$seg_aws" ] && line1="${line1}${SEP}${seg_aws}"
 
 model_str=$(format_model "$model_display")
 context_bar=$(format_context_bar)
