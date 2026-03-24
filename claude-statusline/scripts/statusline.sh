@@ -12,7 +12,7 @@ MAGENTA=$(printf '\033[35m')
 BLUE75=$(printf '\033[38;5;75m')
 BLUE27=$(printf '\033[38;5;27m')
 RST=$(printf '\033[0m')
-SEP=" "
+SEP="${DIM} | ${RST}"
 
 # --- 축약 스크립트 ---
 SHORTEN_CMD="$PLUGIN_ROOT/scripts/shorten.sh"
@@ -138,7 +138,9 @@ format_aws() {
 
   local now exp_epoch remaining
   now=$(date +%s)
-  exp_epoch=$(date -jf "%Y-%m-%dT%H:%M:%S%z" "$exp" +%s 2>/dev/null || \
+  local exp_norm
+  exp_norm=$(printf '%s' "$exp" | sed 's/\([+-][0-9][0-9]\):\([0-9][0-9]\)$/\1\2/')
+  exp_epoch=$(date -jf "%Y-%m-%dT%H:%M:%S%z" "$exp_norm" +%s 2>/dev/null || \
               date -d "$exp" +%s 2>/dev/null || echo 0)
   remaining=$(( (exp_epoch - now) / 60 ))
 
