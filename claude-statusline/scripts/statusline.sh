@@ -5,9 +5,14 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 
 # --- ANSI ---
 DIM=$(printf '\033[2m')
+GREEN=$(printf '\033[32m')
+YELLOW=$(printf '\033[33m')
+RED=$(printf '\033[31m')
 MAGENTA=$(printf '\033[35m')
+BLUE75=$(printf '\033[38;5;75m')
+BLUE27=$(printf '\033[38;5;27m')
 RST=$(printf '\033[0m')
-SEP="${DIM} | ${RST}"
+SEP=" "
 
 # --- 축약 스크립트 ---
 SHORTEN_CMD="$PLUGIN_ROOT/scripts/shorten.sh"
@@ -105,6 +110,47 @@ if [ -f "$cost_cache" ]; then
   fi
 fi
 
+# --- GitHub 계정 표시기 ---
+
+format_gh() {
+  local cache="${XDG_DATA_HOME:-$HOME/.local/share}/gh-prompt-user"
+  [ -f "$cache" ] || return
+  local user
+  user=$(cat "$cache")
+  case "$user" in
+    silee9019)      printf '%sgh@me%s' "$BLUE75" "$RST" ;;
+    silee_imagogit) printf '%sgh@imago%s' "$BLUE27" "$RST" ;;
+    "")             printf '%sgh@---%s' "$DIM" "$RST" ;;
+    *)              printf '%sgh@%s%s' "$BLUE75" "$user" "$RST" ;;
+  esac
+}
+
+# --- AWS 세션 표시기 ---
+
+format_aws() {
+  command -v saml2aws >/dev/null 2>&1 || return
+  local exp="${AWS_SESSION_EXPIRATION:-}"
+  if [ -z "$exp" ]; then
+    exp=$(sed -n 's/^x_security_token_expires *= *//p' \
+      "${AWS_SHARED_CREDENTIALS_FILE:-$HOME/.aws/credentials}" 2>/dev/null | head -1)
+  fi
+  [ -z "$exp" ] && { printf '%saws:?%s' "$DIM" "$RST"; return; }
+
+  local now exp_epoch remaining
+  now=$(date +%s)
+  exp_epoch=$(date -jf "%Y-%m-%dT%H:%M:%S%z" "$exp" +%s 2>/dev/null || \
+              date -d "$exp" +%s 2>/dev/null || echo 0)
+  remaining=$(( (exp_epoch - now) / 60 ))
+
+  if [ "$remaining" -gt 10 ]; then
+    printf '%saws:✓%s' "$GREEN" "$RST"
+  elif [ "$remaining" -gt 0 ]; then
+    printf '%saws:⏳%sm%s' "$YELLOW" "$remaining" "$RST"
+  else
+    printf '%saws:✗%s' "$RED" "$RST"
+  fi
+}
+
 # --- git branch ---
 branch=""
 if [ -n "$cwd" ] && [ -d "$cwd" ]; then
@@ -113,19 +159,25 @@ if [ -n "$cwd" ] && [ -d "$cwd" ]; then
 fi
 
 # --- 세그먼트 조립 ---
-# Line 1: hh:mm | 경로 브랜치
-# Line 2: CLI버전 | 모델+컨텍스트 | 비용
+# Line 1: hh:mm path (branch) gh@user aws:status
+# Line 2: ╰─» vX.Y.Z Model Bar costs
 
-time_seg="${DIM}$(date +%H:%M)${RST}"
+time_seg="${GREEN}$(date +%H:%M)${RST}"
 path_seg=$(shorten_path "$cwd")
 branch_part=""
-[ -n "$branch" ] && branch_part=" ${MAGENTA}【$(shorten_branch "$branch")】${RST}"
+[ -n "$branch" ] && branch_part=" ${MAGENTA}($(shorten_branch "$branch"))${RST}"
 
-line1="${time_seg}${SEP}${path_seg}${branch_part}"
+seg_gh=$(format_gh)
+seg_aws=$(format_aws)
+
+line1="${time_seg} ${path_seg}${branch_part}"
+[ -n "$seg_gh" ] && line1="${line1} ${seg_gh}"
+[ -n "$seg_aws" ] && line1="${line1} ${seg_aws}"
 
 model_str=$(format_model "$model_display")
 context_bar=$(format_context_bar)
 
+seg_arrow="${GREEN}╰─»${RST}"
 seg_version="${DIM}v${version}${RST}"
 seg_model="${DIM}${model_str} ${context_bar}${RST}"
 seg_daily="${DIM}${daily_models}${RST}"
@@ -134,14 +186,14 @@ seg_monthly="${DIM}${monthly_cost}${RST}"
 
 # 반응형: 폭 초과 시 우선순위 낮은 것부터 제거
 # 제거 순서: monthly(10) → weekly(20) → daily(40) → version(50)
-# model+context(70)는 항상 유지
+# model+context(70) + arrow는 항상 유지
 
 fits() { [ "$(plain_len "$1")" -le "$term_width" ]; }
 
-line2="${seg_version}${SEP}${seg_model}${SEP}${seg_daily}${SEP}${seg_weekly}${SEP}${seg_monthly}"
-if ! fits "$line2"; then line2="${seg_version}${SEP}${seg_model}${SEP}${seg_daily}${SEP}${seg_weekly}"; fi
-if ! fits "$line2"; then line2="${seg_version}${SEP}${seg_model}${SEP}${seg_daily}"; fi
-if ! fits "$line2"; then line2="${seg_version}${SEP}${seg_model}"; fi
-if ! fits "$line2"; then line2="${seg_model}"; fi
+line2="${seg_arrow} ${seg_version}${SEP}${seg_model}${SEP}${seg_daily}${SEP}${seg_weekly}${SEP}${seg_monthly}"
+if ! fits "$line2"; then line2="${seg_arrow} ${seg_version}${SEP}${seg_model}${SEP}${seg_daily}${SEP}${seg_weekly}"; fi
+if ! fits "$line2"; then line2="${seg_arrow} ${seg_version}${SEP}${seg_model}${SEP}${seg_daily}"; fi
+if ! fits "$line2"; then line2="${seg_arrow} ${seg_version}${SEP}${seg_model}"; fi
+if ! fits "$line2"; then line2="${seg_arrow} ${seg_model}"; fi
 
 printf '%s\n%s' "$line1" "$line2"
