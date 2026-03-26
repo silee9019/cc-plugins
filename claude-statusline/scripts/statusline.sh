@@ -114,7 +114,7 @@ fi
 
 format_gh() {
   local cache="${XDG_DATA_HOME:-$HOME/.local/share}/gh-prompt-user"
-  [ -f "$cache" ] || return
+  [ -f "$cache" ] || return 0
   local user
   user=$(cat "$cache")
   case "$user" in
@@ -128,7 +128,7 @@ format_gh() {
 # --- AWS 세션 표시기 ---
 
 format_aws() {
-  command -v saml2aws >/dev/null 2>&1 || return
+  command -v saml2aws >/dev/null 2>&1 || return 0
   local exp="${AWS_SESSION_EXPIRATION:-}"
   if [ -z "$exp" ]; then
     exp=$(sed -n 's/^x_security_token_expires *= *//p' \

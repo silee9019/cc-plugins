@@ -176,7 +176,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | weekly-report | 1.2.0 | workflow | skill | — | git, Obsidian vault, obsidian CLI (선택) |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
-| claude-statusline | 2.1.2 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
+| claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
 | issue-box | 3.0.0 | workflow | skill + command | — | obsidian CLI |
 | memento | 1.1.0 | utility | skill+hook+command | Bun | qmd |
 | agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
