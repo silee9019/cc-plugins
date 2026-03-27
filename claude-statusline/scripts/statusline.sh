@@ -134,7 +134,7 @@ format_aws() {
     exp=$(sed -n 's/^x_security_token_expires *= *//p' \
       "${AWS_SHARED_CREDENTIALS_FILE:-$HOME/.aws/credentials}" 2>/dev/null | head -1)
   fi
-  [ -z "$exp" ] && { printf '%saws:?%s' "$DIM" "$RST"; return; }
+  [ -z "$exp" ] && { printf '%saws:?%s' "$DIM" "$RST"; return 0; }
 
   local now exp_epoch remaining
   now=$(date +%s)

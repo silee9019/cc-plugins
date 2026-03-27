@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/compact.mjs\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-compaction.sh\"",
             "timeout": 30000
           }
         ]
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run \"${CLAUDE_PLUGIN_ROOT}/scripts/compact.mjs\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-compaction.sh\"",
             "timeout": 30000
           }
         ]

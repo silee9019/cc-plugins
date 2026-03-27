@@ -118,9 +118,7 @@ PROTOCOL
 
 # ─── Run mechanical compaction ───
 
-if command -v bun >/dev/null 2>&1; then
-  bun run "$PLUGIN_ROOT/scripts/compact.mjs" 2>/dev/null || true
-fi
+sh "$PLUGIN_ROOT/scripts/run-compaction.sh" 2>/dev/null || true
 
 # ─── Check qmd ───
 
