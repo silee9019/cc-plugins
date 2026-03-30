@@ -7,6 +7,9 @@ commands/[0-9a-f]*/
 # Claude Code session data
 .claude/
 
+# Codex CLI session state
+.context/
+
 # Plugin orphaned state marker
 .orphaned_at
 

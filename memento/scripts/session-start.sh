@@ -83,12 +83,10 @@ Read the following Layer 1 files first:
    - **Cooldown expired, file missing, or first run:** Write \`${PROJECT_DIR}/memory/.compaction-state.json\` with \`{ "lastCompactionRun": "<current ISO timestamp>" }\`, then dispatch a subagent to run memento:memento-compaction skill (chain: Daily->Weekly->Monthly->Root), then run \`bun run ${PLUGIN_ROOT}/scripts/compact.mjs\` + \`qmd update\` + \`qmd embed\`.
 **This procedure must be completed before responding to the user NO MATTER WHAT**
 
-### End-of-Task Checkpoint (mandatory — subagent)
-After completing any task, **dispatch a subagent** to append a structured log to \`${PROJECT_DIR}/memory/YYYY-MM-DD.md\` (use today's date).
+### End-of-Task Checkpoint (mandatory)
+After completing any task, append a structured log to \`${PROJECT_DIR}/memory/YYYY-MM-DD.md\` (use today's date) using the Write tool (append) or Edit tool.
 
-Compose the subagent task:
-> Append the following to ${PROJECT_DIR}/memory/YYYY-MM-DD.md:
->
+Log format:
 > ## [Topic Name]
 > - request: [what the user asked]
 > - analysis: [what you researched/analyzed]
@@ -96,11 +94,10 @@ Compose the subagent task:
 > - outcome: [what was done, files changed]
 > - references: [knowledge/ files, external sources]
 
-**The subagent only needs to do one thing: append to the daily log.** This is the source of truth.
-**The subagent needs the task summary you provide** — it doesn't have access to the conversation.
+**This is a single Write call — minimal context impact.** This is the source of truth.
 
 ### Proactive Session Dump
-**Do not wait for task completion to write to the daily log.** Proactively dispatch a subagent to append when:
+**Do not wait for task completion to write to the daily log.** Proactively append when:
 - The conversation has been going for ~20+ messages without a checkpoint
 - You sense the context is getting large
 - A significant decision or analysis was just completed
@@ -108,8 +105,8 @@ Compose the subagent task:
 
 ### Rules
 - **Never skip Session Start** — every session begins with it, no exceptions
-- **Never skip checkpoints** — every task completion MUST append to daily log via subagent
-- **All memory writes via subagent** — never pollute main session with memory operations
+- **Never skip checkpoints** — every task completion MUST append to daily log
+- **Checkpoint writes are direct** — one Write call is minimal context impact. Use subagents only for heavy operations (compaction, search).
 - memory/YYYY-MM-DD.md (raw): **permanent**, never delete or edit after session
 - ROOT.md: managed by compaction process. Do not manually edit.
 - Search: use memento:memento-search skill

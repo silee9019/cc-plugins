@@ -230,11 +230,27 @@ if (dailyUpdated || weeklyUpdated || monthlyUpdated) {
   }
 
   // Re-index qmd
+  // When a project's .mise.toml pins a different node version, qmd may
+  // not exist under that version's global node_modules. Resolve the
+  // absolute qmd path via mise so it's found regardless of project config.
+  const qmdBin = (() => {
+    try {
+      return execSync("mise which qmd", { stdio: "pipe", encoding: "utf8" }).trim();
+    } catch (e) {
+      console.error(`  [memento] qmd path lookup skipped: ${e.message?.split("\n")[0] ?? "unknown"}`);
+      return null;
+    }
+  })();
+  const qmdCmd = qmdBin || "qmd";
   try {
-    execSync("qmd update", { cwd: CWD, stdio: "pipe" });
-    execSync("qmd embed", { cwd: CWD, stdio: "pipe" });
-  } catch {
-    console.error("  [memento] qmd reindex skipped (qmd not available or failed)");
+    execSync(`${qmdCmd} update`, { cwd: CWD, stdio: "pipe" });
+  } catch (e) {
+    console.error(`  [memento] qmd update failed: ${e.message?.split("\n")[0] ?? "unknown"}`);
+  }
+  try {
+    execSync(`${qmdCmd} embed`, { cwd: CWD, stdio: "pipe" });
+  } catch (e) {
+    console.error(`  [memento] qmd embed failed: ${e.message?.split("\n")[0] ?? "unknown"}`);
   }
 }
 

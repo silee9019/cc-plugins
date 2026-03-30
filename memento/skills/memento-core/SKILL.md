@@ -44,12 +44,10 @@ SessionStart hook (`session-start.sh`)이 매 세션 시작 시 자동으로:
 
 ## End-of-Task Checkpoint (MANDATORY)
 
-After completing any task, **dispatch a subagent** to append a structured log to `~/.claude/memento/projects/<project-id>/memory/YYYY-MM-DD.md`.
+After completing any task, append a structured log to `~/.claude/memento/projects/<project-id>/memory/YYYY-MM-DD.md` using the Write tool (append) or Edit tool.
 
-Compose the subagent task:
+Log format:
 
-> Append the following to ~/.claude/memento/projects/<project-id>/memory/YYYY-MM-DD.md:
->
 > ## [Topic Name]
 > - request: [what the user asked]
 > - analysis: [what you researched/analyzed]
@@ -57,21 +55,17 @@ Compose the subagent task:
 > - outcome: [what was done, files changed]
 > - references: [knowledge/ files, external sources]
 
-**The subagent only needs to do one thing: append to the daily log.** This is the source of truth — everything else (SCRATCHPAD, WORKING, TASK-QUEUE) is updated lazily at next session start or by the agent naturally during work.
-
-**The subagent needs the task summary you provide** — it doesn't have access to the conversation.
-
-**Priority if timeout imminent** (no time for subagent — write directly to the daily log file)
+**This is a single Write call — minimal context impact.** This is the source of truth — everything else (SCRATCHPAD, WORKING, TASK-QUEUE) is updated lazily at next session start or by the agent naturally during work.
 
 ## Proactive Session Dump
 
-**Do not wait for task completion to write to the daily log.** Proactively dispatch a subagent to append to the daily log when:
+**Do not wait for task completion to write to the daily log.** Proactively append when:
 - The conversation has been going for ~20+ messages without a checkpoint
 - You sense the context is getting large
 - A significant decision or analysis was just completed, even if the overall task isn't done
 - You're switching between topics within the same task
 
-Compose the subagent task with a summary of what to dump, same as the checkpoint format. The subagent writes the file; the main session stays clean.
+Use the same log format as the checkpoint. Write directly — one Write call is minimal context impact.
 
 This protects against context compression — if the platform compresses your conversation history, undumped details are lost forever. Write early, write often. The daily log is append-only, so multiple dumps in the same session are fine.
 
@@ -96,7 +90,7 @@ This protects against context compression — if the platform compresses your co
 - Long-term facts are managed by platform auto memory. No separate MEMORY.md file.
 - Raw daily logs (`memory/YYYY-MM-DD.md`): **permanent**. Never delete or edit after session.
 - ROOT.md: managed by compaction process. Do not manually edit.
-- All memory writes via subagent — never pollute main session with memory operations.
+- Checkpoint writes are direct — one Write call is minimal context impact. Use subagents only for heavy operations (compaction, search).
 - If this session ends NOW, the next session must be able to continue immediately.
 - Don't skip checkpoints — lost context means you forget.
 

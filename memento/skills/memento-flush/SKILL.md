@@ -26,18 +26,20 @@ Gather a summary of everything discussed in this session so far. For each topic:
 - references: knowledge/ files, external sources
 ```
 
-### 2. Dispatch subagent
+### 2. Write to daily log
 
-**Dispatch a subagent** with the session summary and this task:
+Append the session summary to `~/.claude/memento/projects/<project-id>/memory/YYYY-MM-DD.md` (today's date) using the Write tool (append) or Edit tool.
 
-> Memento memory flush. Append the following structured log to ~/.claude/memento/projects/<project-id>/memory/YYYY-MM-DD.md (today's date). Then run `bun run <plugin-root>/scripts/compact.mjs` to propagate through the tree.
->
-> [paste session summary here]
+### 3. Run compaction
 
-The subagent writes the files and runs compact. The main session stays clean.
+```bash
+bun run <plugin-root>/scripts/compact.mjs
+```
 
-### 3. Report
+This propagates through the compaction tree (daily → weekly → monthly → root).
+
+### 4. Report
 
 Confirm the flush completed:
 - Topics flushed
-- Subagent status
+- Compaction result
