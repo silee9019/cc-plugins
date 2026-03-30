@@ -22,13 +22,36 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Agent, AskUserQuestion
 7. 승인 시 반영, TODO 동기화
 
 **2. 면접 피드백 모드** — "면접 코칭", "피드백 정리", "모의 면접"
-- 독립 실행: 사용자가 원하는 면접관을 지정하면 해당 에이전트를 Agent 도구로 호출
-- 오케스트레이션: "전체 면접" 요청 시 면접관 3명을 순서대로 호출
-  1. interview-arch (기술 심화)
-  2. interview-verify (실무 검증)
-  3. interview-culture (문화적합성)
-- 각 면접 결과를 종합하여 이력서/답변 개선점 도출
-- 개선점을 `material/draft_면접-피드백-*.md`로 저장
+
+페르소나 파일은 `${CLAUDE_PLUGIN_ROOT}/skills/coach/personas/`에 위치한다.
+
+| 페르소나 | 파일 | 역할 |
+|----------|------|------|
+| interview-arch | `personas/interview-arch.md` | 기술 심화 면접관 |
+| interview-verify | `personas/interview-verify.md` | 실무 검증 면접관 |
+| interview-culture | `personas/interview-culture.md` | 문화적합성 면접관 |
+| mentor-ic | `personas/mentor-ic.md` | IC 트랙 멘토 |
+| mentor-manager | `personas/mentor-manager.md` | 매니저 트랙 멘토 |
+
+**디스패치 절차:**
+1. 사용자가 원하는 페르소나를 판별한다 (면접관 지정 또는 멘토 요청)
+2. 해당 페르소나 파일을 Read한다
+3. 프로젝트 루트의 이력서(`v*-*.md`)를 Glob으로 찾아 Read한다
+4. Agent 도구를 호출한다:
+   - `prompt`: 페르소나 파일 전문 + "다음은 사용자의 이력서입니다:" + 이력서 내용
+   - `description`: 페르소나 이름 (예: "기술 심화 면접")
+
+**오케스트레이션** — "전체 면접" 요청 시 면접관 3명을 순서대로 디스패치:
+1. interview-arch (기술 심화)
+2. interview-verify (실무 검증)
+3. interview-culture (문화적합성)
+
+**멘토링** — "커리어 상담", "멘토링" 요청 시:
+- 사용자의 관심 트랙(IC/매니저)에 따라 mentor-ic 또는 mentor-manager를 디스패치
+- 트랙이 불분명하면 AskUserQuestion으로 확인
+
+각 Agent 결과를 종합하여 이력서/답변 개선점 도출.
+개선점을 `material/draft_면접-피드백-*.md`로 저장.
 
 **3. 채용공고 맞춤 모드** — "채용공고 분석", "새 공고"
 1. 사용자로부터 채용공고를 입력받음

@@ -4,6 +4,5 @@
   "version": "0.1.0",
   "author": { "name": "silee9019" },
   "keywords": ["resume", "interview", "coaching", "career", "mentor"],
-  "skills": ["./skills/setup", "./skills/coach"],
-  "agents": ["./agents"]
+  "skills": ["./skills/setup", "./skills/coach"]
 }
