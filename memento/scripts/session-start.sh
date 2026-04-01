@@ -80,7 +80,7 @@ Read the following Layer 1 files first:
 1. **DO NOT SKIP** **DO NOT COMPROMISE** **Compaction maintenance (cooldown-gated):**
    Read \`${PROJECT_DIR}/memory/.compaction-state.json\`.
    - **Within 3-hour cooldown:** Skip compaction subagent — no dispatch needed.
-   - **Cooldown expired, file missing, or first run:** Write \`${PROJECT_DIR}/memory/.compaction-state.json\` with \`{ "lastCompactionRun": "<current ISO timestamp>" }\`, then dispatch a subagent to run memento:memento-compaction skill (chain: Daily->Weekly->Monthly->Root), then run \`bun run ${PLUGIN_ROOT}/scripts/compact.mjs\` + \`qmd update\` + \`qmd embed\`.
+   - **Cooldown expired, file missing, or first run:** Write \`${PROJECT_DIR}/memory/.compaction-state.json\` with \`{ "lastCompactionRun": "<current ISO timestamp>" }\`, then dispatch a subagent to run memento:memento-compaction skill (chain: Daily->Weekly->Monthly->Root), then run \`bun run ${PLUGIN_ROOT}/scripts/compact.mjs\` (내부에서 qmd update + embed 자동 실행).
 **This procedure must be completed before responding to the user NO MATTER WHAT**
 
 ### End-of-Task Checkpoint (mandatory)

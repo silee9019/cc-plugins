@@ -245,14 +245,19 @@ if (dailyUpdated || weeklyUpdated || monthlyUpdated) {
   const QMD_TIMEOUT_MS = 30_000; // 30s — embed가 이보다 오래 걸리면 버그
   const qmdFailures = [];
 
+  // qmd 런처 스크립트가 BUN_INSTALL 감지 시 bun으로 실행 → ABI 불일치 발생.
+  // 항상 node로 실행되도록 BUN_INSTALL을 제거한 환경을 전달.
+  const qmdEnv = { ...process.env };
+  delete qmdEnv.BUN_INSTALL;
+
   try {
-    execSync(`${qmdCmd} update`, { cwd: CWD, stdio: "pipe", timeout: QMD_TIMEOUT_MS });
+    execSync(`${qmdCmd} update`, { cwd: CWD, stdio: "pipe", timeout: QMD_TIMEOUT_MS, env: qmdEnv });
   } catch (e) {
     const reason = e.killed ? `timeout (${QMD_TIMEOUT_MS / 1000}s)` : (e.message?.split("\n")[0] ?? "unknown");
     qmdFailures.push(`update: ${reason}`);
   }
   try {
-    execSync(`${qmdCmd} embed`, { cwd: CWD, stdio: "pipe", timeout: QMD_TIMEOUT_MS });
+    execSync(`${qmdCmd} embed`, { cwd: CWD, stdio: "pipe", timeout: QMD_TIMEOUT_MS, env: qmdEnv });
   } catch (e) {
     const reason = e.killed ? `timeout (${QMD_TIMEOUT_MS / 1000}s)` : (e.message?.split("\n")[0] ?? "unknown");
     qmdFailures.push(`embed: ${reason}`);
