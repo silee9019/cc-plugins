@@ -242,15 +242,26 @@ if (dailyUpdated || weeklyUpdated || monthlyUpdated) {
     }
   })();
   const qmdCmd = qmdBin || "qmd";
+  const QMD_TIMEOUT_MS = 30_000; // 30s — embed가 이보다 오래 걸리면 버그
+  const qmdFailures = [];
+
   try {
-    execSync(`${qmdCmd} update`, { cwd: CWD, stdio: "pipe" });
+    execSync(`${qmdCmd} update`, { cwd: CWD, stdio: "pipe", timeout: QMD_TIMEOUT_MS });
   } catch (e) {
-    console.error(`  [memento] qmd update failed: ${e.message?.split("\n")[0] ?? "unknown"}`);
+    const reason = e.killed ? `timeout (${QMD_TIMEOUT_MS / 1000}s)` : (e.message?.split("\n")[0] ?? "unknown");
+    qmdFailures.push(`update: ${reason}`);
   }
   try {
-    execSync(`${qmdCmd} embed`, { cwd: CWD, stdio: "pipe" });
+    execSync(`${qmdCmd} embed`, { cwd: CWD, stdio: "pipe", timeout: QMD_TIMEOUT_MS });
   } catch (e) {
-    console.error(`  [memento] qmd embed failed: ${e.message?.split("\n")[0] ?? "unknown"}`);
+    const reason = e.killed ? `timeout (${QMD_TIMEOUT_MS / 1000}s)` : (e.message?.split("\n")[0] ?? "unknown");
+    qmdFailures.push(`embed: ${reason}`);
+  }
+
+  if (qmdFailures.length > 0) {
+    console.error(`\n  ⚠️  [memento] qmd FAILED — 검색 인덱스가 갱신되지 않았습니다!`);
+    for (const f of qmdFailures) console.error(`    - ${f}`);
+    console.error(`    수동 실행: cd ${CWD} && ${qmdCmd} update && ${qmdCmd} embed\n`);
   }
 }
 
@@ -266,3 +277,5 @@ if (actions.length > 0) {
 } else {
   console.log("  memento compact: nothing to do");
 }
+
+// qmd 실패 시 exit code 0 유지 (compact 자체는 성공) — 경고는 stderr로 출력됨
