@@ -28,6 +28,8 @@ function resolveProjectId() {
 const PROJECT_ID = resolveProjectId();
 const CWD = join(homedir(), ".claude", "memento", "projects", PROJECT_ID);
 const MEMORY = join(CWD, "memory");
+const USER_DIR = join(homedir(), ".claude", "memento", "user");
+const USER_KNOWLEDGE = join(USER_DIR, "knowledge");
 
 const DAILY_THRESHOLD = 200;
 const WEEKLY_THRESHOLD = 300;
@@ -219,6 +221,23 @@ for (const [month, weeks] of Object.entries(monthGroups)) {
   }
 }
 
+// ─── qmd resolution (shared by project + user reindex) ───
+
+const qmdBin = (() => {
+  try {
+    return execSync("mise which qmd", { stdio: "pipe", encoding: "utf8" }).trim();
+  } catch (e) {
+    console.error(`  [memento] qmd path lookup skipped: ${e.message?.split("\n")[0] ?? "unknown"}`);
+    return null;
+  }
+})();
+const qmdCmd = qmdBin || "qmd";
+const QMD_TIMEOUT_MS = 30_000;
+const qmdFailures = [];
+
+const qmdEnv = { ...process.env };
+delete qmdEnv.BUN_INSTALL;
+
 // ─── Step 4: Update ROOT.md ───
 
 if (dailyUpdated || weeklyUpdated || monthlyUpdated) {
@@ -229,27 +248,7 @@ if (dailyUpdated || weeklyUpdated || monthlyUpdated) {
     writeFileSync(rootPath, rootContent);
   }
 
-  // Re-index qmd
-  // When a project's .mise.toml pins a different node version, qmd may
-  // not exist under that version's global node_modules. Resolve the
-  // absolute qmd path via mise so it's found regardless of project config.
-  const qmdBin = (() => {
-    try {
-      return execSync("mise which qmd", { stdio: "pipe", encoding: "utf8" }).trim();
-    } catch (e) {
-      console.error(`  [memento] qmd path lookup skipped: ${e.message?.split("\n")[0] ?? "unknown"}`);
-      return null;
-    }
-  })();
-  const qmdCmd = qmdBin || "qmd";
-  const QMD_TIMEOUT_MS = 30_000; // 30s — embed가 이보다 오래 걸리면 버그
-  const qmdFailures = [];
-
-  // qmd 런처 스크립트가 BUN_INSTALL 감지 시 bun으로 실행 → ABI 불일치 발생.
-  // 항상 node로 실행되도록 BUN_INSTALL을 제거한 환경을 전달.
-  const qmdEnv = { ...process.env };
-  delete qmdEnv.BUN_INSTALL;
-
+  // Re-index project qmd
   try {
     execSync(`${qmdCmd} update`, { cwd: CWD, stdio: "pipe", timeout: QMD_TIMEOUT_MS, env: qmdEnv });
   } catch (e) {
@@ -262,12 +261,72 @@ if (dailyUpdated || weeklyUpdated || monthlyUpdated) {
     const reason = e.killed ? `timeout (${QMD_TIMEOUT_MS / 1000}s)` : (e.message?.split("\n")[0] ?? "unknown");
     qmdFailures.push(`embed: ${reason}`);
   }
+}
 
-  if (qmdFailures.length > 0) {
-    console.error(`\n  ⚠️  [memento] qmd FAILED — 검색 인덱스가 갱신되지 않았습니다!`);
-    for (const f of qmdFailures) console.error(`    - ${f}`);
-    console.error(`    수동 실행: cd ${CWD} && ${qmdCmd} update && ${qmdCmd} embed\n`);
+// ─── Step 5: User tier — regenerate user/ROOT.md from knowledge files ───
+
+let userUpdated = false;
+
+if (existsSync(USER_KNOWLEDGE)) {
+  const knowledgeFiles = readdirSync(USER_KNOWLEDGE)
+    .filter(f => f.endsWith(".md"))
+    .sort();
+
+  const entries = [];
+  for (const file of knowledgeFiles) {
+    const content = readFileSync(join(USER_KNOWLEDGE, file), "utf8");
+    const titleMatch = content.match(/^title:\s*(.+)$/m);
+    const sourceMatch = content.match(/^source-project:\s*(.+)$/m);
+    const createdMatch = content.match(/^created:\s*(.+)$/m);
+    const title = titleMatch ? titleMatch[1].trim() : file.replace(/\.md$/, "");
+    const source = sourceMatch ? sourceMatch[1].trim() : "unknown";
+    const created = createdMatch ? createdMatch[1].trim() : "unknown";
+    entries.push(`- ${file.replace(/\.md$/, "")}: ${title} (${source}, ${created})`);
   }
+
+  const indexBody = entries.length > 0 ? entries.join("\n") : "(no entries yet)";
+  const userRoot = [
+    "---",
+    "type: user-root",
+    `last-updated: ${today}`,
+    `entries: ${knowledgeFiles.length}`,
+    "---",
+    "",
+    "## Knowledge Index",
+    indexBody,
+    "",
+  ].join("\n");
+
+  const userRootPath = join(USER_DIR, "ROOT.md");
+  const existing = existsSync(userRootPath)
+    ? readFileSync(userRootPath, "utf8")
+    : "";
+  if (existing !== userRoot) {
+    writeFileSync(userRootPath, userRoot);
+    userUpdated = true;
+  }
+}
+
+// Re-index user qmd
+if (userUpdated && existsSync(USER_DIR)) {
+  try {
+    execSync(`${qmdCmd} update`, { cwd: USER_DIR, stdio: "pipe", timeout: QMD_TIMEOUT_MS, env: qmdEnv });
+  } catch (e) {
+    const reason = e.killed ? `timeout (${QMD_TIMEOUT_MS / 1000}s)` : (e.message?.split("\n")[0] ?? "unknown");
+    qmdFailures.push(`user-update: ${reason}`);
+  }
+  try {
+    execSync(`${qmdCmd} embed`, { cwd: USER_DIR, stdio: "pipe", timeout: QMD_TIMEOUT_MS, env: qmdEnv });
+  } catch (e) {
+    const reason = e.killed ? `timeout (${QMD_TIMEOUT_MS / 1000}s)` : (e.message?.split("\n")[0] ?? "unknown");
+    qmdFailures.push(`user-embed: ${reason}`);
+  }
+}
+
+if (qmdFailures.length > 0) {
+  console.error(`\n  ⚠️  [memento] qmd FAILED — 검색 인덱스가 갱신되지 않았습니다!`);
+  for (const f of qmdFailures) console.error(`    - ${f}`);
+  console.error(`    수동 실행: cd ${CWD} && ${qmdCmd} update && ${qmdCmd} embed\n`);
 }
 
 // ─── Summary ───
@@ -276,6 +335,7 @@ const actions = [];
 if (dailyUpdated) actions.push("daily nodes updated");
 if (weeklyUpdated) actions.push("weekly nodes updated");
 if (monthlyUpdated) actions.push("monthly nodes updated");
+if (userUpdated) actions.push("user knowledge index updated");
 
 if (actions.length > 0) {
   console.log(`  memento compact: ${actions.join(", ")}`);

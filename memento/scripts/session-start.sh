@@ -58,6 +58,14 @@ if [ ! -f "$PROJECT_DIR/memory/ROOT.md" ]; then
   cp "$PLUGIN_ROOT/templates/ROOT.md" "$PROJECT_DIR/memory/ROOT.md"
 fi
 
+# ─── User tier auto-setup (idempotent) ───
+USER_DIR="$MEMENTO_HOME/user"
+mkdir -p "$USER_DIR/knowledge"
+
+if [ ! -f "$USER_DIR/ROOT.md" ]; then
+  cp "$PLUGIN_ROOT/templates/USER-ROOT.md" "$USER_DIR/ROOT.md"
+fi
+
 # ─── Output protocol to stdout ───
 
 cat <<PROTOCOL
@@ -75,6 +83,7 @@ Read the following Layer 1 files first:
 - \`${PROJECT_DIR}/WORKING.md\`
 - \`${PROJECT_DIR}/TASK-QUEUE.md\`
 - \`${PROJECT_DIR}/memory/ROOT.md\`
+- \`${USER_DIR}/ROOT.md\` (cross-project knowledge index)
 
 **This procedure must be completed before responding to the user NO MATTER WHAT**
 1. **DO NOT SKIP** **DO NOT COMPROMISE** **Compaction maintenance (cooldown-gated):**
@@ -95,6 +104,19 @@ Log format:
 > - references: [knowledge/ files, external sources]
 
 **This is a single Write call — minimal context impact.** This is the source of truth.
+
+### Knowledge Promotion (in checkpoint)
+If the outcome contains a **project-independent** lesson (debugging technique, tool recipe, environment pattern), also write to \`${USER_DIR}/knowledge/<slug>.md\`:
+\`\`\`
+---
+title: <제목>
+source-project: <project-id>
+created: YYYY-MM-DD
+tags: [tag1, tag2]
+---
+<교훈 내용 — 간결, 실행 가능, 키워드 밀도 높게>
+\`\`\`
+Only promote genuinely reusable knowledge. When in doubt, don't promote. Prefer updating existing files over creating duplicates.
 
 ### Proactive Session Dump
 **Do not wait for task completion to write to the daily log.** Proactively append when:

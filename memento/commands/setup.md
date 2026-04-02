@@ -27,13 +27,18 @@ echo '{}' | bash ${CLAUDE_PLUGIN_ROOT}/scripts/session-start.sh > /dev/null
 ```
 
 session-start.sh는 `mkdir -p` + 템플릿 복사(`[ ! -f ]` 가드)로 이미 존재하는 파일을 덮어쓰지 않음.
+session-start.sh는 user tier 디렉토리(`~/.claude/memento/user/knowledge/`)도 자동 생성.
 
 ### Step 3: qmd collection 등록
 
-프로젝트 디렉토리를 qmd collection으로 등록 (이미 등록된 경우 no-op):
+프로젝트 디렉토리와 user 디렉토리를 qmd collection으로 등록 (이미 등록된 경우 no-op):
 
 ```bash
 cd ~/.claude/memento/projects/<project-id> && qmd collection add .
+```
+
+```bash
+cd ~/.claude/memento/user && qmd collection add .
 ```
 
 project-id는 session-start.sh의 프로젝트 ID 결정 로직과 동일:
@@ -45,4 +50,5 @@ project-id는 session-start.sh의 프로젝트 ID 결정 로직과 동일:
 - 생성된 프로젝트 디렉토리 경로 출력
 - qmd 설치 상태 출력
 - Layer 1 파일 존재 확인 (SCRATCHPAD.md, WORKING.md, TASK-QUEUE.md, memory/ROOT.md)
-- qmd collection 등록 상태 확인
+- user/ROOT.md 존재 확인
+- qmd collection 등록 상태 확인 (프로젝트 + user)

@@ -80,12 +80,12 @@
       "name": "memento",
       "source": "./memento",
       "description": "크로스 프로젝트 3-tier 에이전트 메모리. 5-level 컴팩션 트리, 세션 체크포인트, 일일 로그.",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "author": {
         "name": "silee9019"
       },
       "license": "MIT",
-      "keywords": ["memory", "compaction", "checkpoint", "session"],
+      "keywords": ["memory", "compaction", "checkpoint", "session", "cross-project"],
       "category": "utility"
     },
     {

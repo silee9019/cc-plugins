@@ -8,27 +8,34 @@ description: "크로스 프로젝트 3-tier 에이전트 메모리 시스템. �
 ## Memory Architecture
 
 ```
-Layer 1 (System Prompt — SessionStart hook이 프로토콜 전문을 stdout으로 세션에 주입):
-  SCRATCHPAD.md    ~150 lines  active working state
-  WORKING.md       ~100 lines  current tasks
-  TASK-QUEUE.md    ~50 lines   task backlog
-  memory/ROOT.md   ~100 lines  topic index of all memory (~3K tokens)
+User Tier (Cross-Project — shared across all projects):
+  user/ROOT.md               cross-project knowledge index (~50 lines)
+  user/knowledge/*.md        reusable lessons, recipes, techniques
 
-  Long-term memory and user profile are managed by Claude Code's platform auto memory.
+Project Tier (per-project):
 
-Layer 2 (On-Demand — read when needed):
-  memory/YYYY-MM-DD.md         raw daily logs (permanent, never deleted)
-  knowledge/*.md               detailed knowledge (searchable via qmd)
-  plans/*.md                   task plans
+  Layer 1 (System Prompt — SessionStart hook이 프로토콜 전문을 stdout으로 세션에 주입):
+    SCRATCHPAD.md    ~150 lines  active working state
+    WORKING.md       ~100 lines  current tasks
+    TASK-QUEUE.md    ~50 lines   task backlog
+    memory/ROOT.md   ~100 lines  topic index of all memory (~3K tokens)
 
-Layer 3 (Search — via qmd + compaction tree):
-  memory/daily/YYYY-MM-DD.md   daily compaction nodes
-  memory/weekly/YYYY-WNN.md    weekly compaction nodes
-  memory/monthly/YYYY-MM.md    monthly compaction nodes
-  Tree traversal: ROOT → monthly → weekly → daily → raw
+    Long-term memory and user profile are managed by Claude Code's platform auto memory.
+
+  Layer 2 (On-Demand — read when needed):
+    memory/YYYY-MM-DD.md         raw daily logs (permanent, never deleted)
+    knowledge/*.md               detailed knowledge (searchable via qmd)
+    plans/*.md                   task plans
+
+  Layer 3 (Search — via qmd + compaction tree):
+    memory/daily/YYYY-MM-DD.md   daily compaction nodes
+    memory/weekly/YYYY-WNN.md    weekly compaction nodes
+    memory/monthly/YYYY-MM.md    monthly compaction nodes
+    Tree traversal: ROOT → monthly → weekly → daily → raw
 ```
 
-All files are stored under `~/.claude/memento/projects/<project-id>/`.
+Project files: `~/.claude/memento/projects/<project-id>/`
+User knowledge: `~/.claude/memento/user/`
 The project ID is determined by the SessionStart hook (git remote → org-repo, fallback → CWD path, always lowercase).
 
 ## Session Start
@@ -56,6 +63,28 @@ Log format:
 > - references: [knowledge/ files, external sources]
 
 **This is a single Write call — minimal context impact.** This is the source of truth — everything else (SCRATCHPAD, WORKING, TASK-QUEUE) is updated lazily at next session start or by the agent naturally during work.
+
+## Knowledge Promotion
+
+During end-of-task checkpoint, evaluate whether any outcome is **project-independent**:
+- Reusable debugging technique
+- Tool/library recipe
+- Environment setup pattern
+- Cross-cutting architectural insight
+
+If yes, write to `~/.claude/memento/user/knowledge/<slug>.md`:
+
+```markdown
+---
+title: <descriptive title>
+source-project: <project-id>
+created: YYYY-MM-DD
+tags: [tag1, tag2]
+---
+<content — concise, actionable, keyword-dense>
+```
+
+**Criteria:** Only promote if the knowledge would be useful in a different project. When in doubt, don't promote. Prefer updating an existing knowledge file over creating a new one if the topic overlaps.
 
 ## Proactive Session Dump
 

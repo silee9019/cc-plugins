@@ -178,7 +178,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
 | issue-box | 3.0.0 | workflow | skill + command | — | obsidian CLI |
-| memento | 1.1.1 | utility | skill+hook+command | Bun | qmd |
+| memento | 1.4.0 | utility | skill+hook+command | Bun | qmd |
 | agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
 
 ### agentic-workflow
@@ -319,29 +319,35 @@ memento/
 ├── .claude-plugin/plugin.json
 ├── commands/setup.md               ← /memento-setup: qmd 설치 확인
 ├── skills/
-│   ├── memento-core/SKILL.md       ← 세션 라이프사이클 + 체크포인트
-│   ├── memento-compaction/SKILL.md ← 5-level 컴팩션 트리
+│   ├── memento-core/SKILL.md       ← 세션 라이프사이클 + 체크포인트 + 승격 규칙
+│   ├── memento-compaction/SKILL.md ← 5-level 컴팩션 트리 + user ROOT 재생성
 │   ├── memento-flush/SKILL.md      ← 수동 메모리 플러시
-│   └── memento-search/SKILL.md     ← 트리 탐색 기반 검색
+│   ├── memento-search/SKILL.md     ← 트리 탐색 + user knowledge 검색
+│   └── memento-handoff/SKILL.md    ← 세션 인수인계
 ├── hooks/hooks.json                ← SessionStart + PreCompact + TaskCompleted
 ├── scripts/
-│   ├── session-start.sh            ← 프로젝트 ID 결정 + 디렉토리 생성 + 프로토콜 전문 stdout
-│   └── compact.mjs                 ← 기계적 컴팩션 (Bun)
-└── templates/                      ← 초기 메모리 파일 템플릿
+│   ├── session-start.sh            ← 프로젝트/user 디렉토리 생성 + 프로토콜 전문 stdout
+│   └── compact.mjs                 ← 기계적 컴팩션 + user/ROOT.md 재생성 (Bun)
+└── templates/                      ← 초기 메모리 파일 템플릿 (ROOT.md, USER-ROOT.md 등)
 ```
 
 - **원본**: [hipocampus](https://github.com/kevin-hs-sohn/hipocampus) v0.1.6 (MIT)
+- **2-tier 메모리**:
+  - **프로젝트 티어**: `~/.claude/memento/projects/<project-id>/` — 작업 연속성, 일일 로그, 컴팩션 트리
+  - **유저 티어**: `~/.claude/memento/user/` — 크로스프로젝트 교훈/레시피 (`knowledge/*.md` + `ROOT.md`)
 - **수정 시**:
-  - 스킬 경로는 `~/.claude/memento/projects/<project-id>/` 기반
   - session-start.sh의 프로젝트 ID 로직 변경 시 compact.mjs의 동일 로직도 동기화
   - hooks.json은 auto-discovery → plugin.json에 hooks 필드 선언 금지
+  - user tier 변경 시 session-start.sh 프로토콜 텍스트 + compact.mjs Step 5 + memento-core SKILL.md 승격 규칙 3곳 동기화
 - **테스트**:
-  - 새 세션 시작 → `~/.claude/memento/projects/<id>/` 디렉토리 생성 확인
-  - `/memento-setup` → qmd 설치 확인
+  - 새 세션 시작 → 프로젝트 + user 디렉토리 생성 확인
+  - `/memento-setup` → qmd 설치 + user collection 등록 확인
   - `bun run scripts/compact.mjs` → 에러 없이 완료 확인
 - **의존성**: Bun, qmd (`npm install -g qmd`)
 - **주의**:
-  - 메모리 데이터는 `~/.claude/memento/projects/` (유저 스코프, 프로젝트별 격리)
-  - 스킬/스크립트/템플릿은 플러그인 디렉토리 (프로젝트 데이터 아님)
+  - 프로젝트 데이터는 `~/.claude/memento/projects/` (프로젝트별 격리)
+  - 유저 데이터는 `~/.claude/memento/user/` (크로스프로젝트 공유)
+  - 스킬/스크립트/템플릿은 플러그인 디렉토리 (데이터 아님)
   - SessionStart hook stdout이 프로토콜 전문으로 세션 컨텍스트에 주입됨
+  - Knowledge 승격: 체크포인트 시 에이전트가 프로젝트 비종속 교훈을 user/knowledge/에 저장
 
