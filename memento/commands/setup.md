@@ -49,6 +49,6 @@ project-id는 session-start.sh의 프로젝트 ID 결정 로직과 동일:
 
 - 생성된 프로젝트 디렉토리 경로 출력
 - qmd 설치 상태 출력
-- Layer 1 파일 존재 확인 (SCRATCHPAD.md, WORKING.md, TASK-QUEUE.md, memory/ROOT.md)
+- Layer 1 파일 존재 확인 (WORKING.md, memory/ROOT.md)
 - user/ROOT.md 존재 확인
 - qmd collection 등록 상태 확인 (프로젝트 + user)

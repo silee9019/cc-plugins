@@ -15,9 +15,7 @@ User Tier (Cross-Project — shared across all projects):
 Project Tier (per-project):
 
   Layer 1 (System Prompt — SessionStart hook이 프로토콜 전문을 stdout으로 세션에 주입):
-    SCRATCHPAD.md    ~150 lines  active working state
-    WORKING.md       ~100 lines  current tasks
-    TASK-QUEUE.md    ~50 lines   task backlog
+    WORKING.md       ~100 lines  session handoff / active tasks
     memory/ROOT.md   ~100 lines  topic index of all memory (~3K tokens)
 
     Long-term memory and user profile are managed by Claude Code's platform auto memory.
@@ -62,7 +60,7 @@ Log format:
 > - outcome: [what was done, files changed]
 > - references: [knowledge/ files, external sources]
 
-**This is a single Write call — minimal context impact.** This is the source of truth — everything else (SCRATCHPAD, WORKING, TASK-QUEUE) is updated lazily at next session start or by the agent naturally during work.
+**This is a single Write call — minimal context impact.** This is the source of truth — WORKING.md is updated lazily at next session start or by the agent naturally during work.
 
 ## Knowledge Promotion
 
@@ -110,9 +108,7 @@ This protects against context compression — if the platform compresses your co
 | File | Target | When Exceeded |
 |------|--------|---------------|
 | ROOT.md | ~100 lines (~3K tokens) | Automatic recursive self-compression |
-| SCRATCHPAD | ~150 lines | Remove completed items |
-| WORKING | ~100 lines | Remove completed tasks |
-| TASK-QUEUE | ~50 lines | Archive completed items |
+| WORKING | ~100 lines | Overwrite with latest handoff |
 
 ## Rules
 

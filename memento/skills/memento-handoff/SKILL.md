@@ -70,8 +70,6 @@ user_invocable: true
 2. **일일 로그에 체크포인트 추가**: `~/.claude/memento/projects/<project-id>/memory/YYYY-MM-DD.md`에 세션 요약 append
    - memento-core End-of-Task Checkpoint 형식 사용
 
-3. **SCRATCHPAD.md 갱신** (선택): 크로스 세션 교훈이나 보류 결정이 있으면 업데이트
-
 ### Step 4: 컴팩션
 
 ```bash

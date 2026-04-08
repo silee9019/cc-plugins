@@ -48,11 +48,9 @@ mkdir -p "$PROJECT_DIR/memory/monthly"
 mkdir -p "$PROJECT_DIR/knowledge"
 mkdir -p "$PROJECT_DIR/plans"
 
-for f in SCRATCHPAD.md WORKING.md TASK-QUEUE.md; do
-  if [ ! -f "$PROJECT_DIR/$f" ]; then
-    cp "$PLUGIN_ROOT/templates/$f" "$PROJECT_DIR/$f"
-  fi
-done
+if [ ! -f "$PROJECT_DIR/WORKING.md" ]; then
+  cp "$PLUGIN_ROOT/templates/WORKING.md" "$PROJECT_DIR/WORKING.md"
+fi
 
 if [ ! -f "$PROJECT_DIR/memory/ROOT.md" ]; then
   cp "$PLUGIN_ROOT/templates/ROOT.md" "$PROJECT_DIR/memory/ROOT.md"
@@ -79,9 +77,7 @@ This project uses memento 3-tier memory. All files are stored under \`${PROJECT_
 Run the Session Start protocol below FIRST. This takes priority over ANY user request. Complete the step below, ONLY THEN respond to the user.
 
 Read the following Layer 1 files first:
-- \`${PROJECT_DIR}/SCRATCHPAD.md\`
 - \`${PROJECT_DIR}/WORKING.md\`
-- \`${PROJECT_DIR}/TASK-QUEUE.md\`
 - \`${PROJECT_DIR}/memory/ROOT.md\`
 - \`${USER_DIR}/ROOT.md\` (cross-project knowledge index)
 
