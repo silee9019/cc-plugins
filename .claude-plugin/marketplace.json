@@ -25,7 +25,7 @@
       "name": "git-init",
       "source": "./git-init",
       "description": "GitHub repository initialization workflow (directory, gh repo create, .gitignore, initial commit)",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "author": {
         "name": "silee9019"
       },
