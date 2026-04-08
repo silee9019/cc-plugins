@@ -40,7 +40,7 @@ tutor 설정이 없습니다. 먼저 /tutor:setup 을 실행해주세요.
 
 ### Step 3A: 대시보드 표시 (스크립트)
 
-Python 스크립트로 전체 노트를 스캔하여 대시보드를 생성한다.
+Python 스크립트로 전체 노트를 스캔하여 사용자에게 인라인으로 표시한다 (vault에 저장하지 않음 — gen_dashboard.py는 Step 9에서 vault 저장 시에만 사용).
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scan_notes.py" "<vault>" "<study_base_path>"

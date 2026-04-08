@@ -8,26 +8,41 @@ Reads current mastery/quiz_count/correct_count via obsidian CLI,
 computes new values, and writes them back.
 """
 
+import json
 import subprocess
 import sys
 from datetime import date
 
 
+def run_obsidian(vault: str, *args: str) -> str:
+    """Run an obsidian CLI command and return stdout."""
+    cmd = ['obsidian', f'vault={vault}'] + list(args)
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f'Error: {" ".join(cmd)} failed (rc={result.returncode}): {result.stderr.strip()}', file=sys.stderr)
+        sys.exit(1)
+    return result.stdout.strip()
+
+
 def read_property(vault: str, path: str, name: str) -> str:
     """Read a single property from a note's frontmatter."""
-    result = subprocess.run(
-        ['obsidian', f'vault={vault}', 'property:read', f'name={name}', f'path={path}'],
-        capture_output=True, text=True,
-    )
-    return result.stdout.strip()
+    return run_obsidian(vault, 'property:read', f'name={name}', f'path={path}')
 
 
 def set_property(vault: str, path: str, name: str, value: str) -> None:
     """Set a single property in a note's frontmatter."""
-    subprocess.run(
-        ['obsidian', f'vault={vault}', 'property:set', f'name={name}', f'value={value}', f'path={path}'],
-        capture_output=True, text=True,
-    )
+    run_obsidian(vault, 'property:set', f'name={name}', f'value={value}', f'path={path}')
+
+
+def safe_int(value: str, default: int = 0) -> int:
+    """Parse integer from string, returning default on empty or non-integer values."""
+    if not value:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        print(f'Warning: non-integer value "{value}", using {default}', file=sys.stderr)
+        return default
 
 
 def main():
@@ -37,17 +52,21 @@ def main():
 
     vault = sys.argv[1]
     note_path = sys.argv[2]
-    session_correct = int(sys.argv[3])
-    session_total = int(sys.argv[4])
+    try:
+        session_correct = int(sys.argv[3])
+        session_total = int(sys.argv[4])
+    except ValueError:
+        print(f'Error: session_correct and session_total must be integers, got: {sys.argv[3]!r}, {sys.argv[4]!r}', file=sys.stderr)
+        sys.exit(1)
 
     if session_total <= 0:
         print('Error: session_total must be > 0', file=sys.stderr)
         sys.exit(1)
 
     # Read current values
-    old_mastery = int(read_property(vault, note_path, 'mastery') or '0')
-    old_quiz_count = int(read_property(vault, note_path, 'quiz_count') or '0')
-    old_correct_count = int(read_property(vault, note_path, 'correct_count') or '0')
+    old_mastery = safe_int(read_property(vault, note_path, 'mastery'))
+    old_quiz_count = safe_int(read_property(vault, note_path, 'quiz_count'))
+    old_correct_count = safe_int(read_property(vault, note_path, 'correct_count'))
 
     # Compute new values
     new_quiz_count = old_quiz_count + 1
@@ -75,7 +94,6 @@ def main():
         'last_quiz_date': today,
         'session_rate': session_rate,
     }
-    import json
     json.dump(result, sys.stdout, ensure_ascii=False)
     print()
 

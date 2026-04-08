@@ -177,7 +177,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
 | memento | 1.6.0 | utility | skill+hook+command | Bun | qmd |
 | agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
-| tutor | 0.1.1 | workflow | command + skill | Python 3 | obsidian CLI |
+| tutor | 0.1.2 | workflow | command + skill | Python 3 | obsidian CLI |
 
 ### agentic-workflow
 

@@ -17,7 +17,7 @@ import sys
 def parse_quiz_blocks(text: str) -> list[dict]:
     """Extract quiz items from > [!quiz] callout blocks."""
     items = []
-    # Split into callout blocks starting with > [!quiz]
+    # Match each > [!quiz] callout block and extract question number + body
     block_pattern = re.compile(
         r'> \[!quiz\]-?\s*Q(\d+)\s*:\s*(.+?)(?=\n> \[!quiz\]|\n[^>]|\Z)',
         re.DOTALL,
@@ -33,7 +33,11 @@ def parse_quiz_blocks(text: str) -> list[dict]:
         explanation = ''
 
         for line in lines[1:]:
-            line = line.lstrip('> ').strip()
+            if line.startswith('> '):
+                line = line[2:]
+            elif line.startswith('>'):
+                line = line[1:]
+            line = line.strip()
             # Choice: - A) text
             choice_match = re.match(r'^-\s*([A-D])\)\s*(.+)', line)
             if choice_match:
@@ -82,17 +86,20 @@ def main():
             with open(args.prioritize) as f:
                 priority_texts = [line.strip() for line in f if line.strip()]
         except FileNotFoundError:
+            print(f'Warning: prioritize file not found: {args.prioritize}', file=sys.stderr)
             priority_texts = []
+        except OSError as e:
+            print(f'Error: cannot read {args.prioritize}: {e}', file=sys.stderr)
+            sys.exit(1)
 
-        if priority_texts:
-            priority = []
-            rest = []
-            for item in items:
-                if any(pt in item['question'] for pt in priority_texts):
-                    priority.append(item)
-                else:
-                    rest.append(item)
-            items = priority + rest
+        priority = []
+        rest = []
+        for item in items:
+            if any(pt in item['question'] for pt in priority_texts):
+                priority.append(item)
+            else:
+                rest.append(item)
+        items = priority + rest
 
     # Renumber after shuffle/prioritize
     for i, item in enumerate(items, 1):

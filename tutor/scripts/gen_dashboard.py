@@ -24,7 +24,11 @@ def status_emoji(mastery: int, quiz_count: int) -> str:
 
 
 def main():
-    data = json.load(sys.stdin)
+    try:
+        data = json.load(sys.stdin)
+    except json.JSONDecodeError as e:
+        print(f'Error: invalid JSON input: {e}', file=sys.stderr)
+        sys.exit(1)
 
     today = date.today().isoformat()
     total = data['total_notes']
@@ -63,10 +67,7 @@ def main():
     lines.extend(['', '## \ucd5c\uadfc \ud559\uc2b5', ''])
 
     # Collect all notes, sort by last_quiz_date descending, show top 10
-    all_notes = []
-    for cat in data['categories']:
-        for note in cat['notes']:
-            all_notes.append({**note, 'category': cat['name']})
+    all_notes = [{**note, 'category': cat['name']} for cat in data['categories'] for note in cat['notes']]
 
     all_notes.sort(key=lambda n: n.get('last_quiz_date') or '', reverse=True)
     for note in all_notes[:10]:

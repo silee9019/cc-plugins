@@ -17,7 +17,21 @@ def run_obsidian(vault: str, *args: str) -> str:
     """Run an obsidian CLI command and return stdout."""
     cmd = ['obsidian', f'vault={vault}'] + list(args)
     result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f'Error: {" ".join(cmd)} failed (rc={result.returncode}): {result.stderr.strip()}', file=sys.stderr)
+        sys.exit(1)
     return result.stdout.strip()
+
+
+def safe_int(value: str, default: int = 0) -> int:
+    """Parse integer from string, returning default on empty or non-integer values."""
+    if not value:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        print(f'Warning: non-integer value "{value}", using {default}', file=sys.stderr)
+        return default
 
 
 def read_property(vault: str, path: str, name: str) -> str:
@@ -68,8 +82,8 @@ def main():
 
         notes = []
         for file_path in files:
-            mastery = int(read_property(vault, file_path, 'mastery') or '0')
-            quiz_count = int(read_property(vault, file_path, 'quiz_count') or '0')
+            mastery = safe_int(read_property(vault, file_path, 'mastery'))
+            quiz_count = safe_int(read_property(vault, file_path, 'quiz_count'))
             last_quiz_date = read_property(vault, file_path, 'last_quiz_date') or ''
 
             # Extract note name from path (remove folder prefix and .md)
