@@ -30,6 +30,12 @@ def main():
         print(f'Error: invalid JSON input: {e}', file=sys.stderr)
         sys.exit(1)
 
+    required_keys = ['total_notes', 'quizzed_notes', 'avg_mastery', 'categories']
+    missing = [k for k in required_keys if k not in data]
+    if missing:
+        print(f'Error: scan data missing expected keys: {missing}', file=sys.stderr)
+        sys.exit(1)
+
     today = date.today().isoformat()
     total = data['total_notes']
     quizzed = data['quizzed_notes']

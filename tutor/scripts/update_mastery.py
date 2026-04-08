@@ -9,40 +9,10 @@ computes new values, and writes them back.
 """
 
 import json
-import subprocess
 import sys
 from datetime import date
 
-
-def run_obsidian(vault: str, *args: str) -> str:
-    """Run an obsidian CLI command and return stdout."""
-    cmd = ['obsidian', f'vault={vault}'] + list(args)
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        print(f'Error: {" ".join(cmd)} failed (rc={result.returncode}): {result.stderr.strip()}', file=sys.stderr)
-        sys.exit(1)
-    return result.stdout.strip()
-
-
-def read_property(vault: str, path: str, name: str) -> str:
-    """Read a single property from a note's frontmatter."""
-    return run_obsidian(vault, 'property:read', f'name={name}', f'path={path}')
-
-
-def set_property(vault: str, path: str, name: str, value: str) -> None:
-    """Set a single property in a note's frontmatter."""
-    run_obsidian(vault, 'property:set', f'name={name}', f'value={value}', f'path={path}')
-
-
-def safe_int(value: str, default: int = 0) -> int:
-    """Parse integer from string, returning default on empty or non-integer values."""
-    if not value:
-        return default
-    try:
-        return int(value)
-    except ValueError:
-        print(f'Warning: non-integer value "{value}", using {default}', file=sys.stderr)
-        return default
+from obsidian_helpers import read_property, run_obsidian_soft, safe_int
 
 
 def main():
@@ -63,6 +33,10 @@ def main():
         print('Error: session_total must be > 0', file=sys.stderr)
         sys.exit(1)
 
+    if session_correct < 0 or session_correct > session_total:
+        print(f'Error: session_correct must be 0..{session_total}, got: {session_correct}', file=sys.stderr)
+        sys.exit(1)
+
     # Read current values
     old_mastery = safe_int(read_property(vault, note_path, 'mastery'))
     old_quiz_count = safe_int(read_property(vault, note_path, 'quiz_count'))
@@ -80,11 +54,20 @@ def main():
 
     today = date.today().isoformat()
 
-    # Write back
-    set_property(vault, note_path, 'mastery', str(new_mastery))
-    set_property(vault, note_path, 'quiz_count', str(new_quiz_count))
-    set_property(vault, note_path, 'correct_count', str(new_correct_count))
-    set_property(vault, note_path, 'last_quiz_date', today)
+    # Write back with partial-write tracking
+    properties = [
+        ('mastery', str(new_mastery)),
+        ('quiz_count', str(new_quiz_count)),
+        ('correct_count', str(new_correct_count)),
+        ('last_quiz_date', today),
+    ]
+    written = []
+    for name, value in properties:
+        result = run_obsidian_soft(vault, 'property:set', f'name={name}', f'value={value}', f'path={note_path}')
+        if result is None:
+            print(f'Error: failed to write {name}. Successfully written: {written}', file=sys.stderr)
+            sys.exit(1)
+        written.append(name)
 
     # Output summary
     result = {

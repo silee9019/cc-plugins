@@ -65,6 +65,9 @@ def parse_quiz_blocks(text: str) -> list[dict]:
                 'answer': answer,
                 'explanation': explanation,
             })
+        else:
+            missing = 'question' if not question else 'answer'
+            print(f'Warning: skipping Q{num}: missing {missing}', file=sys.stderr)
 
     return items
 
@@ -76,6 +79,9 @@ def main():
     args = parser.parse_args()
 
     text = sys.stdin.read()
+    if not text.strip():
+        print('Error: empty input (stdin)', file=sys.stderr)
+        sys.exit(1)
     items = parse_quiz_blocks(text)
 
     if args.shuffle:
@@ -86,20 +92,21 @@ def main():
             with open(args.prioritize) as f:
                 priority_texts = [line.strip() for line in f if line.strip()]
         except FileNotFoundError:
-            print(f'Warning: prioritize file not found: {args.prioritize}', file=sys.stderr)
-            priority_texts = []
+            print(f'Error: prioritize file not found: {args.prioritize}', file=sys.stderr)
+            sys.exit(1)
         except OSError as e:
             print(f'Error: cannot read {args.prioritize}: {e}', file=sys.stderr)
             sys.exit(1)
 
-        priority = []
-        rest = []
-        for item in items:
-            if any(pt in item['question'] for pt in priority_texts):
-                priority.append(item)
-            else:
-                rest.append(item)
-        items = priority + rest
+        if priority_texts:
+            priority = []
+            rest = []
+            for item in items:
+                if any(pt in item['question'] for pt in priority_texts):
+                    priority.append(item)
+                else:
+                    rest.append(item)
+            items = priority + rest
 
     # Renumber after shuffle/prioritize
     for i, item in enumerate(items, 1):

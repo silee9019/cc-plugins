@@ -9,34 +9,9 @@ Automatically excludes _ prefixed folders/files (meta files like _dashboard, _qu
 """
 
 import json
-import subprocess
 import sys
 
-
-def run_obsidian(vault: str, *args: str) -> str:
-    """Run an obsidian CLI command and return stdout."""
-    cmd = ['obsidian', f'vault={vault}'] + list(args)
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        print(f'Error: {" ".join(cmd)} failed (rc={result.returncode}): {result.stderr.strip()}', file=sys.stderr)
-        sys.exit(1)
-    return result.stdout.strip()
-
-
-def safe_int(value: str, default: int = 0) -> int:
-    """Parse integer from string, returning default on empty or non-integer values."""
-    if not value:
-        return default
-    try:
-        return int(value)
-    except ValueError:
-        print(f'Warning: non-integer value "{value}", using {default}', file=sys.stderr)
-        return default
-
-
-def read_property(vault: str, path: str, name: str) -> str:
-    """Read a single property from a note's frontmatter."""
-    return run_obsidian(vault, 'property:read', f'name={name}', f'path={path}')
+from obsidian_helpers import read_property_soft, run_obsidian, safe_int
 
 
 def main():
@@ -66,6 +41,9 @@ def main():
             continue
         categories.append(relative)
 
+    if not categories:
+        print(f"Warning: no study categories found under '{study_base_path}'. Check vault name and path.", file=sys.stderr)
+
     # Scan each category
     result_categories = []
     total_notes = 0
@@ -82,9 +60,13 @@ def main():
 
         notes = []
         for file_path in files:
-            mastery = safe_int(read_property(vault, file_path, 'mastery'))
-            quiz_count = safe_int(read_property(vault, file_path, 'quiz_count'))
-            last_quiz_date = read_property(vault, file_path, 'last_quiz_date') or ''
+            mastery_raw = read_property_soft(vault, file_path, 'mastery')
+            if mastery_raw is None:
+                print(f'Warning: skipping {file_path}: cannot read properties', file=sys.stderr)
+                continue
+            mastery = safe_int(mastery_raw)
+            quiz_count = safe_int(read_property_soft(vault, file_path, 'quiz_count') or '')
+            last_quiz_date = read_property_soft(vault, file_path, 'last_quiz_date') or ''
 
             # Extract note name from path (remove folder prefix and .md)
             name = file_path.split('/')[-1]
