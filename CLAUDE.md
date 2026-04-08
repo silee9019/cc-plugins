@@ -172,7 +172,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | 플러그인 | 버전 | 카테고리 | 컴포넌트 | 런타임 | 외부 의존성 |
 |----------|------|----------|----------|--------|-------------|
 | git-init | 1.4.0 | workflow | command | — | gh, curl |
-| silee-planner | 1.2.0 | workflow | command | — | obsidian CLI, git |
+| silee-planner | 1.3.0 | workflow | command | — | obsidian CLI, git |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
@@ -219,8 +219,8 @@ git-init/
   - `/silee-planner:daily-plan` → Daily Note 생성 확인
   - `/silee-planner:capture-task 할일내용` → 빠른 캡처 확인
   - `/silee-planner:capture-task` → 세션 스캔 확인
-  - `/silee-planner:task-done` → 작업 완료 + 리마인드 확인
-  - `/silee-planner:task-done 키워드` → fuzzy match 빠른 완료 확인
+  - `/silee-planner:task-done` → 작업 완료 + 리마인드 + 다음 작업 전환 확인
+  - `/silee-planner:task-done 키워드` → fuzzy match 빠른 완료 + 다음 작업 전환 확인
   - `/silee-planner:pick-task` → 백로그 조회/선택 확인
   - `/silee-planner:daily-wrap-up` → 마감 정리 확인
   - `/silee-planner:weekly-report 이번 주` → 보고서 생성 확인
