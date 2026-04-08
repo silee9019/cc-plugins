@@ -35,7 +35,25 @@ if REMOTE_URL=$(git remote get-url origin 2>/dev/null); then
 fi
 
 if [ -z "$PROJECT_ID" ]; then
-  PROJECT_ID=$(to_lower "$(pwd | tr '/' '-')")
+  GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
+  if [ -n "$GIT_ROOT" ]; then
+    PROJECT_ID=$(to_lower "$(printf '%s' "$GIT_ROOT" | tr '/' '-')")
+  else
+    VAULT_ROOT=""
+    _dir=$(pwd)
+    while [ "$_dir" != "/" ]; do
+      if [ -d "$_dir/.obsidian" ]; then
+        VAULT_ROOT="$_dir"
+        break
+      fi
+      _dir=$(dirname "$_dir")
+    done
+    if [ -n "$VAULT_ROOT" ]; then
+      PROJECT_ID=$(to_lower "$(printf '%s' "$VAULT_ROOT" | tr '/' '-')")
+    else
+      PROJECT_ID=$(to_lower "$(pwd | tr '/' '-')")
+    fi
+  fi
 fi
 
 PROJECT_DIR="$MEMENTO_HOME/projects/$PROJECT_ID"

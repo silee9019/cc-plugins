@@ -8,12 +8,12 @@
  * Project ID resolution: same logic as init.sh (git remote + CWD fallback, lowercase).
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, rmSync } from "node:fs";
+import { join, dirname } from "node:path";
 import { execSync } from "node:child_process";
 import { homedir } from "node:os";
 
-// ─── Project ID resolution (mirrors init.sh) ───
+// ─── Project ID resolution (mirrors session-start.sh) ───
 
 function resolveProjectId() {
   try {
@@ -21,6 +21,19 @@ function resolveProjectId() {
     const match = remoteUrl.match(/[:/]([^/]+)\/([^/]+?)(?:\.git)?$/);
     if (match) return `${match[1]}-${match[2]}`.toLowerCase();
   } catch { /* no git remote */ }
+
+  try {
+    const gitRoot = execSync("git rev-parse --show-toplevel", { stdio: ["pipe", "pipe", "pipe"] }).toString().trim();
+    return gitRoot.replace(/\//g, "-").toLowerCase();
+  } catch { /* no git */ }
+
+  let dir = process.cwd();
+  while (dir !== "/") {
+    if (existsSync(join(dir, ".obsidian"))) {
+      return dir.replace(/\//g, "-").toLowerCase();
+    }
+    dir = dirname(dir);
+  }
 
   return process.cwd().replace(/\//g, "-").toLowerCase();
 }
@@ -336,6 +349,33 @@ if (dailyUpdated) actions.push("daily nodes updated");
 if (weeklyUpdated) actions.push("weekly nodes updated");
 if (monthlyUpdated) actions.push("monthly nodes updated");
 if (userUpdated) actions.push("user knowledge index updated");
+
+// ─── Step 8: Prune empty projects ───
+
+const projectsDir = join(homedir(), ".claude", "memento", "projects");
+let pruned = 0;
+if (existsSync(projectsDir)) {
+  for (const name of readdirSync(projectsDir)) {
+    if (name === PROJECT_ID) continue;
+    const dir = join(projectsDir, name);
+    const memDir = join(dir, "memory");
+    const rawLogs = existsSync(memDir)
+      ? readdirSync(memDir).filter(f => DATE_RE.test(f))
+      : [];
+    const workingLines = countLines(join(dir, "WORKING.md"));
+    const knowledgeFiles = existsSync(join(dir, "knowledge"))
+      ? readdirSync(join(dir, "knowledge")).filter(f => f.endsWith(".md"))
+      : [];
+    if (rawLogs.length === 0 && workingLines <= 10 && knowledgeFiles.length === 0) {
+      rmSync(dir, { recursive: true, force: true });
+      pruned++;
+    }
+  }
+}
+
+// ─── Summary ───
+
+if (pruned > 0) actions.push(`${pruned} empty projects pruned`);
 
 if (actions.length > 0) {
   console.log(`  memento compact: ${actions.join(", ")}`);
