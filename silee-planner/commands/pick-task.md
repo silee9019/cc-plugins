@@ -39,26 +39,10 @@ blocked ─┘ (조건 충족 시 open 또는 바로 in-progress)
 
 | 케이스 | 처리 |
 |--------|------|
-| 파일 존재 | YAML frontmatter에서 `vault`, `inbox_folder_path`, `in_progress_folder_path`, `resolved_folder_path`, `dismissed_folder_path` 값을 로드 → Step 3으로 건너뜀 |
-| 파일 없음 | Step 2로 진행 (obsidian CLI로 탐색) |
+| 파일 존재 | YAML frontmatter에서 `vault`, `inbox_folder_path`, `in_progress_folder_path`, `resolved_folder_path`, `dismissed_folder_path` 값을 로드 |
+| 파일 없음 | "설정이 없습니다. `/silee-planner:setup`을 먼저 실행해주세요." 안내 후 중단 |
 
-### Step 2: Obsidian CLI 확인 및 Vault 파악
-
-> CLI 명령 상세는 `../reference/obsidian-cli-reference.md` 참조.
-
-`obsidian --help` 실행으로 CLI 설치 여부 확인.
-
-- **미설치**: 설치 안내 출력 후 중단
-
-`obsidian vaults verbose` 실행하여 vault 목록과 경로를 파악.
-
-| 케이스 | 처리 |
-|--------|------|
-| 0개 | "Obsidian vault가 없습니다." 안내 후 중단 |
-| 1개 | 자동 선택, 선택된 vault 이름 출력 |
-| 2개+ | AskUserQuestion으로 vault 이름 + 경로 목록을 제시하고 선택 요청 |
-
-### Step 3: 이슈 검색
+### Step 2: 이슈 검색
 
 **open 이슈 수집** (`inbox_folder_path` 하위):
 
@@ -78,7 +62,7 @@ in-progress 이슈는 open 이슈 목록 위에 별도 섹션으로 표시한다
 
 **결과가 0건인 경우**: "해당 조건의 이슈가 없습니다." 안내 후 종료.
 
-### Step 4: 이슈 목록 출력
+### Step 3: 이슈 목록 출력
 
 수집된 이슈를 번호 매긴 테이블로 출력한다.
 
@@ -109,18 +93,18 @@ in-progress 이슈는 open 이슈 목록 위에 별도 섹션으로 표시한다
 정렬: 우선순위 순(high > medium > low), 동일 우선순위 내에서 생성일 역순(최신 우선).
 상한: 상위 20건까지 출력. 20건 초과 시 "추가 N건이 있습니다. category 또는 priority 필터를 사용하세요." 안내.
 
-### Step 5: 사용자 행동 선택
+### Step 4: 사용자 행동 선택
 
 AskUserQuestion으로 행동을 묻는다:
 
-- **이슈 선택 (작업 시작)**: 번호 입력 (예: "1", "3번") → Step 6으로 진행
-- **상세 보기**: "상세 1", "자세히 2" → 해당 이슈 전문 출력 후 Step 5로 복귀
-- **blocked 해제**: "해제 1", "unblock 2" → status를 open으로 변경, blocked_reason 제거 후 Step 5로 복귀
-- **완료 처리**: "완료 1", "해결 2" → Step 7로 진행 (resolved)
-- **폐기 처리**: "폐기 1", "dismiss 2" → Step 7로 진행 (dismissed)
+- **이슈 선택 (작업 시작)**: 번호 입력 (예: "1", "3번") → Step 5으로 진행
+- **상세 보기**: "상세 1", "자세히 2" → 해당 이슈 전문 출력 후 Step 4로 복귀
+- **blocked 해제**: "해제 1", "unblock 2" → status를 open으로 변경, blocked_reason 제거 후 Step 4로 복귀
+- **완료 처리**: "완료 1", "해결 2" → Step 6으로 진행 (resolved)
+- **폐기 처리**: "폐기 1", "dismiss 2" → Step 6으로 진행 (dismissed)
 - **종료**: "done", "완료", "그만" → 즉시 종료
 
-### Step 6: 이슈 선택 및 작업 시작
+### Step 5: 이슈 선택 및 작업 시작
 
 1. 선택된 이슈 파일의 전체 내용을 읽는다:
 
@@ -172,7 +156,7 @@ obsidian vault="<vault>" move path="<file_path>" to="<in_progress_folder_path>/{
    - **일치**: "현재 프로젝트에서 바로 작업 가능합니다."
    - **불일치**: "이 이슈는 {source_project} 프로젝트의 이슈입니다. 해당 디렉토리로 이동이 필요할 수 있습니다."
 
-### Step 7: 완료 처리
+### Step 6: 완료 처리
 
 선택된 이슈의 상태를 변경한다.
 
@@ -194,7 +178,7 @@ obsidian vault="<vault>" move path="<file_path>" to="<대상_folder_path>/{YYYY-
 
 대상 폴더 설정이 없으면 이동하지 않고 status만 변경한다.
 
-변경 완료 후 변경된 파일명과 새 상태를 출력하고, Step 5로 돌아간다.
+변경 완료 후 변경된 파일명과 새 상태를 출력하고, Step 4로 돌아간다.
 
 ## Do / Don't
 

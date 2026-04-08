@@ -172,7 +172,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | 플러그인 | 버전 | 카테고리 | 컴포넌트 | 런타임 | 외부 의존성 |
 |----------|------|----------|----------|--------|-------------|
 | git-init | 1.4.0 | workflow | command | — | gh, curl |
-| silee-planner | 1.0.0 | workflow | command | — | obsidian CLI, git |
+| silee-planner | 1.2.0 | workflow | command | — | obsidian CLI, git |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
@@ -213,27 +213,14 @@ git-init/
 
 ### silee-planner
 
-```
-silee-planner/
-├── .claude-plugin/plugin.json
-├── commands/
-│   ├── setup.md              ← 설정 (vault, 폴더, 이메일)
-│   ├── daily-plan.md         ← 아침 계획 수립
-│   ├── capture-task.md       ← 할 일 캡처 (빠른 입력 + 세션 스캔)
-│   ├── daily-wrap-up.md      ← 하루 마감 정리
-│   ├── pick-task.md          ← 백로그 선택/완료
-│   └── weekly-report.md      ← 주간 보고서 생성
-└── reference/
-    ├── report-format.md      ← 이슈 보고서 포맷
-    └── obsidian-cli-reference.md ← CLI 사용법
-```
-
-- **수정 시**: 커맨드 간 교차 참조 (`daily-plan`, `daily-wrap-up` 등) 동기화 확인
+- **수정 시**: 커맨드 간 교차 참조 (`daily-plan`, `daily-wrap-up`, `task-done` 등) 동기화 확인. Step 순서 변경 시 번호 정합성 확인
 - **테스트**: 각 커맨드를 Obsidian vault 환경에서 실행 확인
   - `/silee-planner:setup` → 설정 생성 확인
   - `/silee-planner:daily-plan` → Daily Note 생성 확인
   - `/silee-planner:capture-task 할일내용` → 빠른 캡처 확인
   - `/silee-planner:capture-task` → 세션 스캔 확인
+  - `/silee-planner:task-done` → 작업 완료 + 리마인드 확인
+  - `/silee-planner:task-done 키워드` → fuzzy match 빠른 완료 확인
   - `/silee-planner:pick-task` → 백로그 조회/선택 확인
   - `/silee-planner:daily-wrap-up` → 마감 정리 확인
   - `/silee-planner:weekly-report 이번 주` → 보고서 생성 확인
