@@ -1,7 +1,7 @@
 {
   "name": "silee-planner",
   "description": "일일 업무 계획, 할 일 캡처, 하루 마감 정리, 백로그 보관/선택, 주간 보고서를 통합한 개인 플래너. Obsidian Daily Notes와 Issue Box를 연동.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": { "name": "silee9019" },
   "keywords": ["planner", "daily", "weekly", "obsidian", "issue", "report", "pick", "capture"],
   "commands": ["./commands"]

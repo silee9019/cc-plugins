@@ -86,14 +86,26 @@ AskUserQuestion으로 Weekly Notes 경로를 묻는다.
 
 | 설정 | 설명 | 기본값 |
 |------|------|--------|
-| `weekly_notes_path` | Weekly Notes 폴더 경로 패턴 | `01 Weekly Notes/{YYYY}` |
+| `weekly_notes_path` | Weekly Notes 폴더 경로 패턴 | `02 Weekly Notes/{YYYY}` |
 | `weekly_note_format` | Weekly Note 파일명 형식 | `{YYYY} Week-{WW}` |
 
 - 사용 가능 변수: `{YYYY}`, `{MM}`, `{WW}`
 - `{WW}`: ISO 8601 주 번호 (zero-padded). 계산: `date -j -f "%Y-%m-%d" "$date" "+%V"`
-- ��시: `01 Weekly Notes/2026/2026 Week-15.md`
+- 예시: `02 Weekly Notes/2026/2026 Week-15.md`
 
-### Step 7: 작성자 이메일 설정
+### Step 7: Monthly Notes 경로 설정
+
+AskUserQuestion으로 Monthly Notes 경로를 묻는다.
+
+| 설정 | 설명 | 기본값 |
+|------|------|--------|
+| `monthly_notes_path` | Monthly Notes 폴더 경로 패턴 | `03 Monthly Notes/{YYYY}` |
+| `monthly_note_format` | Monthly Note 파일명 형식 | `{YYYY}-{MM}` |
+
+- 사용 가능 변수: `{YYYY}`, `{MM}`
+- 예시: `03 Monthly Notes/2026/2026-04.md`
+
+### Step 8: 작성자 이메일 설정
 
 AskUserQuestion으로 주간 보고서용 Git author 이메일을 묻는다.
 
@@ -106,7 +118,7 @@ AskUserQuestion으로 주간 보고서용 Git author 이메일을 묻는다.
 |------|------|--------|
 | `author_email` | 주간 보고서 Git author 이메일 | 위 후보 중 첫 번째 |
 
-### Step 8: file_title_format 설정
+### Step 9: file_title_format 설정
 
 AskUserQuestion으로 파일 제목 형식을 묻는다.
 
@@ -114,7 +126,7 @@ AskUserQuestion으로 파일 제목 형식을 묻는다.
 - 사용 가능 변수: `{category}`, `{title}`, `{date}`
 - 예시: `2026-04-08 bug 로그인 에러 메시지 누락.md`
 
-### Step 9: 설정 파일 생성
+### Step 10: 설정 파일 생성
 
 `~/.claude/plugins/data/silee-planner-cc-plugins/config.md` 경로에 설정 파일을 생성한다.
 디렉토리가 없으면 먼저 생성.
@@ -128,6 +140,8 @@ daily_notes_path: "<Daily Notes 폴더 경로 패턴>"
 daily_note_format: "<Daily Note 파일명 형식>"
 weekly_notes_path: "<Weekly Notes 폴더 경로 패턴>"
 weekly_note_format: "<Weekly Note 파일명 형식>"
+monthly_notes_path: "<Monthly Notes 폴더 경로 패턴>"
+monthly_note_format: "<Monthly Note 파일명 형식>"
 author_email: "<Git author 이메일>"
 inbox_folder_path: "<inbox 폴더 경로>"
 in_progress_folder_path: "<진행중 폴더 경로>"
@@ -137,7 +151,7 @@ file_title_format: "<파일 제목 형식>"
 ---
 ```
 
-### Step 10: 설정 요약 출력
+### Step 11: 설정 요약 출력
 
 설정 완료 후 아래 형식으로 요약 출력:
 
@@ -148,6 +162,8 @@ silee-planner 설정 완료:
   daily_note_format:        <Daily Note 파일명 형식>
   weekly_notes_path:        <Weekly Notes 경로 패턴>
   weekly_note_format:       <Weekly Note 파일명 형식>
+  monthly_notes_path:       <Monthly Notes 경로 패턴>
+  monthly_note_format:      <Monthly Note 파일명 형식>
   author_email:             <Git author 이메일>
   inbox_folder_path:        <inbox 폴더 경로>
   in_progress_folder_path:  <진행중 폴더 경로>
