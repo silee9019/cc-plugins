@@ -7,7 +7,7 @@ argument-hint: [완료한 작업 키워드]
 # 작업 완료 (task-done)
 
 오늘 Daily Note에서 완료한 작업을 체크하고, Issue Box 연동 처리 후, 남은 작업을 리마인드한다.
-하루 마감 정리는 `/silee-planner:daily-wrap-up`을 사용한다.
+하루 마감 정리는 `/silee-planner:today-review`를 사용한다.
 
 ## 워크플로우
 
@@ -223,7 +223,7 @@ obsidian vault="<vault>" move path="<file_path>" to="<in_progress_folder_path>/{
 | in_progress_folder_path 미설정 시 Step 6 스킵 | 설정 없는데 이슈 탐색 시도 |
 | task-done은 resolved만 처리 (dismissed는 `/silee-planner:pick-task`에서) | task-done에서 폐기 처리 시도 |
 | obsidian CLI 명령 실패 시 에러 내용 출력 후 대안 제시 | CLI 에러를 무시하고 진행 |
-| 하루 마감 정리는 `/silee-planner:daily-wrap-up` 사용 | task-done으로 하루 전체 마감 처리 |
+| 하루 마감 정리는 `/silee-planner:today-review` 사용 | task-done으로 하루 전체 마감 처리 |
 | Edit 실패 시 파일을 다시 읽고 재시도 | Write로 전체 파일을 덮어쓰기 |
 | 남은 항목 0건이면 Step 8 스킵 | 완료 메시지 후에도 강제로 다음 작업 질문 |
 | 인터뷰 응답 "없음"/"패스" 시 해당 필드 생략 | 모든 필드를 반드시 입력하도록 강제 |
