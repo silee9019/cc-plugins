@@ -8,11 +8,10 @@ Claude Code 플러그인 모노레포.
 cc-plugins/
 ├── .claude-plugin/marketplace.json   ← 중앙 카탈로그 (모든 플러그인 등록)
 ├── git-init/                         ← command: GitHub 저장소 초기화
-├── weekly-report/                    ← skill: Git 커밋 기반 업무 보고서
+├── silee-planner/                    ← command: 일일 계획 + 백로그 + 주간 보고서 통합 플래너
 ├── andrej-karpathy-skills/           ← skill: LLM 코딩 실수 방지 가이드라인
 ├── cached/                           ← hook: 크로스 프로젝트 skill/command 캐시
 ├── claude-statusline/                ← hook: 2줄 HUD statusline
-├── issue-box/                        ← skill+command: 세션 이슈 추출 → Obsidian 보관
 ├── memento/                          ← skill+hook+command: 3-tier 에이전트 메모리 시스템
 ├── agentic-workflow/                 ← skill+command: 에이전틱 워크플로우 scaffold
 └── backup/                           ← 기존 statusline 백업
@@ -172,12 +171,11 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 
 | 플러그인 | 버전 | 카테고리 | 컴포넌트 | 런타임 | 외부 의존성 |
 |----------|------|----------|----------|--------|-------------|
-| git-init | 1.3.0 | workflow | command | — | gh, curl |
-| weekly-report | 1.2.0 | workflow | skill | — | git, Obsidian vault, obsidian CLI (선택) |
+| git-init | 1.4.0 | workflow | command | — | gh, curl |
+| silee-planner | 1.0.0 | workflow | command | — | obsidian CLI, git |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | cached | 1.0.0 | utility | hook | Python 3 | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
-| issue-box | 3.0.0 | workflow | skill + command | — | obsidian CLI |
 | memento | 1.6.0 | utility | skill+hook+command | Bun | qmd |
 | agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
 
@@ -213,18 +211,39 @@ git-init/
 - **테스트**: `/git-init test-repo` 실행 후 GitHub에서 생성 확인, `gh repo delete`로 정리
 - **의존성**: `gh` CLI (인증 필요), `curl` (gitignore.io)
 
-### weekly-report
+### silee-planner
 
 ```
-weekly-report/
+silee-planner/
 ├── .claude-plugin/plugin.json
-└── skills/weekly-report/SKILL.md   ← 트리거 키워드 + 6단계 워크플로우
+├── commands/
+│   ├── setup.md              ← 설정 (vault, 폴더, 이메일)
+│   ├── daily-plan.md         ← 아침 계획 수립
+│   ├── capture-task.md       ← 할 일 캡처 (빠른 입력 + 세션 스캔)
+│   ├── daily-wrap-up.md      ← 하루 마감 정리
+│   ├── pick-task.md          ← 백로그 선택/완료
+│   └── weekly-report.md      ← 주간 보고서 생성
+└── reference/
+    ├── report-format.md      ← 이슈 보고서 포맷
+    └── obsidian-cli-reference.md ← CLI 사용법
 ```
 
-- **수정 시**: 트리거 키워드 변경 시 description의 키워드 목록도 동기화
-- **테스트**: "이번 주 주간 보고서 작성해줘" 프롬프트로 트리거 확인
-- **의존성**: git (커밋 이력), Obsidian vault (출력 경로)
-- **주의**: Obsidian vault 경로를 `find`로 자동 탐색 — vault가 없으면 현재 디렉토리에 저장
+- **수정 시**: 커맨드 간 교차 참조 (`daily-plan`, `daily-wrap-up` 등) 동기화 확인
+- **테스트**: 각 커맨드를 Obsidian vault 환경에서 실행 확인
+  - `/silee-planner:setup` → 설정 생성 확인
+  - `/silee-planner:daily-plan` → Daily Note 생성 확인
+  - `/silee-planner:capture-task 할일내용` → 빠른 캡처 확인
+  - `/silee-planner:capture-task` → 세션 스캔 확인
+  - `/silee-planner:pick-task` → 백로그 조회/선택 확인
+  - `/silee-planner:daily-wrap-up` → 마감 정리 확인
+  - `/silee-planner:weekly-report 이번 주` → 보고서 생성 확인
+- **의존성**: `obsidian` CLI (`brew install obsidian-cli`), `git`
+- **설정**: `~/.claude/plugins/data/silee-planner-cc-plugins/config.md`
+- **상태 라이프사이클**: `open | blocked → in-progress → resolved | dismissed` (각 상태별 폴더 이동)
+- **주의**:
+  - issue-box config(구 버전) 마이그레이션은 setup에서 자동 처리
+  - `capture-task`: 인자 있으면 빠른 캡처, 없으면 세션 대화에서 이슈 추출
+  - weekly-report 작성자 이메일은 config.md `author_email`에 캐시
 
 ### andrej-karpathy-skills
 
@@ -284,33 +303,6 @@ claude-statusline/
 - **의존성**: jq (JSON 파싱), Bun + ccusage (비용 데이터, refresh-cost.ts에서만 사용)
 - **주의**:
   - ccusage는 `refresh-cost.ts` detached 프로세스로만 실행 (캐시 TTL 5분)
-
-### issue-box
-
-```
-issue-box/
-├── .claude-plugin/plugin.json          ← v3.0.0
-├── commands/
-│   └── setup.md                        ← vault/4개 폴더/파일명 설정 + 마이그레이션
-└── skills/
-    ├── reference/
-    │   └── obsidian-cli-reference.md   ← CLI 사용법 (공유 리소스)
-    ├── defer-issue/                    ← 이슈 추출 → Obsidian 보관
-    │   ├── SKILL.md                    ← 설정 로드, 경로 변경, reference 참조
-    │   └── report-format.md            ← 보고서 포맷
-    └── pick-issue/                     ← 이슈 선택 → 작업 시작 → 완료 처리
-        └── SKILL.md                    ← 목록, 선택, 상태 전환, 폴더 이동
-```
-
-- **수정 시**: 트리거 키워드 변경 시 description의 키워드 목록도 동기화
-- **테스트**: `/issue-box:defer-issue`로 추출 확인, `/issue-box:pick-issue`로 선택·완료 확인, `/issue-box:setup`으로 설정 확인
-- **의존성**: `obsidian` CLI (`brew install obsidian-cli`)
-- **설정**: `~/.claude/plugins/data/issue-box-cc-plugins/config.md` (vault, inbox_folder_path, in_progress_folder_path, resolved_folder_path, dismissed_folder_path, file_title_format)
-- **상태 라이프사이클**: `open → in-progress → resolved | dismissed` (각 상태별 폴더 이동)
-- **주의**:
-  - config.md 존재 시 vault/폴더 CLI 탐색 단계 스킵. 일자별 하위 폴더 `{YYYY-MM-DD}` 자동 생성
-  - v2.x config(`folder_path`)는 `inbox_folder_path`로 읽기 호환. `/issue-box:setup` 재실행으로 마이그레이션
-  - `obsidian-cli-reference.md`는 `skills/reference/`에 위치 (defer-issue, pick-issue 공유)
 
 ### memento
 

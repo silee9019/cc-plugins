@@ -44,17 +44,6 @@
       "category": "workflow"
     },
     {
-      "name": "weekly-report",
-      "source": "./weekly-report",
-      "description": "Git 커밋 기반 주간/기간별 업무 보고서 자동 생성. 다수 레포의 커밋을 수집하여 날짜별/티켓별 정리 및 다각도 리뷰 포함.",
-      "version": "1.2.0",
-      "author": {
-        "name": "silee9019"
-      },
-      "keywords": ["report", "weekly", "git", "commits", "review"],
-      "category": "workflow"
-    },
-    {
       "name": "claude-statusline",
       "source": "./claude-statusline",
       "description": "2줄 HUD statusline: 환경 모니터링 + 비용 표시",
@@ -66,14 +55,14 @@
       "category": "utility"
     },
     {
-      "name": "issue-box",
-      "source": "./issue-box",
-      "description": "세션 대화에서 이슈를 분석·추출하여 Obsidian vault에 보고서로 저장. 이슈를 보관(defer)하고 선택·착수(pick)하는 트리아지 도구.",
-      "version": "3.0.0",
+      "name": "silee-planner",
+      "source": "./silee-planner",
+      "description": "일일 업무 계획, 할 일 캡처, 하루 마감 정리, 백로그 보관/선택, 주간 보고서를 통합한 개인 플래너. Obsidian Daily Notes와 Issue Box를 연동.",
+      "version": "1.0.0",
       "author": {
         "name": "silee9019"
       },
-      "keywords": ["issue", "obsidian", "defer", "triage", "pick"],
+      "keywords": ["planner", "daily", "weekly", "obsidian", "issue", "report", "pick", "capture"],
       "category": "workflow"
     },
     {
