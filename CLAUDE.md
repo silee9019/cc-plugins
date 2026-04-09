@@ -175,7 +175,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | silee-planner | 1.4.1 | workflow | command | — | obsidian CLI, git |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
-| memento | 1.6.0 | utility | skill+hook+command | Bun | qmd |
+| memento | 1.6.1 | utility | skill+hook+command | Bun | qmd |
 | agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
 | tutor | 0.1.3 | workflow | command + skill | Python 3 | obsidian CLI |
 

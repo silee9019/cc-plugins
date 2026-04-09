@@ -45,7 +45,7 @@ SessionStart hook (`session-start.sh`)이 매 세션 시작 시 자동으로:
 
 주입된 프로토콜에 의해 LLM은:
 - Layer 1 파일 4개를 읽고
-- 컴팩션 쿨다운을 체크하여 필요 시 서브에이전트 디스패치
+- compact.mjs가 쿨다운을 자체 관리 (3시간). needs-summarization 노드 존재 시 서브에이전트 디스패치
 
 ## End-of-Task Checkpoint (MANDATORY)
 

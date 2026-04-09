@@ -44,6 +44,25 @@ const MEMORY = join(CWD, "memory");
 const USER_DIR = join(homedir(), ".claude", "memento", "user");
 const USER_KNOWLEDGE = join(USER_DIR, "knowledge");
 
+// ─── Cooldown gate ───
+
+const COOLDOWN_MS = 3 * 60 * 60 * 1000; // 3시간
+const stateFile = join(MEMORY, ".compaction-state.json");
+
+if (existsSync(stateFile)) {
+  try {
+    const state = JSON.parse(readFileSync(stateFile, "utf8"));
+    if (!state.lastCompactionRun) throw new Error("missing lastCompactionRun");
+    const elapsed = Date.now() - new Date(state.lastCompactionRun).getTime();
+    if (elapsed < COOLDOWN_MS) {
+      console.log("  memento compact: cooldown active, skipped");
+      process.exit(0);
+    }
+  } catch (err) {
+    console.error(`  [memento] compaction state unreadable, proceeding: ${err.message}`);
+  }
+}
+
 const DAILY_THRESHOLD = 200;
 const WEEKLY_THRESHOLD = 300;
 const MONTHLY_THRESHOLD = 500;
@@ -381,6 +400,14 @@ if (actions.length > 0) {
   console.log(`  memento compact: ${actions.join(", ")}`);
 } else {
   console.log("  memento compact: nothing to do");
+}
+
+// ─── Update cooldown timestamp (after successful compaction) ───
+
+try {
+  writeFileSync(stateFile, JSON.stringify({ lastCompactionRun: new Date().toISOString() }));
+} catch (err) {
+  console.error(`  [memento] failed to write compaction state: ${err.message}`);
 }
 
 // qmd 실패 시 exit code 0 유지 (compact 자체는 성공) — 경고는 stderr로 출력됨
