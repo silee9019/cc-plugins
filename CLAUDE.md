@@ -172,7 +172,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | 플러그인 | 버전 | 카테고리 | 컴포넌트 | 런타임 | 외부 의존성 |
 |----------|------|----------|----------|--------|-------------|
 | git-init | 1.4.1 | workflow | command | — | gh, curl |
-| silee-planner | 1.3.0 | workflow | command | — | obsidian CLI, git |
+| silee-planner | 1.4.1 | workflow | command | — | obsidian CLI, git |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
 | memento | 1.6.0 | utility | skill+hook+command | Bun | qmd |
@@ -213,16 +213,16 @@ git-init/
 
 ### silee-planner
 
-- **수정 시**: 커맨드 간 교차 참조 (`daily-plan`, `daily-wrap-up`, `task-done` 등) 동기화 확인. Step 순서 변경 시 번호 정합성 확인
+- **수정 시**: 커맨드 간 교차 참조 (`plan-today`, `review-today`, `finish-task` 등) 동기화 확인. Step 순서 변경 시 번호 정합성 확인
 - **테스트**: 각 커맨드를 Obsidian vault 환경에서 실행 확인
   - `/silee-planner:setup` → 설정 생성 확인
-  - `/silee-planner:daily-plan` → Daily Note 생성 확인
+  - `/silee-planner:plan-today` → Daily Note 생성 확인
   - `/silee-planner:capture-task 할일내용` → 빠른 캡처 확인
   - `/silee-planner:capture-task` → 세션 스캔 확인
-  - `/silee-planner:task-done` → 작업 완료 + 리마인드 + 다음 작업 전환 확인
-  - `/silee-planner:task-done 키워드` → fuzzy match 빠른 완료 + 다음 작업 전환 확인
+  - `/silee-planner:finish-task` → 작업 완료 + 리마인드 + 다음 작업 전환 확인
+  - `/silee-planner:finish-task 키워드` → fuzzy match 빠른 완료 + 다음 작업 전환 확인
   - `/silee-planner:pick-task` → 백로그 조회/선택 확인
-  - `/silee-planner:daily-wrap-up` → 마감 정리 확인
+  - `/silee-planner:review-today` → 마감 정리 확인
   - `/silee-planner:weekly-report 이번 주` → 보고서 생성 확인
 - **의존성**: `obsidian` CLI (`brew install obsidian-cli`), `git`
 - **설정**: `~/.claude/plugins/data/silee-planner-cc-plugins/config.md`

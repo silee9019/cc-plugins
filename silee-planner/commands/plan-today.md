@@ -3,7 +3,7 @@ description: 아침 계획 수립. 어제 미완료 항목 수집, 백로그 스
 allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 ---
 
-# 오늘 계획 (daily-plan)
+# 오늘 계획 (plan-today)
 
 어제 미완료 항목과 백로그를 종합하여 오늘의 할 일을 계획하고 Daily Note를 생성/갱신한다.
 

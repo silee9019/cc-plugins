@@ -4,10 +4,10 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 argument-hint: [완료한 작업 키워드]
 ---
 
-# 작업 완료 (task-done)
+# 작업 완료 (finish-task)
 
 오늘 Daily Note에서 완료한 작업을 체크하고, Issue Box 연동 처리 후, 남은 작업을 리마인드한다.
-하루 마감 정리는 `/silee-planner:today-review`를 사용한다.
+하루 마감 정리는 `/silee-planner:review-today`를 사용한다.
 
 ## 워크플로우
 
@@ -34,7 +34,7 @@ argument-hint: [완료한 작업 키워드]
 
 3. 오늘 Daily Note 파일을 직접 읽는다 (Read 도구 사용).
 
-**Daily Note가 없는 경우**: "오늘 Daily Note가 없습니다. `/silee-planner:daily-plan`을 먼저 실행해주세요." 안내 후 중단.
+**Daily Note가 없는 경우**: "오늘 Daily Note가 없습니다. `/silee-planner:plan-today`를 먼저 실행해주세요." 안내 후 중단.
 
 ### Step 3: 미완료 항목 수집
 
@@ -42,7 +42,7 @@ Daily Note에서 `## Tasks` 섹션을 찾는다.
 
 | 케이스 | 처리 |
 |--------|------|
-| Tasks 섹션 없음 | "Daily Note에 Tasks 섹션이 없습니다. `/silee-planner:daily-plan`으로 계획을 먼저 수립해주세요." 안내 후 중단 |
+| Tasks 섹션 없음 | "Daily Note에 Tasks 섹션이 없습니다. `/silee-planner:plan-today`로 계획을 먼저 수립해주세요." 안내 후 중단 |
 | Tasks 섹션 있고 `- [ ]` 0건 | "오늘 모든 작업을 완료했습니다!" 출력 후 종료 |
 | Tasks 섹션 있고 `- [ ]` 1건 이상 | 섹션별로 분류 (Projects / Areas / Inbox), 각 항목의 텍스트와 소속 섹션을 기록 |
 
@@ -221,11 +221,11 @@ obsidian vault="<vault>" move path="<file_path>" to="<in_progress_folder_path>/{
 | Edit 도구로 해당 줄만 변경 | Daily Note 전체를 다시 작성 |
 | 복수 항목 한 번에 완료 지원 | 항목마다 개별 확인 루프 |
 | in_progress_folder_path 미설정 시 Step 6 스킵 | 설정 없는데 이슈 탐색 시도 |
-| task-done은 resolved만 처리 (dismissed는 `/silee-planner:pick-task`에서) | task-done에서 폐기 처리 시도 |
+| finish-task는 resolved만 처리 (dismissed는 `/silee-planner:pick-task`에서) | finish-task에서 폐기 처리 시도 |
 | obsidian CLI 명령 실패 시 에러 내용 출력 후 대안 제시 | CLI 에러를 무시하고 진행 |
-| 하루 마감 정리는 `/silee-planner:today-review` 사용 | task-done으로 하루 전체 마감 처리 |
+| 하루 마감 정리는 `/silee-planner:review-today` 사용 | finish-task로 하루 전체 마감 처리 |
 | Edit 실패 시 파일을 다시 읽고 재시도 | Write로 전체 파일을 덮어쓰기 |
 | 남은 항목 0건이면 Step 8 스킵 | 완료 메시지 후에도 강제로 다음 작업 질문 |
 | 인터뷰 응답 "없음"/"패스" 시 해당 필드 생략 | 모든 필드를 반드시 입력하도록 강제 |
 | Issue Box 매칭은 best-effort (없으면 스킵) | 매칭 실패 시 에러 처리 |
-| 백로그 조회/선택 UI는 pick-task로 위임. 매칭된 이슈의 상태 전환은 task-done에서 직접 수행 | task-done 안에서 백로그 목록 조회/선택 UI를 중복 구현 |
+| 백로그 조회/선택 UI는 pick-task로 위임. 매칭된 이슈의 상태 전환은 finish-task에서 직접 수행 | finish-task 안에서 백로그 목록 조회/선택 UI를 중복 구현 |

@@ -63,7 +63,7 @@ AskUserQuestion으로 묻는다:
    - [ ] {할 일 내용}
    ```
 3. 해당 섹션이 없으면 Inbox에 추가한다.
-4. Daily Note��� 없으면 "오늘 Daily Note가 없습니다. `/silee-planner:daily-plan`을 먼저 실행해주세요." 안내.
+4. Daily Note��� 없으면 "오늘 Daily Note가 없습니다. `/silee-planner:plan-today`를 먼저 실행해주세요." 안내.
 
 추가 완료 후 "Daily Note에 추가: {할 일 내용}" 출력.
 
@@ -174,7 +174,7 @@ YAML frontmatter의 `---` 구분자도 content 문자열 안에 포함하여 전
 |----|-------|
 | 인자 유무로 모드를 자동 판별 | 매번 "어떤 모드?" 질문으로 흐름 끊기 |
 | 빠른 캡처 시 카테고리/우선순위 자동 추정 후 확인만 | 매번 카테고리/우선순위를 처음부터 묻기 |
-| Daily Note 없으면 daily-plan 안내 | Daily Note��� 자동 생성 |
+| Daily Note 없으면 plan-today 안내 | Daily Note��� 자동 생성 |
 | 세션 스캔 시 대화 내용에서 실제��� 논의된 이슈만 추출 | 대화에 없는 이슈를 추측하여 생성 |
 | 이슈별로 충분한 컨텍스트와 재현 방법 포함 | 제목과 요약만으로 보고서 작성 |
 | obsidian CLI 명령 실패 시 에러 내용 출력 후 대안 제시 | CLI 에러를 무시하고 진행 |
