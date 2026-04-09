@@ -1,0 +1,8 @@
+{
+  "name": "knowledge-tools",
+  "description": "지식 도구 모음: 온톨로지 워크숍(개념 정의/의사결정)과 문서 공유(마크다운→HTML 변환)",
+  "version": "0.1.0",
+  "author": { "name": "silee9019" },
+  "keywords": ["ontology", "decision", "naming", "definition", "workshop", "markdown", "html", "pandoc", "share", "document"],
+  "skills": ["./skills/ontology-workshop", "./skills/share-document"]
+}

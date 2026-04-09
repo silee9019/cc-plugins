@@ -14,6 +14,7 @@ cc-plugins/
 ├── memento/                          ← skill+hook+command: 3-tier 에이전트 메모리 시스템
 ├── agentic-workflow/                 ← skill+command: 에이전틱 워크플로우 scaffold
 ├── tutor/                            ← command: 학습 노트 생성 + 4지선다 퀴즈 튜터
+├── knowledge-tools/                  ← skill: 온톨로지 워크숍 + 문서 공유
 └── backup/                           ← 기존 statusline 백업
 ```
 
@@ -179,7 +180,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | memento | 1.6.3 | utility | skill+hook+command | Bun | qmd |
 | agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
 | tutor | 0.1.3 | workflow | command + skill | Python 3 | obsidian CLI |
-| ontology-workshop | 1.0.0 | workflow | skill | — | 없음 |
+| knowledge-tools | 0.1.0 | workflow | skill | — | pandoc |
 
 ### agentic-workflow
 
@@ -356,14 +357,19 @@ memento/
   - SessionStart hook stdout이 프로토콜 전문으로 세션 컨텍스트에 주입됨
   - Knowledge 승격: 체크포인트 시 에이전트가 프로젝트 비종속 교훈을 user/knowledge/에 저장
 
-### ontology-workshop
+### knowledge-tools
 
 ```
-ontology-workshop/
+knowledge-tools/
 ├── .claude-plugin/plugin.json
 ├── skills/
-│   └── ontology-workshop/
-│       └── SKILL.md                # 5단계 워크플로우 (현상학→온톨로지→분류학→검증→도출)
+│   ├── ontology-workshop/
+│   │   └── SKILL.md                # 5단계 워크플로우 (현상학→온톨로지→분류학→검증→도출)
+│   └── share-document/
+│       ├── SKILL.md                # 마크다운→HTML 변환 (pandoc)
+│       └── style.css               # 공유용 CSS
+├── scripts/
+│   └── preprocess.sh               # Obsidian→pandoc 전처리
 ├── personas/
 │   ├── core/
 │   │   ├── ontologist.md           # 본질 분석 (genus-differentia)
@@ -388,10 +394,13 @@ ontology-workshop/
     └── persona-selection.md        # 유형별 자동 선택 가이드
 ```
 
-- **수정 시**: 페르소나 추가/제거 시 `reference/persona-selection.md`의 자동 선택 로직과 SKILL.md의 벤치 멤버 테이블도 동기화
-- **테스트**: 용어 결정 주제로 워크숍 실행 → 5단계 진행 + Obsidian vault 기록 + auto memory 저장 확인
-- **의존성**: 없음 (순수 스킬 — Agent + WebSearch 사용)
-- **산출물**: `{vault}/Resources/decisions/YYYY-MM-DD-{slug}.md`
+- **스킬 2개**: ontology-workshop (온톨로지 워크숍), share-document (문서 공유)
+- **수정 시**: 페르소나 추가/제거 시 `reference/persona-selection.md`와 SKILL.md 벤치 멤버 테이블 동기화
+- **테스트**:
+  - ontology-workshop: 용어 결정 주제로 워크숍 실행 → 5단계 진행 + Obsidian vault 기록 확인
+  - share-document: `/share-document <파일>` → HTML 변환 확인
+- **의존성**: pandoc (share-document 스킬)
+- **산출물**: `{vault}/Resources/decisions/YYYY-MM-DD-{slug}.md` (ontology-workshop)
 - **주의**:
   - 투표는 목적이 아니라 검증 수단 — 정의 확립이 우선
   - 리서치 에이전트와 검증 에이전트는 반드시 분리 (hallucination 방지)

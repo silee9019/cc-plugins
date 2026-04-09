@@ -89,17 +89,6 @@
       "category": "workflow"
     },
     {
-      "name": "share-document",
-      "source": "./share-document",
-      "description": "마크다운 문서를 공유용 HTML로 변환 (pandoc + 내장 CSS)",
-      "version": "1.0.0",
-      "author": {
-        "name": "silee9019"
-      },
-      "keywords": ["markdown", "html", "pandoc", "share", "document", "export"],
-      "category": "utility"
-    },
-    {
       "name": "tutor",
       "source": "./tutor",
       "description": "학습 자료(PDF, MD, URL, 코드)를 Obsidian 노트로 변환하고, 4지선다 퀴즈로 학습 효과를 측정하는 개인 튜터. silee vault 연동.",
@@ -111,14 +100,14 @@
       "category": "workflow"
     },
     {
-      "name": "ontology-workshop",
-      "source": "./ontology-workshop",
-      "description": "온톨로지 워크숍: 개념의 본질을 다면적으로 분석하여 정의를 확립하고, 정의에서 이름/결정을 도출하는 범용 의사결정 스킬",
-      "version": "1.0.0",
+      "name": "knowledge-tools",
+      "source": "./knowledge-tools",
+      "description": "지식 도구 모음: 온톨로지 워크숍(개념 정의/의사결정)과 문서 공유(마크다운→HTML 변환)",
+      "version": "0.1.0",
       "author": {
         "name": "silee9019"
       },
-      "keywords": ["ontology", "decision", "naming", "definition", "workshop", "taxonomy"],
+      "keywords": ["ontology", "decision", "naming", "definition", "workshop", "markdown", "html", "pandoc", "share", "document"],
       "category": "workflow"
     }
   ]

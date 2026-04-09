@@ -39,18 +39,17 @@ which pandoc
 리스트 항목 앞에 빈 줄이 없으면 삽입. Obsidian은 빈 줄 없이도 리스트를 렌더링하지만 pandoc은 엄격하게 파싱한다.
 
 ```bash
-PLUGIN_DIR="$(dirname "$(dirname "$(dirname "$0")")")"
-sh "$PLUGIN_DIR/scripts/preprocess.sh" "<input.md>" > /tmp/share-doc-preprocessed.md
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/preprocess.sh" "<input.md>" > /tmp/share-doc-preprocessed.md
 ```
 
-`$PLUGIN_DIR`은 실행 시 이 스킬 파일의 위치에서 resolve. 실제 실행 시에는 플러그인 설치 경로를 사용한다:
-- 개발: `cc-plugins/share-document/`
-- 설치: `~/.claude/plugins/cache/cc-plugins/share-document/<version>/`
+`${CLAUDE_PLUGIN_ROOT}`는 플러그인 루트 경로로 자동 해석된다:
+- 개발: `cc-plugins/knowledge-tools/`
+- 설치: `~/.claude/plugins/cache/cc-plugins/knowledge-tools/<version>/`
 
 ### 4. pandoc 변환
 
 ```bash
-STYLE_CSS="<plugin-root>/skills/share-document/style.css"
+STYLE_CSS="${CLAUDE_PLUGIN_ROOT}/skills/share-document/style.css"
 pandoc /tmp/share-doc-preprocessed.md \
   -t html5 \
   --standalone \

@@ -1,8 +1,0 @@
-{
-  "name": "share-document",
-  "description": "마크다운 문서를 공유용 HTML로 변환 (pandoc + 내장 CSS)",
-  "version": "1.0.0",
-  "author": { "name": "silee9019" },
-  "keywords": ["markdown", "html", "pandoc", "share", "document", "export"],
-  "skills": ["./skills/share-document"]
-}
