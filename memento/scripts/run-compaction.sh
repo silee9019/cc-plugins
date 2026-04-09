@@ -42,4 +42,4 @@ if ! command -v bun >/dev/null 2>&1; then
   echo "[memento] bun not found — compaction skipped." >&2
   exit 1
 fi
-exec bun run "$SCRIPT_DIR/compact.mjs"
+exec bun run "$SCRIPT_DIR/compact.mjs" "$@"

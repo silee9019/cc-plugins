@@ -33,10 +33,10 @@ Append the session summary to `~/.claude/memento/projects/<project-id>/memory/YY
 ### 3. Run compaction
 
 ```bash
-bun run <plugin-root>/scripts/compact.mjs
+bun run <plugin-root>/scripts/compact.mjs --force
 ```
 
-This propagates through the compaction tree (daily → weekly → monthly → root).
+`--force` 플래그로 3시간 쿨다운을 바이패스. 수동 플러시는 항상 즉시 컴팩션 실행.
 
 ### 4. Report
 

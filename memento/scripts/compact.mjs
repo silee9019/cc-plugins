@@ -13,6 +13,17 @@ import { join, dirname } from "node:path";
 import { execSync } from "node:child_process";
 import { homedir } from "node:os";
 
+function localISOString() {
+  const d = new Date();
+  const off = d.getTimezoneOffset();
+  const sign = off <= 0 ? "+" : "-";
+  const absOff = Math.abs(off);
+  const hh = String(Math.floor(absOff / 60)).padStart(2, "0");
+  const mm = String(absOff % 60).padStart(2, "0");
+  const pad = (n, len = 2) => String(n).padStart(len, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}${sign}${hh}:${mm}`;
+}
+
 // ─── Project ID resolution (mirrors session-start.sh) ───
 
 function resolveProjectId() {
@@ -48,8 +59,9 @@ const USER_KNOWLEDGE = join(USER_DIR, "knowledge");
 
 const COOLDOWN_MS = 3 * 60 * 60 * 1000; // 3시간
 const stateFile = join(MEMORY, ".compaction-state.json");
+const forceMode = process.argv.includes("--force");
 
-if (existsSync(stateFile)) {
+if (!forceMode && existsSync(stateFile)) {
   try {
     const state = JSON.parse(readFileSync(stateFile, "utf8"));
     if (!state.lastCompactionRun) throw new Error("missing lastCompactionRun");
@@ -405,7 +417,7 @@ if (actions.length > 0) {
 // ─── Update cooldown timestamp (after successful compaction) ───
 
 try {
-  writeFileSync(stateFile, JSON.stringify({ lastCompactionRun: new Date().toISOString() }));
+  writeFileSync(stateFile, JSON.stringify({ lastCompactionRun: localISOString() }));
 } catch (err) {
   console.error(`  [memento] failed to write compaction state: ${err.message}`);
 }
