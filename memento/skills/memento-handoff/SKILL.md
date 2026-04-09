@@ -75,22 +75,10 @@ user_invocable: true
 2. **일일 로그 append**: `~/.claude/memento/projects/<project-id>/memory/YYYY-MM-DD.md`에 세션 요약 append
    - memento-core End-of-Task Checkpoint 형식 사용
 
-### Step 4: 컴팩션
-
-compact.mjs를 실행하여 컴팩션 트리를 전파한다.
-
-이 SKILL.md가 `<plugin-root>/skills/memento-handoff/SKILL.md`에 위치하므로, compact.mjs 경로는 이 파일 기준 `../../scripts/compact.mjs`의 절대 경로로 해석한다.
-
-```bash
-bun run <이 SKILL.md 기준 ../../scripts/compact.mjs 의 절대 경로>
-```
-
-> **Cooldown**: compact.mjs 내부에 3시간 cooldown gate가 있다 (`.compaction-state.json` 기반). 마지막 실행 후 3시간 이내면 자동 스킵. 빈번한 호출에 부작용 없음 — 무조건 실행해도 안전.
-
-### Step 5: 다음 세션 재개 안내
+### Step 4: 다음 세션 재개 안내
 
 핸드오프 결과를 **다음 세션이 바로 이어갈 수 있는 형식**으로 출력한다.
-내부 처리 결과(저장 완료, 컴팩션 결과 등)는 출력하지 않는다.
+내부 처리 결과(저장 완료 등)는 출력하지 않는다.
 
 출력 형식:
 
@@ -126,8 +114,6 @@ bun run <이 SKILL.md 기준 ../../scripts/compact.mjs 의 절대 경로>
 | WORKING.md는 덮어쓰기 (최신 상태만) | WORKING.md에 히스토리 누적 |
 | 일일 로그는 append (영구 기록) | 일일 로그 덮어쓰기 |
 | WORKING.md, 일일 로그는 Write 도구로 직접 작성 | 서브에이전트에 핸드오프 저장을 위임 |
-| compact.mjs는 무조건 실행 (cooldown이 알아서 판단) | cooldown 시간을 직접 계산하여 실행 여부 결정 |
 | plan 파일이 없으면 해당 항목 생략 | plan 없음을 에러로 취급 |
 | plan 파일은 세션 컨텍스트에서 확인된 경로만 사용 | `~/.claude/plans/`를 Glob 스캔하여 추측 |
 | 다음 세션 프롬프트를 코드블록으로 출력 | 프롬프트를 산문 형태로 풀어쓰기 |
-| `<plugin-root>`를 SKILL.md 기준 절대 경로로 해석 | `<plugin-root>` 문자열을 그대로 실행 |

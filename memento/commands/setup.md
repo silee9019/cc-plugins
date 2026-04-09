@@ -45,7 +45,18 @@ project-id는 session-start.sh의 프로젝트 ID 결정 로직과 동일:
 - git remote → `org-repo` (lowercase)
 - fallback → CWD 경로 (/ → -, lowercase)
 
-### Step 4: 완료 확인
+### Step 4: 구 캐시 정리
+
+memento 플러그인 캐시 디렉토리를 스캔하여 현재 버전 외 구 버전이 있는지 확인:
+
+```bash
+ls -d ~/.claude/plugins/cache/cc-plugins/memento/*/ 2>/dev/null
+```
+
+- 구 버전 디렉토리가 존재하면 사용자에게 목록을 보여주고 AskUserQuestion으로 삭제 여부 확인
+- 현재 버전만 있으면 "구 캐시 없음" 출력 후 다음 Step으로
+
+### Step 5: 완료 확인
 
 - 생성된 프로젝트 디렉토리 경로 출력
 - qmd 설치 상태 출력

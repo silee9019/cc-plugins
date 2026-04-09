@@ -3,7 +3,6 @@
 # 1. Resolve project ID (git remote + CWD fallback, always lowercase)
 # 2. Create project directory structure + templates (idempotent)
 # 3. Output memory protocol to stdout for agent injection
-# 4. Run mechanical compaction
 
 set -eu
 
@@ -22,38 +21,6 @@ STDIN_DATA="$(cat)"
 PROJECT_CWD="$(printf '%s' "$STDIN_DATA" | grep -o '"cwd":"[^"]*"' | head -1 | cut -d'"' -f4)"
 if [ -n "$PROJECT_CWD" ] && [ -d "$PROJECT_CWD" ]; then
   cd "$PROJECT_CWD"
-fi
-
-# ─── Auto-upgrade (self-healing cache) ───
-
-MARKETPLACE_PLUGIN="$HOME/.claude/plugins/marketplaces/cc-plugins/memento/.claude-plugin/plugin.json"
-if [ -f "$MARKETPLACE_PLUGIN" ]; then
-  CURRENT_VER="$(basename "$PLUGIN_ROOT")"
-  LATEST_VER="$(grep '"version"' "$MARKETPLACE_PLUGIN" | head -1 | cut -d'"' -f4)"
-  if [ -n "$LATEST_VER" ] && [ "$CURRENT_VER" != "$LATEST_VER" ]; then
-    NEW_CACHE="$HOME/.claude/plugins/cache/cc-plugins/memento/$LATEST_VER"
-    if [ -d "$NEW_CACHE" ]; then
-      # Update installed_plugins.json
-      INST_FILE="$HOME/.claude/plugins/installed_plugins.json"
-      if [ -f "$INST_FILE" ] && command -v jq >/dev/null 2>&1; then
-        jq --arg p "$NEW_CACHE" --arg v "$LATEST_VER" \
-          '(.plugins["memento@cc-plugins"][0].installPath=$p)|(.plugins["memento@cc-plugins"][0].version=$v)' \
-          "$INST_FILE" > "$INST_FILE.tmp" && mv "$INST_FILE.tmp" "$INST_FILE"
-      fi
-      # Clean old cache versions (background)
-      CACHE_PARENT="$(dirname "$PLUGIN_ROOT")"
-      for d in "$CACHE_PARENT"/*/; do
-        ver="$(basename "$d")"
-        if [ "$ver" != "$LATEST_VER" ]; then
-          rm -rf "$d" &
-        fi
-      done
-      # Re-exec from new version (pass stdin data via temp file)
-      _tmpf=$(mktemp)
-      printf '%s' "$STDIN_DATA" > "$_tmpf"
-      exec bash "$NEW_CACHE/scripts/session-start.sh" < "$_tmpf"
-    fi
-  fi
 fi
 
 # ─── Project ID resolution ───
@@ -132,11 +99,6 @@ Read the following Layer 1 files first:
 - \`${USER_DIR}/ROOT.md\` (cross-project knowledge index)
 
 **This procedure must be completed before responding to the user NO MATTER WHAT**
-1. **DO NOT SKIP** **DO NOT COMPROMISE** **Compaction maintenance (auto-gated):**
-   \`compact.mjs\` runs at session start with built-in 3-hour cooldown (no manual JSON check needed).
-   - **Compact output contains \`needs-summarization\`:** Dispatch a subagent to run memento:memento-compaction skill (chain: Daily->Weekly->Monthly->Root).
-   - **Otherwise:** No action needed.
-**This procedure must be completed before responding to the user NO MATTER WHAT**
 
 ### End-of-Task Checkpoint (mandatory)
 After completing any task, append a structured log to \`${PROJECT_DIR}/memory/YYYY-MM-DD.md\` (use today's date) using the Write tool (append) or Edit tool.
@@ -180,10 +142,6 @@ Only promote genuinely reusable knowledge. When in doubt, don't promote. Prefer 
 - Search: use memento:memento-search skill
 - If this session ends NOW, the next session must be able to continue immediately
 PROTOCOL
-
-# ─── Run mechanical compaction ───
-
-sh "$PLUGIN_ROOT/scripts/run-compaction.sh" 2>/dev/null || true
 
 # ─── Check qmd ───
 
