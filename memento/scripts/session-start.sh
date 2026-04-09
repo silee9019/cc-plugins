@@ -24,6 +24,38 @@ if [ -n "$PROJECT_CWD" ] && [ -d "$PROJECT_CWD" ]; then
   cd "$PROJECT_CWD"
 fi
 
+# ─── Auto-upgrade (self-healing cache) ───
+
+MARKETPLACE_PLUGIN="$HOME/.claude/plugins/marketplaces/cc-plugins/memento/.claude-plugin/plugin.json"
+if [ -f "$MARKETPLACE_PLUGIN" ]; then
+  CURRENT_VER="$(basename "$PLUGIN_ROOT")"
+  LATEST_VER="$(grep '"version"' "$MARKETPLACE_PLUGIN" | head -1 | cut -d'"' -f4)"
+  if [ -n "$LATEST_VER" ] && [ "$CURRENT_VER" != "$LATEST_VER" ]; then
+    NEW_CACHE="$HOME/.claude/plugins/cache/cc-plugins/memento/$LATEST_VER"
+    if [ -d "$NEW_CACHE" ]; then
+      # Update installed_plugins.json
+      INST_FILE="$HOME/.claude/plugins/installed_plugins.json"
+      if [ -f "$INST_FILE" ] && command -v jq >/dev/null 2>&1; then
+        jq --arg p "$NEW_CACHE" --arg v "$LATEST_VER" \
+          '(.plugins["memento@cc-plugins"][0].installPath=$p)|(.plugins["memento@cc-plugins"][0].version=$v)' \
+          "$INST_FILE" > "$INST_FILE.tmp" && mv "$INST_FILE.tmp" "$INST_FILE"
+      fi
+      # Clean old cache versions (background)
+      CACHE_PARENT="$(dirname "$PLUGIN_ROOT")"
+      for d in "$CACHE_PARENT"/*/; do
+        ver="$(basename "$d")"
+        if [ "$ver" != "$LATEST_VER" ]; then
+          rm -rf "$d" &
+        fi
+      done
+      # Re-exec from new version (pass stdin data via temp file)
+      _tmpf=$(mktemp)
+      printf '%s' "$STDIN_DATA" > "$_tmpf"
+      exec bash "$NEW_CACHE/scripts/session-start.sh" < "$_tmpf"
+    fi
+  fi
+fi
+
 # ─── Project ID resolution ───
 
 PROJECT_ID=""
