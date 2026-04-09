@@ -179,6 +179,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | memento | 1.6.3 | utility | skill+hook+command | Bun | qmd |
 | agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
 | tutor | 0.1.3 | workflow | command + skill | Python 3 | obsidian CLI |
+| ontology-workshop | 1.0.0 | workflow | skill | — | 없음 |
 
 ### agentic-workflow
 
@@ -354,4 +355,45 @@ memento/
   - 스킬/스크립트/템플릿은 플러그인 디렉토리 (데이터 아님)
   - SessionStart hook stdout이 프로토콜 전문으로 세션 컨텍스트에 주입됨
   - Knowledge 승격: 체크포인트 시 에이전트가 프로젝트 비종속 교훈을 user/knowledge/에 저장
+
+### ontology-workshop
+
+```
+ontology-workshop/
+├── .claude-plugin/plugin.json
+├── skills/
+│   └── ontology-workshop/
+│       └── SKILL.md                # 5단계 워크플로우 (현상학→온톨로지→분류학→검증→도출)
+├── personas/
+│   ├── core/
+│   │   ├── ontologist.md           # 본질 분석 (genus-differentia)
+│   │   ├── sw-expert.md            # 체계 분석 (표준/업계 매핑)
+│   │   └── user-proxy.md           # 경험 수집 (사용자 대리인)
+│   └── bench/
+│       ├── linguist.md             # 의미론, 한영 대응
+│       ├── architect.md            # 경계, 관계, 생명주기
+│       ├── backend-dev.md          # 코드 모델링, API 설계
+│       ├── frontend-dev.md         # UI 표현, 타입 네이밍
+│       ├── designer.md             # 사용자 멘탈 모델
+│       ├── pm.md                   # 이해관계자, 로드맵
+│       ├── qa-engineer.md          # 품질, 테스트 분류
+│       ├── devops.md               # 운영, 로그, 검색성
+│       ├── tech-writer.md          # 문서 일관성, 표준 용어
+│       ├── test-engineer.md        # 검증 가능성, 수용 기준
+│       ├── security.md             # 위협 모델, 보안 경계
+│       └── data-engineer.md        # 데이터 모델, 스키마
+├── templates/
+│   └── decision-record.md          # Obsidian 기록 템플릿
+└── reference/
+    └── persona-selection.md        # 유형별 자동 선택 가이드
+```
+
+- **수정 시**: 페르소나 추가/제거 시 `reference/persona-selection.md`의 자동 선택 로직과 SKILL.md의 벤치 멤버 테이블도 동기화
+- **테스트**: 용어 결정 주제로 워크숍 실행 → 5단계 진행 + Obsidian vault 기록 + auto memory 저장 확인
+- **의존성**: 없음 (순수 스킬 — Agent + WebSearch 사용)
+- **산출물**: `{vault}/Resources/decisions/YYYY-MM-DD-{slug}.md`
+- **주의**:
+  - 투표는 목적이 아니라 검증 수단 — 정의 확립이 우선
+  - 리서치 에이전트와 검증 에이전트는 반드시 분리 (hallucination 방지)
+  - vault 경로는 silee-planner config에서 읽음
 

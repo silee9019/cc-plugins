@@ -1,0 +1,8 @@
+{
+  "name": "ontology-workshop",
+  "description": "온톨로지 워크숍: 개념의 본질을 다면적으로 분석하여 정의를 확립하고, 정의에서 이름/결정을 도출하는 범용 의사결정 스킬",
+  "version": "1.0.0",
+  "author": { "name": "silee9019" },
+  "keywords": ["ontology", "decision", "naming", "definition", "workshop", "taxonomy"],
+  "skills": ["./skills/ontology-workshop"]
+}
