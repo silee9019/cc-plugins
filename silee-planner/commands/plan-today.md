@@ -26,7 +26,13 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
    obsidian vaults verbose
    ```
    vault 이름에 해당하는 경로를 추출.
-3. 오늘 Daily Note 파일 존재 여부를 확인한다 (Read 도구 사용).
+3. KR1 체크포인트 연체 확인 (best-effort):
+   - 트래킹 파일 `{vault_path}/10 Projects/2026 Imagoworks/26 OKR/kr1-tracking.md`을 읽는다 (Read 도구).
+   - 파일 없음 → 조용히 건너뛰기
+   - 파일 있음 → 첫 5줄에서 `> 다음 업데이트:` 줄의 날짜를 파싱한다
+     - 날짜 < 오늘 → 연체 플래그 ON (Step 6 계획 제안 시 상단에 경고 표시)
+     - 날짜 >= 오늘 → 아무것도 하지 않음
+4. 오늘 Daily Note 파일 존재 여부를 확인한다 (Read 도구 사용).
 
 | 케이스 | 처리 |
 |--------|------|
@@ -75,7 +81,14 @@ AskUserQuestion으로 묻는다: "오늘 미팅이나 고정 일정이 있나요
 
 ### Step 6: 오늘 계획 제안
 
-수집된 정보를 종합하여 오늘의 할 일을 제안한다:
+수집된 정보를 종합하여 오늘의 할 일을 제안한다.
+
+**연체 플래그가 ON인 경우** (Step 2-3에서 감지), 제안 상단에 경고를 표시한다:
+
+```
+> ⚠ KR1 체크포인트 업데이트가 {N}일 연체되었습니다 (기한: {date}).
+> `/silee-planner:project-checkpoint` 실행을 권장합니다.
+```
 
 **제안 형식**:
 

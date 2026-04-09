@@ -172,7 +172,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | 플러그인 | 버전 | 카테고리 | 컴포넌트 | 런타임 | 외부 의존성 |
 |----------|------|----------|----------|--------|-------------|
 | git-init | 1.4.1 | workflow | command | — | gh, curl |
-| silee-planner | 1.4.3 | workflow | command | — | obsidian CLI, git |
+| silee-planner | 1.5.0 | workflow | command | — | obsidian CLI, git, Jira MCP |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
 | memento | 1.6.1 | utility | skill+hook+command | Bun | qmd |
@@ -224,13 +224,16 @@ git-init/
   - `/silee-planner:pick-task` → 백로그 조회/선택 확인
   - `/silee-planner:review-today` → 마감 정리 확인
   - `/silee-planner:weekly-report 이번 주` → 보고서 생성 확인
-- **의존성**: `obsidian` CLI (`brew install obsidian-cli`), `git`
+  - `/silee-planner:project-checkpoint` → Jira 동기화 + 체크포인트 리뷰 + 트래킹 파일 갱신 확인
+- **의존성**: `obsidian` CLI (`brew install obsidian-cli`), `git`, Jira MCP (project-checkpoint)
 - **설정**: `~/.claude/plugins/data/silee-planner-cc-plugins/config.md`
 - **상태 라이프사이클**: `open | blocked → in-progress → resolved | dismissed` (각 상태별 폴더 이동)
 - **주의**:
   - issue-box config(구 버전) 마이그레이션은 setup에서 자동 처리
   - `capture-task`: 인자 있으면 빠른 캡처, 없으면 세션 대화에서 이슈 추출
   - weekly-report 작성자 이메일은 config.md `author_email`에 캐시
+  - `project-checkpoint`: KR1 프로세스 준수율 트래킹 (Jira MCP 연동, 3일 주기). 트래킹 파일 경로/에픽 키는 커맨드 파일에 하드코딩 (OKR 기간별 고정)
+  - `plan-today`: KR1 체크포인트 연체 감지 연동 (트래킹 파일의 `다음 업데이트` 날짜 확인)
 
 ### andrej-karpathy-skills
 
