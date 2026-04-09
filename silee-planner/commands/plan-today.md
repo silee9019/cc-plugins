@@ -18,27 +18,41 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 | 파일 존재 | `vault`, `daily_notes_path`, `daily_note_format`, `inbox_folder_path` 값을 로드 |
 | 파일 없음 | "설정이 없습니다. `/silee-planner:setup`을 먼저 실행해주세요." 안내 후 중단 |
 
-### Step 2: 어제 Daily Note 읽기
+### Step 2: 오늘 Daily Note 사전 확인
 
-1. 어제 날짜로 Daily Note 경로를 생성한다:
-   - `{daily_notes_path}/{daily_note_format}.md` 패턴에서 변수 치환
-   - 예: `01 Daily Notes/2026/04/2026-04-07.md`
-
+1. 오늘 날짜로 Daily Note 경로를 생성한다 (Step 1에서 로드한 설정 사용).
 2. Obsidian vault 경로를 파악한다:
    ```bash
    obsidian vaults verbose
    ```
    vault 이름에 해당하는 경로를 추출.
+3. 오늘 Daily Note 파일 존재 여부를 확인한다 (Read 도구 사용).
 
-3. 어제 Daily Note 파일을 직접 읽는다 (Read 도구 사용).
+| 케이스 | 처리 |
+|--------|------|
+| 파일 없음 | Step 3으로 진행 |
+| 파일 있음 + Tasks 비어있음 | Step 3으로 진행 |
+| 파일 있음 + Tasks 내용 있음 | 기존 Plan/Tasks를 보여주고 AskUserQuestion: "이미 오늘 계획이 있습니다. 기존 계획을 유지할까요, 새로 수립할까요?" |
 
-4. 미완료 항목(`- [ ]`)을 수집한다:
+**사용자 응답 분기**:
+- "유지" → 기존 계획 요약 출력 후 **종료** (Step 9로 이동)
+- "새로 수립" → Step 3으로 진행 (Step 8에서 기존 내용과 병합/덮어쓰기 처리)
+
+### Step 3: 어제 Daily Note 읽기
+
+1. 어제 날짜로 Daily Note 경로를 생성한다:
+   - `{daily_notes_path}/{daily_note_format}.md` 패턴에서 변수 치환
+   - 예: `01 Daily Notes/2026/04/2026-04-07.md`
+
+2. Step 2에서 파악한 vault 경로를 사용하여 어제 Daily Note 파일을 직접 읽는다 (Read 도구 사용).
+
+3. 미완료 항목(`- [ ]`)을 수집한다:
    - 섹션별로 분류 (Projects / Areas / Inbox)
    - 각 항목의 텍스트와 소속 섹션을 기록
 
-**어제 Daily Note가 없는 경우**: "어제 Daily Note가 없습니다." 안내 후 Step 3으로 진행.
+**어제 Daily Note가 없는 경우**: "어제 Daily Note가 없습니다." 안내 후 Step 4로 진행.
 
-### Step 3: 백로그 스캔 (Issue Box)
+### Step 4: 백로그 스캔 (Issue Box)
 
 `inbox_folder_path` 하위의 이슈 파일을 스캔한다.
 
@@ -53,13 +67,13 @@ obsidian vault="<vault>" files folder="<inbox_folder_path>"
 **blocked 이슈 리뷰**: blocked 이슈가 있으면 목록을 보여주고 "해제 가능한 항목이 있나요?" 질문.
 해제 가능하면 status를 open으로 변경.
 
-### Step 4: 미팅/일정 확인
+### Step 5: 미팅/일정 확인
 
 AskUserQuestion으로 묻는다: "오늘 미팅이나 고정 일정이 있나요? (없으면 건너뛰기)"
 
 사용자가 입력한 일정은 Plan 섹션에 반영.
 
-### Step 5: 오늘 계획 제안
+### Step 6: 오늘 계획 제안
 
 수집된 정보를 종합하여 오늘의 할 일을 제안한다:
 
@@ -91,18 +105,18 @@ AskUserQuestion으로 묻는다: "오늘 미팅이나 고정 일정이 있나요
 3. 사용자가 언급한 일정/미팅 관련 작업
 4. 기타
 
-### Step 6: 사용자 확인
+### Step 7: 사용자 확인
 
 AskUserQuestion으로 제안된 계획을 확인받는다:
-- "이대로 진행" → Step 7
-- 추가/삭제/순서 변경 → 반영 후 Step 7
+- "이대로 진행" → Step 8
+- 추가/삭제/순서 변경 → 반영 후 Step 8
 
 **어제 미완료 항목 중 오늘 안 할 것**:
 각 미완료 항목에 대해 "이월할까요, 백로그로 보관할까요?" 질문.
 - 이월 → 오늘 Tasks에 포함
 - 백로그 → capture-task 백로그 보관 모드로 Issue Box에 보관
 
-### Step 7: Daily Note 생성/갱신
+### Step 8: Daily Note 생성/갱신
 
 1. 오늘 날짜로 Daily Note 경로를 생성한다.
 2. 파일 존재 여부 확인:
@@ -154,7 +168,7 @@ date: {YYYY-MM-DD}
 
 3. obsidian CLI로 파일을 생성하거나 Edit 도구로 갱신한다.
 
-### Step 8: 완료 출력
+### Step 9: 완료 출력
 
 생성/갱신된 Daily Note 경로와 오늘 계획 요약을 출력한다.
 
@@ -168,3 +182,4 @@ date: {YYYY-MM-DD}
 | 사용자 확인 후 Daily Note 작성 | 확인 없이 자동 생성 |
 | 기존 Daily Note가 있으면 병합 여부 질문 | 기존 내용을 묻지 않고 덮어쓰기 |
 | blocked 이슈 해제 가능 여부 확인 | blocked 이슈를 무시 |
+| 수집 전에 오늘 기존 계획 유무를 먼저 확인 | 기존 계획이 있는데 수집부터 시작 |
