@@ -20,6 +20,16 @@ argument-hint: [완료한 작업 키워드]
 | 파일 존재 | `vault`, `daily_notes_path`, `daily_note_format`, `inbox_folder_path`, `in_progress_folder_path`, `resolved_folder_path` 값을 로드 |
 | 파일 없음 | "설정이 없습니다. `/silee-planner:setup`을 먼저 실행해주세요." 안내 후 중단 |
 
+### Step 1.5: Active Reminders 주입
+
+`~/.claude/plugins/data/silee-planner-cc-plugins/active-reminders.md` 존재 여부 확인.
+
+| 케이스 | 처리 |
+|--------|------|
+| 파일 없음 | 조용히 건너뛰기 |
+| 파일 있음 + `expires_at` >= 오늘 | 리마인드 목록을 **메모리에 로드**. Step 5 이후 완료 처리 시 해당 작업이 특정 reminder와 연결된 것이면 완료 로그에 `(리마인드 실행: {슬로건})` 필드 추가 (선택, 근거 있을 때만) |
+| 파일 있음 + `expires_at` < 오늘 | 건너뛰기 |
+
 ### Step 2: 오늘 Daily Note 읽기
 
 1. 오늘 날짜로 Daily Note 경로를 생성한다:

@@ -42,6 +42,16 @@ blocked ─┘ (조건 충족 시 open 또는 바로 in-progress)
 | 파일 존재 | YAML frontmatter에서 `vault`, `inbox_folder_path`, `in_progress_folder_path`, `resolved_folder_path`, `dismissed_folder_path` 값을 로드 |
 | 파일 없음 | "설정이 없습니다. `/silee-planner:setup`을 먼저 실행해주세요." 안내 후 중단 |
 
+### Step 1.5: Active Reminders 주입
+
+`~/.claude/plugins/data/silee-planner-cc-plugins/active-reminders.md` 존재 여부 확인.
+
+| 케이스 | 처리 |
+|--------|------|
+| 파일 없음 | 조용히 건너뛰기 |
+| 파일 있음 + `expires_at` >= 오늘 | 이슈 목록 제시 전에 "이번 주 리마인드" 1-2줄 요약을 먼저 출력 (우선순위 판단 시 참고용) |
+| 파일 있음 + `expires_at` < 오늘 | 건너뛰기 (plan-today/review-today에서 경고 출력 담당) |
+
 ### Step 2: 이슈 검색
 
 **open 이슈 수집** (`inbox_folder_path` 하위):

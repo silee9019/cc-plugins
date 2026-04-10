@@ -18,6 +18,16 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 | 파일 존재 | `vault`, `daily_notes_path`, `daily_note_format`, `inbox_folder_path`, `file_title_format` 값을 로드 |
 | 파일 없음 | "설정이 없습니다. `/silee-planner:setup`을 먼저 실행해주세요." 안내 후 중단 |
 
+### Step 1.5: Active Reminders 주입
+
+`~/.claude/plugins/data/silee-planner-cc-plugins/active-reminders.md` 존재 여부 확인.
+
+| 케이스 | 처리 |
+|--------|------|
+| 파일 없음 | 조용히 건너뛰기 |
+| 파일 있음 + `expires_at` >= 오늘 | 본문을 읽어 "## Active Reminders" 헤딩과 함께 컨텍스트 프리앰블로 출력. Step 6 Review 작성 시 "Reminders에 비춰 오늘 어땠는가" 한 줄 체크포인트 포함 |
+| 파일 있음 + `expires_at` < 오늘 | "⚠ Active reminders 만료 ({expires_at})" 1줄 경고 후 주입 생략 |
+
 ### Step 2: 오늘 Daily Note 읽기
 
 1. 오늘 날짜로 Daily Note 경로를 생성한다.
@@ -118,6 +128,7 @@ Daily Notes에 정리할 파일이 N개 있습니다:
 - **완료 항목**: 무엇을 했는지 + 왜 했는지/결과가 뭔지 한 줄 맥락 추가
 - **미완료 항목**: 무엇이 남았는지 + 왜 못했는지/다음 단계가 뭔지 한 줄 맥락 추가
 - **배운 것/발견**: 단순 수행 사실 나열이 아닌, 세션 대화에서 추출한 교훈/발견/인사이트 작성. 없으면 빈칸으로 두되 억지로 채우지 않음
+- **Reminder 체크포인트**: Step 1.5에서 Active Reminders가 주입되었다면, Review 말미에 "Reminders 점검" 한 줄 추가. 각 reminder가 오늘 작동했는지/놓쳤는지 한 줄로 기록 (억지 X, 근거 있을 때만)
 
 #### Review 템플릿
 
@@ -133,6 +144,9 @@ Daily Notes에 정리할 파일이 N개 있습니다:
 
 ### 배운 것 / 발견
 - {교훈/발견/인사이트}
+
+### Reminders 점검 (선택)
+- {reminder 슬로건}: {작동/놓침 + 근거 한 줄}
 ```
 
 #### 확인

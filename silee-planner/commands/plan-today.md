@@ -18,6 +18,18 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 | 파일 존재 | `vault`, `daily_notes_path`, `daily_note_format`, `inbox_folder_path` 값을 로드 |
 | 파일 없음 | "설정이 없습니다. `/silee-planner:setup`을 먼저 실행해주세요." 안내 후 중단 |
 
+### Step 1.5: Active Reminders 주입
+
+`~/.claude/plugins/data/silee-planner-cc-plugins/active-reminders.md` 존재 여부 확인.
+
+| 케이스 | 처리 |
+|--------|------|
+| 파일 없음 | 조용히 건너뛰기 |
+| 파일 있음 + `expires_at` >= 오늘 | 본문을 읽어 "## Active Reminders (주간 회고 {period})" 헤딩과 함께 **컨텍스트 프리앰블**로 출력. Step 6 계획 제안 시 "Reminders와 충돌/일치하는 항목이 있으면 명시"하는 원칙 적용 |
+| 파일 있음 + `expires_at` < 오늘 | "⚠ Active reminders가 만료되었습니다 ({expires_at}). `/silee-planner:weekly-report` 실행을 권장합니다." 1줄 경고 후 주입 생략 |
+
+만료 판별: `date "+%Y-%m-%d"`과 frontmatter `expires_at` 문자열 비교.
+
 ### Step 2: 오늘 Daily Note 사전 확인
 
 1. 오늘 날짜로 Daily Note 경로를 생성한다 (Step 1에서 로드한 설정 사용).
@@ -117,6 +129,10 @@ AskUserQuestion으로 묻는다: "오늘 미팅이나 고정 일정이 있나요
 2. 백로그에서 high 우선순위 open 이슈
 3. 사용자가 언급한 일정/미팅 관련 작업
 4. 기타
+
+**Active Reminders 반영**:
+- Step 1.5에서 주입된 reminder가 있다면, 제안 상단에 "오늘 의식할 리마인드" 2-3줄 요약 추가
+- 제안 항목 중 reminder의 원칙/시점/기준과 **충돌하거나 정렬되는 것**이 있으면 해당 항목 뒤에 `(리마인드: {슬로건})` 마크
 
 ### Step 7: 사용자 확인
 
