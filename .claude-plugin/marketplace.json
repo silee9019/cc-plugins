@@ -47,7 +47,7 @@
       "name": "silee-planner",
       "source": "./silee-planner",
       "description": "일일 업무 계획, 할 일 캡처, 작업 완료/리마인드, 하루 마감 정리, 백로그 보관/선택, 주간 보고서, 프로젝트 체크포인트 트래킹을 통합한 개인 플래너. Obsidian Daily Notes와 Issue Box를 연동.",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "author": {
         "name": "silee9019"
       },

@@ -174,7 +174,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | 플러그인 | 버전 | 카테고리 | 컴포넌트 | 런타임 | 외부 의존성 |
 |----------|------|----------|----------|--------|-------------|
 | git-init | 1.4.1 | workflow | command | — | gh, curl |
-| silee-planner | 1.5.0 | workflow | command | — | obsidian CLI, git, Jira MCP |
+| silee-planner | 1.6.0 | workflow | command | — | obsidian CLI, git, Jira MCP |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
 | memento | 1.6.8 | utility | skill+hook+command | Bun | qmd |
