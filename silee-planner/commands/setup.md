@@ -118,7 +118,31 @@ AskUserQuestion으로 주간 보고서용 Git author 이메일을 묻는다.
 |------|------|--------|
 | `author_email` | 주간 보고서 Git author 이메일 | 위 후보 중 첫 번째 |
 
-### Step 9: file_title_format 설정
+### Step 9-A: Repositories 기본 경로 설정
+
+AskUserQuestion으로 주간 회고에서 커밋을 수집할 Git 저장소 루트 경로를 묻는다.
+
+| 설정 | 설명 | 기본값 |
+|------|------|--------|
+| `repos_base_path` | 활성 레포 자동 탐지의 루트 (2단계까지 재귀 탐색) | 현재 `cwd`에서 `Repositories` 세그먼트 추출 |
+
+- 기존 설정이 있으면 해당 값을 기본값으로 제안
+- 자동 탐지 실패 시 기본값은 빈 문자열이며, 사용자가 경로를 직접 입력
+- 예시: `/Users/silee/ResilioSync/silee-drive/Repositories`
+
+### Step 9-B: Atlassian 연동 설정 (선택)
+
+AskUserQuestion으로 Jira/Confluence 사이트 URL을 묻는다. 입력하지 않으면(빈 문자열) Atlassian 수집을 비활성화한다.
+
+| 설정 | 설명 | 기본값 |
+|------|------|--------|
+| `atlassian_site_url` | Atlassian Cloud site URL (예: `https://company.atlassian.net`) | 빈 문자열 |
+| `atlassian_cloud_id` | 자동 탐지 후 캐시됨 (수동 입력 불필요) | 빈 문자열 |
+
+- `atlassian_site_url`이 빈 문자열이면 weekly-report에서 Atlassian 수집 전체 스킵
+- `atlassian_cloud_id`는 weekly-report가 최초 실행 시 `getAccessibleAtlassianResources`로 조회하여 자동 캐시
+
+### Step 10: file_title_format 설정
 
 AskUserQuestion으로 파일 제목 형식을 묻는다.
 
@@ -126,7 +150,7 @@ AskUserQuestion으로 파일 제목 형식을 묻는다.
 - 사용 가능 변수: `{category}`, `{title}`, `{date}`
 - 예시: `2026-04-08 bug 로그인 에러 메시지 누락.md`
 
-### Step 10: 설정 파일 생성
+### Step 11: 설정 파일 생성
 
 `~/.claude/plugins/data/silee-planner-cc-plugins/config.md` 경로에 설정 파일을 생성한다.
 디렉토리가 없으면 먼저 생성.
@@ -147,11 +171,14 @@ inbox_folder_path: "<inbox 폴더 경로>"
 in_progress_folder_path: "<진행중 폴더 경로>"
 resolved_folder_path: "<완료 폴더 경로>"
 dismissed_folder_path: "<폐기 폴더 경로>"
+repos_base_path: "<Git 저장소 루트 경로>"
+atlassian_site_url: "<Atlassian Cloud site URL (선택)>"
+atlassian_cloud_id: "<자동 캐시 - 비워둠>"
 file_title_format: "<파일 제목 형식>"
 ---
 ```
 
-### Step 11: 설정 요약 출력
+### Step 12: 설정 요약 출력
 
 설정 완료 후 아래 형식으로 요약 출력:
 
@@ -169,6 +196,8 @@ silee-planner 설정 완료:
   in_progress_folder_path:  <진행중 폴더 경로>
   resolved_folder_path:     <완료 폴더 경로>
   dismissed_folder_path:    <폐기 폴더 경로>
+  repos_base_path:          <Git 저장소 루트 경로>
+  atlassian_site_url:       <Atlassian site URL 또는 "(미설정)">
   file_title_format:        <파일 제목 형식>
   config:                   ~/.claude/plugins/data/silee-planner-cc-plugins/config.md
 ```

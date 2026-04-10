@@ -1,227 +1,363 @@
 ---
-description: Git 커밋 기반 주간/기간별 업무 보고서 자동 생성. 다수 레포의 커밋을 수집하여 티켓별 정리 및 다각도 리뷰 포함.
-allowed-tools: Bash, Read, Write, Edit, Agent, AskUserQuestion
-argument-hint: <기간> [레포 목록] [작성자]
+description: 주간 회고. Daily Notes, Memento 세션, Jira/Confluence, 커밋을 포함한 한 주의 총체적 흐름을 순간·질문·배움 중심으로 회고.
+allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, mcp__plugin_atlassian_atlassian__getAccessibleAtlassianResources, mcp__plugin_atlassian_atlassian__searchJiraIssuesUsingJql, mcp__plugin_atlassian_atlassian__searchConfluenceUsingCql
+argument-hint: <기간>
 ---
 
-# 주간 보고서 (weekly-report)
+# 주간 회고 (weekly-report)
 
-Git 커밋 데이터를 기반으로 기간별 업무 보고서를 자동 생성합니다.
+한 주의 총체적 흐름을 **순간·질문·배움** 중심으로 회고한다. 생산성 지표가 아니라 경험의 질이 중심.
 
 ## 인자
 
 | 인자 | 설명 | 필수 | 기본값 |
 |------|------|------|--------|
 | 기간 | 시작~종료 날짜 (자연어 또는 YYYY-MM-DD) | O | - |
-| 레포 | 대상 저장소 목록 | X | 현재 레포 |
-| 작성자 | Git author 이메일 | X | config.md `author_email` 또는 후보군에서 선택 |
 
 **사용 예시**:
 ```
-/silee-planner:weekly-report 2월 21일부터 27일까지
-/silee-planner:weekly-report 이번 주 connect-monorepo, eks, terraform-aws
-/silee-planner:weekly-report 지난 2주 user@company.com
+/silee-planner:weekly-report 이번 주
+/silee-planner:weekly-report 지난 주
+/silee-planner:weekly-report 2026-04-06~2026-04-12
 ```
+
+**Breaking change**: 이전 버전의 `[레포 목록]`, `[작성자]` 인자는 제거됨. 레포는 `repos_base_path`에서 자동 탐지, 작성자는 config의 `author_email` 사용. 이전 구문 사용 시 경고 1줄 후 기본값으로 진행.
 
 ## 워크플로우
 
 ### Step 1: 설정 로드 및 인자 파싱
 
-`~/.claude/plugins/data/silee-planner-cc-plugins/config.md` 파일을 읽는다.
+`~/.claude/plugins/data/silee-planner-cc-plugins/config.md` 파일을 Read한다.
 
 | 케이스 | 처리 |
 |--------|------|
-| 파일 존재 | `vault`, `weekly_notes_path`, `weekly_note_format`, `author_email`, `inbox_folder_path` 값을 로드 |
+| 파일 존재 | `vault`, `daily_notes_path`, `daily_note_format`, `weekly_notes_path`, `weekly_note_format`, `author_email`, `inbox_folder_path`, `in_progress_folder_path`, `resolved_folder_path`, `dismissed_folder_path`, `repos_base_path`, `atlassian_site_url`, `atlassian_cloud_id` 로드 |
 | 파일 없음 | "설정이 없습니다. `/silee-planner:setup`을 먼저 실행해주세요." 안내 후 중단 |
 
-사용자 입력에서 기간, 레포 목록, 작성자를 추출합니다.
+**기간 파싱**:
+- 자연어("이번 주", "지난 주")는 월요일 기준으로 실제 날짜 변환. 주 시작 = 월요일, 종료 = 일요일
+- `YYYY-MM-DD~YYYY-MM-DD` 형식 직접 지원
+- 기간 계산은 `date` 명령 사용:
+  ```bash
+  # 이번 주 월요일
+  date -j -v-Mon "+%Y-%m-%d"
+  ```
 
-- 날짜가 자연어("이번 주", "지난 2주")면 실제 날짜로 변환
-- 레포가 지정되지 않으면 현재 디렉토리의 레포 사용
-- 추가 working directory가 있으면 해당 레포도 포함 가능
-- **작성자 결정**:
-  - 인자로 명시적 지정된 경우 → 그대로 사용
-  - 미지정 시 후보군 수집 + 사용자 선택:
-    1. 후보 수집 (중복 제거):
-       - config.md의 `author_email` (캐시)
-       - `git config user.email` (현재 레포)
-       - `git config --global user.email` (글로벌)
-    2. AskUserQuestion(select)으로 후보 목록 제시 + "직접 입력" 옵션. 캐시값이 있으면 기본 선택
-    3. 선택 결과를 config.md의 `author_email` 필드에 업데이트 (Edit 도구로 frontmatter 수정)
+**`repos_base_path` 결정**:
+1. config에 값이 있으면 그대로 사용
+2. 없으면 현재 `pwd`에서 `Repositories` 세그먼트를 찾아 그 디렉토리 사용
+   ```bash
+   pwd | sed -E 's|(.*/Repositories)/.*|\1|'
+   ```
+3. 위 실패 시 AskUserQuestion으로 경로 확인 + 선택값을 config에 캐시 (Edit 도구로 frontmatter 수정)
 
-### Step 2: 커밋 데이터 수집
+**Atlassian 설정 확인**:
+- `atlassian_site_url`이 빈 문자열이면 Step 2B 전체 스킵
+- `atlassian_site_url` 있고 `atlassian_cloud_id` 없으면 `getAccessibleAtlassianResources` 호출하여 URL 매칭 후 config에 `atlassian_cloud_id` 캐시
 
-각 레포에 대해 **병렬로** general-purpose 에이전트를 실행하여 커밋 데이터를 수집합니다.
-
+**vault 경로 파악**:
+```bash
+obsidian vaults verbose
 ```
-Agent(subagent_type="general-purpose", model="haiku", prompt="""
-cd {repo_path} && git log --all --author="{author}" \
-  --since="{start_date}" --until="{end_date}" \
-  --format="%H|%ad|%s" --date=format:"%Y-%m-%d %H:%M"
+vault 이름 → 파일시스템 경로 매핑.
 
-각 커밋에 대해 git show --stat {hash} 실행하여 변경 파일 통계 수집.
-모든 커밋 해시, 날짜, 메시지, 변경 파일을 빠짐없이 보고.
-""")
+**임시 디렉토리 생성**:
+```bash
+TMPDIR=$(mktemp -d)
+echo "$TMPDIR"  # 이후 Step에서 사용하기 위해 기록
 ```
 
-**모든 레포를 동시에 실행** (Agent tool의 병렬 호출 활용).
+### Step 2A: 로컬 수집 (Python 스크립트 병렬 실행)
 
-### Step 3: 이슈 현황 수집 (선택적)
+4개의 Python 스크립트를 Bash `&`로 병렬 실행한다. `${CLAUDE_PLUGIN_ROOT}`를 사용하여 스크립트 경로를 참조한다.
 
-silee-planner가 보관한 이슈 중 보고 기간 내 생성된 것을 수집한다.
-이 Step은 config.md에 `inbox_folder_path`가 없거나 vault가 미설정이면 **자동으로 건너뛴다** (경고 없이 조용히 skip).
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/collect_daily_notes.py" \
+  "$VAULT_PATH" "$DAILY_NOTES_PATH" "$DAILY_NOTE_FORMAT" "$START" "$END" \
+  > "$TMPDIR/daily.json" 2>"$TMPDIR/daily.err" &
 
-> Step 2와 Step 3은 독립적이므로 **병렬 실행 가능**.
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/collect_memento_logs.py" \
+  "$HOME/.claude/memento/projects" "$START" "$END" \
+  > "$TMPDIR/memento.json" 2>"$TMPDIR/memento.err" &
 
-**수집 절차**:
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/collect_commits.py" \
+  "$REPOS_BASE_PATH" "$AUTHOR_EMAIL" "$START" "$END" \
+  > "$TMPDIR/commits.json" 2>"$TMPDIR/commits.err" &
 
-1. config.md에서 `vault`, `inbox_folder_path` 읽기
-   - 값 없음 → 이 Step 건너뛰고 Step 4로 진행
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/collect_issues.py" \
+  "$VAULT_PATH" "$INBOX_PATH" "$IN_PROGRESS_PATH" "$RESOLVED_PATH" "$DISMISSED_PATH" \
+  "$START" "$END" \
+  > "$TMPDIR/issues.json" 2>"$TMPDIR/issues.err" &
 
-2. `obsidian vaults verbose` 실행하여 vault 이름 → 파일시스템 경로 매핑
-   - obsidian CLI 미설치 또는 vault 미발견 → 조용히 skip
+wait
+```
 
-3. `{vault_path}/{inbox_folder_path}/` 하위 일자별 폴더 탐색
-   - 폴더명(`{YYYY-MM-DD}`)으로 1차 날짜 필터 (보고 기간 범위)
-   - 각 `.md` 파일의 YAML frontmatter 파싱: `created`, `category`, `priority`, `status`, `source_project`
-   - frontmatter `created` 값으로 2차 날짜 필터 (정확한 기간 검증)
-   - 본문에서 `# {제목}` (h1)과 `## 요약` 섹션 내용 추출
+- 각 스크립트 실패 시 stderr 파일에 기록, JSON은 비어있을 수 있음
+- 실패한 소스는 다음 Step에서 빈 결과로 자연스럽게 처리됨
 
-4. 이슈가 0건이면 이슈 현황 섹션을 보고서에 포함하지 않음
+### Step 2B: Atlassian 수집 (MCP 호출, 선택)
 
-### Step 4: 커밋 데이터 분석
+`atlassian_cloud_id`가 있는 경우에만 실행한다. 없으면 이 Step 전체를 스킵하고 빈 파일로 초기화:
 
-수집된 데이터에서:
+```bash
+echo '{"issues": []}' > "$TMPDIR/jira.json"
+echo '{"pages": []}' > "$TMPDIR/confluence.json"
+```
 
-1. **티켓 추출**: 커밋 메시지에서 `CND-\d+`, `JIRA-\d+` 등 티켓 ID 패턴 추출
-2. **날짜별 그룹핑**: 커밋을 날짜 순으로 정렬
-3. **파일 카테고리 분류**:
-   - `server/**` → 백엔드
-   - `client/**` → 프론트엔드
-   - `pipelines/**`, `Dockerfile*`, `*.yaml` (k8s) → 인프라/DevOps
-   - `.claude/**`, `scripts/**` → DevTooling
-4. **투입 비율 계산**: 카테고리별 변경 파일 수 기반 비율 산출
+**Atlassian 활성화 시**:
 
-### Step 5: 보고서 생성
+1. **Jira 이슈 수집**:
+   - 호출: `mcp__plugin_atlassian_atlassian__searchJiraIssuesUsingJql`
+   - 파라미터:
+     - `cloudId`: config의 `atlassian_cloud_id`
+     - `jql`: `(assignee = currentUser() OR worklogAuthor = currentUser()) AND updated >= "{START}" AND updated <= "{END}" ORDER BY updated DESC`
+     - `fields`: `["summary", "status", "issuetype", "priority", "updated", "description"]`
+     - `limit`: 50
+   - 결과를 다음 형식으로 간소화하여 Write 도구로 `$TMPDIR/jira.json`에 저장:
+     ```json
+     {
+       "issues": [
+         {
+           "key": "CND-1234",
+           "summary": "...",
+           "status": "Done",
+           "type": "Task",
+           "priority": "Medium",
+           "updated": "2026-04-07",
+           "description_excerpt": "첫 200자"
+         }
+       ]
+     }
+     ```
+   - 실패 시 `{"issues": []}`로 저장하고 다음 진행
 
-아래 구조의 마크다운 보고서를 생성합니다:
+2. **Confluence 페이지 수집**:
+   - 호출: `mcp__plugin_atlassian_atlassian__searchConfluenceUsingCql`
+   - 파라미터:
+     - `cloudId`: config의 `atlassian_cloud_id`
+     - `cql`: `type = page AND contributor = currentUser() AND lastmodified >= "{START}" AND lastmodified <= "{END}" ORDER BY lastmodified DESC`
+     - `limit`: 50
+   - 결과 간소화하여 `$TMPDIR/confluence.json`에 저장:
+     ```json
+     {
+       "pages": [
+         {
+           "id": "...",
+           "title": "...",
+           "space": "ENG",
+           "lastmodified": "2026-04-07",
+           "url": "https://...",
+           "excerpt": "첫 200자"
+         }
+       ]
+     }
+     ```
+   - 실패 시 `{"pages": []}`로 저장
+
+**중단 조건**: Daily Notes + Memento + Jira + Confluence 모두 0건이면 "회고할 재료가 없습니다" 안내 후 임시 디렉토리 삭제하고 중단.
+
+### Step 3: 타임라인 묶기
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/bundle_week.py" \
+  "$TMPDIR/daily.json" "$TMPDIR/memento.json" \
+  "$TMPDIR/commits.json" "$TMPDIR/issues.json" \
+  "$TMPDIR/jira.json" "$TMPDIR/confluence.json" \
+  > "$TMPDIR/timeline.json"
+```
+
+### Step 4: 회고 초안 작성
+
+`$TMPDIR/daily.json`, `$TMPDIR/memento.json`, `$TMPDIR/commits.json`, `$TMPDIR/issues.json`, `$TMPDIR/jira.json`, `$TMPDIR/confluence.json`, `$TMPDIR/timeline.json`을 Read 도구로 모두 읽어 회고 초안을 작성한다.
+
+#### 작성 원칙
+
+- **숫자/비율/통계 언급 금지**. 부록의 `counts`도 본문에 인용하지 않는다
+- **표/차트 생성 금지**. 본문은 산문(narrative)으로
+- **최상급 금지**. "가장 많이", "가장 커밋이 많은" 같은 양적 사고 금지
+- **원문 인용 활용**. Review "배운 것", Memento `decisions`/`analysis`, Jira summary 등 **사용자가 직접 쓴 문장**을 인용부호로 박음
+- **placeholder `_{직접 써주세요}_` 적극 사용**. AI가 채우지 말아야 할 자리를 명시
+- **범주화 금지**. "기술/비기술", "프로젝트/영역" 같은 분류 만들지 말 것
+- **회고 재료가 빈약하면 솔직하게**: 해당 섹션을 "이번 주에는 뚜렷한 X가 없었다"로 놓아두고 placeholder만 남김
+
+#### 회고 템플릿
 
 ```markdown
-# 주간 업무 보고서
+---
+created: {today}
+period_start: {START}
+period_end: {END}
+tags:
+  - weekly-review
+---
 
-## Part A — 기간 요약
-- 기간, 레포, 커밋/티켓 수, 투입 분야 비율 테이블
+# 주간 회고: {START} ~ {END}
 
-## Part B — 다각도 리뷰
+## 1. 이번 주의 순간들
+> 뚜렷하게 남은 장면, 대화, 결정의 기억
 
-### 1. 임팩트 분석 (비즈니스 + 개발자)
-  - 비즈니스 임팩트 테이블 (이전→이후→효과)
-  - 개발자 임팩트: 지속적으로 적용 가능한 개선 사항
-  - 리스크 완화 실적
+{LLM이 Daily Notes Review, Memento decisions/analysis, 이슈 요약, Jira 이슈 description에서 "특별히 기억에 남을 법한" 3-5개 순간을 찾아 한 문단씩 서술. 각 순간은 날짜 앵커(`_{YYYY-MM-DD}_`)와 원문 인용(`> ...`) 1개 이상 포함.}
 
-### 2. 추천 기술 세션
-  - 이번 주 작업에서 도출한 세션 주제 (커밋/PR 기반 근거 명시)
-  - 각 주제: 주제명, 대상 청중, 핵심 내용 요약, 기대 효과
+_{더 떠오르는 순간이 있다면 직접 덧붙여 주세요}_
 
-### 3. 팀 기여도 관점 (업무 repo만)
-  - 정량 지표 (커밋 수, PR 수, 파일 수) — 업무(회사) 저장소 커밋만 집계
-  - 팀 생산성 기여 (도구 개선, 자동화)
-  - 지식 공유/멘토링 기회, 블로그 주제
+## 2. 나를 살아있게 한 것 / 힘들게 한 것
+> 생산성이 아니라 경험의 질
 
-### 4. 기술적 깊이 관점
-  - 기술 스택별 작업 깊이 테이블
-  - 기술적 난제와 해결 과정 (문제→원인→시도→해결→교훈)
+### 살아있게 한 것
+{Memento/Review 원문에서 "몰입/돌파/발견"의 단서가 된 문장 2-3개를 인용부호로 박고, 각 인용 뒤에 한 줄 맥락}
 
-### 5. 업무 방식 개선 관점
-  - 아키텍처 의사결정 패턴, 기술 부채 관리 전략, 팀 간 협업 구조 분석
-  - 다음 주에 실험해볼 구체적 접근법
+_{직접 써주세요}_
 
-### 6. 자기 피드백 & 경력기술서 관점
-  - 핵심 역량별 성과 기술
-  - 각 역량에 경력기술서 활용 문구 (이탤릭)
+### 힘들게 한 것
+{"블로커/반복/미완"의 단서가 된 문장 2-3개를 인용부호로 박고, 각 인용 뒤에 한 줄 맥락}
 
-## Part C — 이슈 현황 (Step 3에서 수집된 경우에만)
+_{직접 써주세요}_
 
-### 요약 통계
-| 카테고리 | 건수 |
-|----------|------|
+## 3. 떠오른 질문과 생각
+> 해답보다 질문. 해결되지 않은 긴장
 
-### 이슈 목록
-| # | 제목 | 카테고리 | 우선순위 | 상태 | 프로젝트 | 생성일 |
-|---|------|----------|----------|------|----------|--------|
+{Daily Notes Log/Review, Memento analysis에서 물음표나 미결정을 발견하여 나열. 없으면 "이번 주에는 뚜렷한 질문을 남기지 않았다"로 솔직하게.}
 
-### 주요 이슈 상세 (high 우선순위만)
+_{나만이 아는 질문이 있다면}_
 
-## 부록: 커밋 전체 목록
+## 4. 배움과 발견
+> 기술뿐 아니라 나 자신에 대해, 일에 대해
+
+{Daily Notes "배운 것" 섹션과 Memento outcome/references를 모아 범주 없이 한 줄씩 인용. 범주화 금지.}
+
+{만약 2-3개의 배움이 같은 주제로 묶인다면 그 연결을 한 문단으로 서술.}
+
+## 5. 남겨진 것들
+> 미완성 작업이 아니라 미완성 생각
+
+{Daily Notes 미완료 + 열린 이슈 + Memento의 "결정 유보" 부분에서 **정서적/인지적 실마리**를 찾아 서술. "N건 이월" 같은 수치 대신 "아직 답하지 않은 질문이 하나 있다: ..." 식으로.}
+
+## 6. 다음 주의 나에게
+> 편지
+
+{1~5의 흐름을 바탕으로 **나에게 보내는 짧은 편지**(3-5문장) 초안. 구체적 task 리스트 아님. 의도/바람/경계.}
+
+_{진짜 하고 싶은 말을 직접 고쳐 써주세요}_
+
+---
+
+## 부록
+
+<details><summary>원시 타임라인 (시간순)</summary>
+
+{timeline.json의 항목을 날짜별로 그룹화. 각 항목은 `- [{source}] {ref} — {preview}` 형식}
+
+</details>
+
+<details><summary>숫자로 본 한 주</summary>
+
+| 지표 | 값 |
+|------|-----|
+| Daily Notes | {counts.daily_notes}일 |
+| Memento 세션 | {counts.memento_sessions}건 |
+| Commits | {counts.commits}건 |
+| 활동 레포 | {counts.active_repos}개 |
+| Issue Box | {counts.issues}건 |
+| Jira 이슈 | {counts.jira_issues}건 |
+| Confluence 페이지 | {counts.confluence_pages}건 |
+
+</details>
+
+<details><summary>커밋 로그</summary>
+
+{commits.json의 repos별 그룹핑. 각 레포 아래 커밋 리스트 `- {date} {hash:0-7} {message}`}
+
+</details>
+
+<details><summary>Issue Box 목록</summary>
+
+{issues.json의 issues 테이블 — 비어 있으면 이 섹션 생략}
+
+| 상태 | 카테고리 | 제목 | 생성 | 해결 |
+|------|----------|------|------|------|
+
+</details>
+
+<details><summary>Jira 이슈 목록</summary>
+
+{jira.json의 issues 테이블 — 비어 있으면 이 섹션 생략}
+
+| Key | 상태 | 유형 | 제목 | 업데이트 |
+|-----|------|------|------|----------|
+
+</details>
+
+<details><summary>Confluence 페이지 목록</summary>
+
+{confluence.json의 pages 테이블 — 비어 있으면 이 섹션 생략}
+
+| 제목 | 스페이스 | 최종 수정 |
+|------|----------|-----------|
+
+</details>
 ```
+
+### Step 5: 사용자 확인
+
+AskUserQuestion으로 회고 **전문(full text)**을 보여주고 확인받는다:
+- "이대로" → Step 6으로
+- 수정 내용 입력 → 반영 후 다시 전문 확인 (최대 2회 수정 루프)
 
 ### Step 6: 파일 저장
 
-config.md의 `weekly_notes_path` + `weekly_note_format`을 사용하여 저장 경로를 생성한다.
+config의 `weekly_notes_path` + `weekly_note_format`을 사용하여 저장 경로 생성.
 
 **경로 변수 치환**:
 | 변수 | 값 | 계산 |
 |------|-----|------|
 | `{YYYY}` | 4자리 연도 | `date "+%Y"` |
-| `{MM}` | 2자리 월 (zero-padded) | `date "+%m"` |
-| `{WW}` | ISO 8601 주 번호 (zero-padded) | `date -j -f "%Y-%m-%d" "{start_date}" "+%V"` |
+| `{MM}` | 2자리 월 | `date "+%m"` |
+| `{WW}` | ISO 8601 주 번호 | `date -j -f "%Y-%m-%d" "$START" "+%V"` |
 
 **최종 경로**: `{vault_path}/{weekly_notes_path}/{weekly_note_format}.md`
 - 예: `02 Weekly Notes/2026/2026 Week-15.md`
 
-**Obsidian vault 위치**: `obsidian vaults verbose`로 vault 이름 → 경로 매핑.
+**기존 파일 처리**:
+- 이미 존재하면 `{filename}.bak`으로 백업 후 새 파일 작성 (사용자가 placeholder에 채워넣은 내용 보존)
+- `.bak` 파일이 이미 있으면 덮어씀 (한 세대만 유지)
 
-**Obsidian frontmatter** (YAML): 보고서 본문 상단에 반드시 포함
+Write 도구로 새 회고 파일 작성.
 
-```yaml
----
-created: {today}
-period_start: {start_date}
-period_end: {end_date}
-author: {author_email}
-repositories:
-  - {repo_1}
-  - {repo_2}
-total_commits: {count}
-total_tickets: {count}
-tickets:
-  - {ticket_1}
-  - {ticket_2}
-tags:
-  - weekly-report
-# 이슈가 있는 경우에만 아래 필드 포함
-issue_count: {총 이슈 수}
-issue_categories:
-  bug: {N}
-  tech-debt: {N}
-  enhancement: {N}
-  risk: {N}
-  follow-up: {N}
-  task: {N}
----
+### Step 7: 임시 파일 정리
+
+```bash
+rm -rf "$TMPDIR"
 ```
 
-Write 도구로 파일을 생성한다. 이미 존재하면 "이미 보고서가 있습니다. 덮어쓸까요?" 질문.
+정리 완료 후 "주간 회고 작성 완료: {파일 경로}" 출력.
 
 ## Do / Don't
 
 | Do | Don't |
 |----|-------|
-| 커밋 메시지와 변경 파일 기반으로 사실적 서술 | 실제 커밋에 없는 작업을 추측하여 추가 |
-| 경력기술서 활용 문구에 구체적 수치/기술명 포함 | "다양한 기술을 활용" 같은 모호한 표현 |
-| 개선 기회를 건설적으로 제안 | 비난이나 부정적 평가 |
-| 기술적 난제는 문제→시도→해결 과정을 서술 | 결과만 나열하고 과정 생략 |
-| 각 관점에서 actionable한 제안 포함 | 일반론적 조언 반복 |
-| 개발자 임팩트를 장기적/지속적 관점으로 서술 | 일시적 핫픽스를 지속적 개선으로 과장 |
-| 팀 기여도에 업무 레포 작업만 포함 | 개인 프로젝트 커밋을 팀 기여도에 포함 |
-| 업무 방식 개선을 커밋/PR 데이터의 구조적 패턴에 기반하여 제안 | 업무 방식을 추측으로 평가 |
+| 본문은 산문(narrative)으로 | 본문에 표/차트/수치 |
+| 사용자가 직접 쓴 문장을 인용부호로 본문에 박기 | AI가 요약·재해석하여 원문 변질 |
+| 순간(moments)은 날짜 앵커와 함께 | 양적 최상급 ("가장 많은 N") |
+| placeholder `_{직접 써주세요}_`를 적극 남김 | AI가 감정/소감/의지를 대신 작성 |
+| Memento 로그의 `decisions`/`analysis`를 재료로 | Memento를 "AI와의 대화"로 오해하여 제외 |
+| 배움은 범주 없이 한 줄씩 인용 | "기술/비기술"로 분류 |
+| "남겨진 것"을 **정서적/인지적 실마리**로 | "미완료 N건" 식 수치 |
+| "다음 주의 나에게"는 짧은 편지 | Continue/Change/Try 버킷 리스트 |
+| 숫자는 `<details>` 부록에만 격리 | 본문에 수치 인용 |
+| Repositories 하위 활성 레포 자동 탐지 | 레포를 사용자에게 일일이 묻기 |
+| 수집은 폭넓게, 서술은 선별적으로 | 모든 수집 데이터를 본문에 풀기 |
+| 회고 재료 0건이면 솔직하게 중단 | 빈약한 재료로 억지 서술 |
+| 기존 파일은 `.bak`으로 백업 후 덮어쓰기 | 덮어쓰기로 placeholder 손실 |
+| Python 스크립트로 결정론적 수집 | LLM에 파싱/집계 위임 |
+| Jira/Confluence는 고정 JQL/CQL로 재현성 확보 | 쿼리를 LLM이 즉석에서 생성 |
+| Jira 이슈의 summary/description을 원문 인용 재료로 | 이슈 상태 전환(In Progress→Done)을 본문 반영 |
+| Atlassian 미설정 시 조용히 스킵 | "Jira 미설정" 경고로 노이즈 |
+| 이전 인자 구문 사용 시 경고 1줄 후 기본값 진행 | 이전 구문을 그대로 해석 시도 |
 
 ## 보고서 품질 기준
 
-- **사실 기반**: 모든 내용은 실제 커밋/파일 변경에서 도출
-- **구체적**: 파일명, 기술명, 수치를 포함
-- **다각도**: 6가지 관점 (임팩트 → 기술 세션 → 팀 기여도 → 기술 깊이 → 업무 개선 → 자기 피드백)
-- **actionable**: 각 관점에서 다음 행동 제안 포함
-- **가독성**: 테이블, 코드 블록, 구조화된 마크다운 활용
-- **팀 기여도 필터**: 업무(회사) 저장소 커밋만 집계 (개인 프로젝트 제외)
-- **잘한 점/아쉬운 점 미생성**: 이 항목은 사용자 직접 작성 영역이므로 보고서에 포함하지 않음
+- **총체성**: Daily Notes + Memento + Jira + Confluence + Commits + Issue Box를 모두 수집. 회고에 드러나는 것은 선별적
+- **주권**: 사용자가 채워야 할 자리는 placeholder로 명시. AI가 대신 쓰지 않음
+- **순간 중심**: 완료 개수가 아닌 기억에 남는 장면
+- **원문 존중**: 인용부호로 박아 사용자의 문장을 보존
+- **생산성 용어 제거**: 임팩트/효율/기여도/최상급 없음

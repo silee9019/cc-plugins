@@ -46,12 +46,12 @@
     {
       "name": "silee-planner",
       "source": "./silee-planner",
-      "description": "일일 업무 계획, 할 일 캡처, 작업 완료/리마인드, 하루 마감 정리, 백로그 보관/선택, 주간 보고서, 프로젝트 체크포인트 트래킹을 통합한 개인 플래너. Obsidian Daily Notes와 Issue Box를 연동.",
-      "version": "1.6.0",
+      "description": "일일 업무 계획, 할 일 캡처, 작업 완료/리마인드, 하루 마감 정리, 백로그 보관/선택, 주간 회고, 프로젝트 체크포인트 트래킹을 통합한 개인 플래너. Obsidian Daily Notes, Memento 로그, Issue Box, Jira/Confluence를 연동.",
+      "version": "2.0.0",
       "author": {
         "name": "silee9019"
       },
-      "keywords": ["planner", "daily", "weekly", "obsidian", "issue", "report", "pick", "capture", "done", "checkpoint", "okr"],
+      "keywords": ["planner", "daily", "weekly", "obsidian", "issue", "review", "pick", "capture", "done", "checkpoint", "okr", "memento", "jira", "confluence"],
       "category": "workflow"
     },
     {

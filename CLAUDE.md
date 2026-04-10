@@ -174,7 +174,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | 플러그인 | 버전 | 카테고리 | 컴포넌트 | 런타임 | 외부 의존성 |
 |----------|------|----------|----------|--------|-------------|
 | git-init | 1.4.1 | workflow | command | — | gh, curl |
-| silee-planner | 1.6.0 | workflow | command | — | obsidian CLI, git, Jira MCP |
+| silee-planner | 2.0.0 | workflow | command | Python 3 | obsidian CLI, git, Jira MCP, Atlassian MCP |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
 | memento | 1.6.8 | utility | skill+hook+command | Bun | qmd |
@@ -218,9 +218,9 @@ git-init/
 
 ### silee-planner
 
-- **수정 시**: 커맨드 간 교차 참조 (`plan-today`, `review-today`, `finish-task` 등) 동기화 확인. Step 순서 변경 시 번호 정합성 확인
+- **수정 시**: 커맨드 간 교차 참조 (`plan-today`, `review-today`, `finish-task` 등) 동기화 확인. Step 순서 변경 시 번호 정합성 확인. **weekly-report 관련**: 스크립트 변경 시 `bundle_week.py`의 입력 스키마와 `weekly-report.md`의 템플릿 변수 동기화. JQL/CQL 템플릿 변경 시 재현성 고려
 - **테스트**: 각 커맨드를 Obsidian vault 환경에서 실행 확인
-  - `/silee-planner:setup` → 설정 생성 확인
+  - `/silee-planner:setup` → 설정 생성 확인 (repos_base_path, atlassian_site_url 포함)
   - `/silee-planner:plan-today` → Daily Note 생성 확인
   - `/silee-planner:capture-task 할일내용` → 빠른 캡처 확인
   - `/silee-planner:capture-task` → 세션 스캔 확인
@@ -228,17 +228,19 @@ git-init/
   - `/silee-planner:finish-task 키워드` → fuzzy match 빠른 완료 + 다음 작업 전환 확인
   - `/silee-planner:pick-task` → 백로그 조회/선택 확인
   - `/silee-planner:review-today` → 마감 정리 확인
-  - `/silee-planner:weekly-report 이번 주` → 보고서 생성 확인
+  - `/silee-planner:weekly-report 이번 주` → 주간 회고 생성 확인 (Memento/Jira/Confluence 수집, 산문 회고, `.bak` 백업, 부록 `<details>` 구조)
+  - 스크립트 단위: `python3 silee-planner/scripts/collect_memento_logs.py "$HOME/.claude/memento/projects" 2026-04-01 2026-04-10`
   - `/silee-planner:project-checkpoint` → Jira 동기화 + 체크포인트 리뷰 + 트래킹 파일 갱신 확인
-- **의존성**: `obsidian` CLI (`brew install obsidian-cli`), `git`, Jira MCP (project-checkpoint)
+- **의존성**: `obsidian` CLI (`brew install obsidian-cli`), `git`, Python 3 (표준 라이브러리만), Jira MCP (project-checkpoint), Atlassian MCP (weekly-report 선택)
 - **설정**: `~/.claude/plugins/data/silee-planner-cc-plugins/config.md`
 - **상태 라이프사이클**: `open | blocked → in-progress → resolved | dismissed` (각 상태별 폴더 이동)
 - **주의**:
   - issue-box config(구 버전) 마이그레이션은 setup에서 자동 처리
   - `capture-task`: 인자 있으면 빠른 캡처, 없으면 세션 대화에서 이슈 추출
-  - weekly-report 작성자 이메일은 config.md `author_email`에 캐시
+  - `weekly-report` (v2.0.0): 5개 Python 스크립트 + Atlassian MCP 하이브리드 수집. 본문은 산문 회고, 숫자는 `<details>` 부록에만. 이전 인자(`[레포]`, `[작성자]`)는 제거됨. 기존 파일은 `.bak`으로 백업
   - `project-checkpoint`: KR1 프로세스 준수율 트래킹 (Jira MCP 연동, 3일 주기). 트래킹 파일 경로/에픽 키는 커맨드 파일에 하드코딩 (OKR 기간별 고정)
   - `plan-today`: KR1 체크포인트 연체 감지 연동 (트래킹 파일의 `다음 업데이트` 날짜 확인)
+  - Python 스크립트는 모두 표준 라이브러리만 사용, stdin/stdout JSON 파이프라인
 
 ### andrej-karpathy-skills
 
