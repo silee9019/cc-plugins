@@ -182,7 +182,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | tutor | 0.1.3 | workflow | command + skill | Python 3 | obsidian CLI |
 | knowledge-tools | 0.1.1 | workflow | skill | — | pandoc |
 | resume-coach | 0.1.1 | workflow | skill | — | 없음 |
-| review-flow | 0.1.1 | workflow | skill | — | 없음 (WebFetch는 선택적) |
+| review-flow | 0.1.2 | workflow | skill | — | 없음 (WebFetch는 선택적) |
 
 ### agentic-workflow
 

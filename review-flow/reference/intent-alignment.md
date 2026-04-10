@@ -38,6 +38,8 @@ review-flow의 모든 리뷰 스킬(plan-review / code-review / skill-review)이
 | **Clear but Misaligned** | 의도는 명확하나 산출물이 빗나감 (누락 또는 과잉 존재) | **BLOCK**. 일반 리뷰 중단. 수정 권장 항목을 Fix Plan 형태로 제시하여 사용자 컨펌을 먼저 받음 |
 | **Unclear** | 의도/요구사항 자체가 불분명 | **회의 주최**. 일반 리뷰 중단. 아래 프로토콜 수행 |
 
+> ※ 각 스킬의 **총평 매핑**(PASS/WARN/BLOCK 임계, BLOCK 확정 조건 등)은 이 표가 아니라 해당 스킬 정의(SKILL.md의 Step 6 등)를 우선한다. 이 문서는 의도 정합성 판정 프로토콜만 정의한다.
+
 ### 4. 회의 주최 프로토콜 (Unclear인 경우)
 
 의도가 불분명하면 리뷰를 이어가지 않고 명확화부터 수행한다.
