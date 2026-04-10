@@ -1,6 +1,20 @@
 # Review Criteria
 
-review-flow 플러그인의 범용 리뷰 기준. plan-review와 code-review 스킬이 공유한다.
+review-flow 플러그인의 범용 리뷰 기준. plan-review, code-review, skill-review 스킬이 공유한다.
+
+## Priority-0: 의도 정합성 (모든 리뷰 스킬 공통)
+
+모든 리뷰는 기술적 품질 평가보다 **먼저** 사용자 의도와 산출물의 정합성을 검증한다. 기술적 완성도가 높더라도 의도를 빗나간 산출물은 BLOCK 처리한다.
+
+- **상세 프로토콜**: `${CLAUDE_PLUGIN_ROOT}/reference/intent-alignment.md`
+- **판정**:
+  - **Clear & Aligned** → 아래 기술적 기준을 이어서 적용
+  - **Clear but Misaligned** → 일반 리뷰 중단. 정합성 복구 항목을 Fix Plan으로 먼저 사용자에게 컨펌
+  - **Unclear** → 회의 주최 (AskUserQuestion 또는 `knowledge-tools:ontology-workshop` 위임) 후 재실행
+
+**아래의 기술적 기준은 "Clear & Aligned" 판정을 받은 경우에만 적용된다.**
+
+---
 
 ## Plan Review 기준
 
@@ -127,3 +141,42 @@ review-flow 플러그인의 범용 리뷰 기준. plan-review와 code-review 스
 1. CLAUDE.md에서 프로젝트 가이드라인을 읽는다
 2. 린터/포매터 설정 (.eslintrc, pyproject.toml 등)을 참조한다
 3. 범용 기준과 프로젝트별 기준이 충돌하면 프로젝트별 기준을 우선한다
+
+## 공통: 수정 계획(Fix Plan) 필수 포함
+
+모든 리뷰 스킬(plan-review / code-review / skill-review)의 보고서는 "발견 사항 나열"로 끝나지 않고 반드시 **실행 가능한 수정 계획** 섹션을 포함한다. 사용자는 이 계획을 보고 **컨펌 / 피드백 / 부분 승인** 중 하나를 선택하며, 선택에 따라 리뷰 스킬이 후속 동작을 수행한다.
+
+보고서 말미 공통 템플릿:
+
+```markdown
+## 수정 계획 (Fix Plan)
+
+> 이 계획에 대해 **컨펌**하시면 수정을 진행합니다. 수정이 필요하면 **피드백**을 주세요.
+
+### 필수 수정 (Critical + Important)
+1. **[파일:라인 또는 섹션]** — [무엇을 어떻게 바꿀지 구체적 액션]
+   - 근거: [리뷰 발견 근거]
+   - 검증: [수정 후 확인 방법]
+2. ...
+
+### 선택 수정 (Suggestion)
+1. **[...]** — [...]
+
+### 실행 순서
+1. 필수 1 → 필수 2 → ...
+2. 각 수정 후 검증 단계
+3. 전체 재리뷰 여부
+
+### 사용자 액션 요청
+- [ ] **컨펌** → 위 계획대로 수정 진행
+- [ ] **피드백** → 아래 피드백을 받아 계획 수정 후 재확인
+- [ ] **부분 승인** → 특정 항목만 선택하여 수정
+```
+
+각 스킬은 보고서 출력 직후 `AskUserQuestion`으로 세 선택지를 제시하고, 선택에 따라 다음을 수행한다:
+
+- **컨펌** → 필수 수정부터 순차 실행, 각 수정 후 검증 요약 보고
+- **피드백** → 피드백 반영하여 Fix Plan 재작성 후 다시 사용자 컨펌 요청
+- **부분 승인** → 선택된 항목만 실행
+
+`intent-alignment.md`의 "Clear but Misaligned → BLOCK" 케이스에서도 이 Fix Plan 형식으로 "정합성 복구 항목"을 우선 제시하여 사용자 컨펌을 받는다.

@@ -174,7 +174,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | 플러그인 | 버전 | 카테고리 | 컴포넌트 | 런타임 | 외부 의존성 |
 |----------|------|----------|----------|--------|-------------|
 | git-init | 1.4.1 | workflow | command | — | gh, curl |
-| silee-planner | 2.0.0 | workflow | command | Python 3 | obsidian CLI, git, Jira MCP, Atlassian MCP |
+| silee-planner | 2.0.1 | workflow | command | Python 3 | obsidian CLI, git, Jira MCP, Atlassian MCP |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
 | memento | 1.6.8 | utility | skill+hook+command | Bun | qmd |
@@ -182,7 +182,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | tutor | 0.1.3 | workflow | command + skill | Python 3 | obsidian CLI |
 | knowledge-tools | 0.1.1 | workflow | skill | — | pandoc |
 | resume-coach | 0.1.1 | workflow | skill | — | 없음 |
-| review-flow | 0.1.0 | workflow | skill | — | 없음 |
+| review-flow | 0.1.1 | workflow | skill | — | 없음 (WebFetch는 선택적) |
 
 ### agentic-workflow
 
@@ -436,21 +436,34 @@ resume-coach/
 ```
 review-flow/
 ├── .claude-plugin/plugin.json
+├── .gitignore                          ← .cache/claude-docs/ 제외
 ├── skills/
-│   ├── plan-review/SKILL.md        ← 설계/계획 검토
-│   └── code-review/SKILL.md        ← 코드 변경 검토
-└── reference/
-    └── review-criteria.md          ← 범용 리뷰 기준 (양 스킬 공유)
+│   ├── plan-review/SKILL.md            ← 설계/계획 검토
+│   ├── code-review/SKILL.md            ← 코드 변경 검토
+│   └── skill-review/SKILL.md           ← 스킬/커맨드 문서 검토 (agent harness 관점)
+├── reference/
+│   ├── review-criteria.md              ← 범용 리뷰 기준 (3개 스킬 공유)
+│   ├── intent-alignment.md             ← Priority-0 의도 정합성 공유 프로토콜
+│   └── skill-review-criteria.md        ← skill-review의 기준 소스(공식 가이드)와 페치 정책
+└── .cache/claude-docs/                 ← (런타임) 공식 가이드 캐시 (gitignore)
 ```
 
-- **스킬 2개**: plan-review (설계 검토), code-review (코드 검토)
-- **수정 시**: review-criteria.md의 기준 변경 시 양 스킬의 워크플로우도 동기화 확인
+- **스킬 3개**: plan-review (설계), code-review (코드), skill-review (SKILL.md + 슬래시 커맨드)
+- **수정 시**:
+  - `review-criteria.md` 변경 시 3개 스킬 워크플로우 동기화 확인
+  - `intent-alignment.md`는 3개 스킬 모두 Step 0에서 로드 — 프로토콜 변경 시 각 SKILL.md의 Step 0 설명도 동기화
+  - `skill-review-criteria.md`의 페치 알고리즘/임계값 변경 시 skill-review SKILL.md의 Step 2 요약 동기화
 - **테스트**:
-  - plan-review: 설계 문서 입력 → 보고서 출력 확인 (codex 병렬 포함)
-  - code-review: `git diff` → 위임 판단 + 보고서 출력 확인
-- **의존성**: 없음 (codex, pr-review-toolkit은 선택적 위임)
+  - plan-review: 설계 문서 입력 → Step 0 정합성 검증 → 보고서 (Fix Plan 포함) → 컨펌 대기 확인
+  - code-review: `git diff` → Step 0 → 위임 판단 → 보고서 → 컨펌 대기 확인
+  - skill-review: SKILL.md 입력 → 공식 가이드 페치 (캐시/라이브) → 위임+자체+codex 교차 → Fix Plan → 컨펌 대기 확인
+  - 페치 실패 시뮬레이션: 네트워크 차단 → 캐시 Fallback + 경고 출력 확인
+- **의존성**: 없음. `WebFetch`(skill-review), `/codex`(병렬), `pr-review-toolkit`/`gstack /review`/`plugin-dev:skill-reviewer`(선택적 위임)는 모두 있으면 활용, 없으면 자체 리뷰로 폴백
 - **주의**:
-  - code-review는 pr-review-toolkit/gstack /review가 있으면 우선 위임
-  - codex 병렬 리뷰는 양 스킬 모두 필수
-  - 보고서는 왜(Why)/무엇을(What)/어떻게(How) 3축 구조
+  - **Priority-0 의도 정합성 원칙**: 모든 리뷰 스킬은 기술적 품질 평가 전에 사용자 의도/요구사항 정합성을 먼저 검증한다. 판정 결과가 `Clear but Misaligned` 또는 `Unclear`면 일반 리뷰를 중단하고 Fix Plan/회의 주최로 분기한다
+  - **Fix Plan 컨펌 절차**: 모든 리뷰는 보고서 말미에 Fix Plan 섹션과 AskUserQuestion 컨펌 단계를 반드시 포함. 사용자가 **컨펌/피드백/부분 승인** 중 하나를 선택하지 않으면 수정을 진행하지 않는다
+  - **skill-review 공식 가이드 페치**: 매 실행마다 `https://code.claude.com/docs/llms.txt`를 라이브 페치, 성공 시 `${CLAUDE_PLUGIN_ROOT}/.cache/claude-docs/`에 24h TTL로 캐시. 페치 실패가 누적(≥3회 또는 >72h)되면 경고 + Tentative 플래그, 더 누적(≥5회 또는 >7d)되면 사용자 중단 가능 알림
+  - code-review는 pr-review-toolkit / gstack /review가 있으면 우선 위임
+  - codex 병렬 리뷰는 3개 스킬 모두 선택적 — 없으면 건너뜀
+  - 보고서는 왜(Why)/무엇을(What)/어떻게(How) 3축 구조 + Fix Plan
 

@@ -47,7 +47,7 @@
       "name": "silee-planner",
       "source": "./silee-planner",
       "description": "일일 업무 계획, 할 일 캡처, 작업 완료/리마인드, 하루 마감 정리, 백로그 보관/선택, 주간 회고, 프로젝트 체크포인트 트래킹을 통합한 개인 플래너. Obsidian Daily Notes, Memento 로그, Issue Box, Jira/Confluence를 연동.",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "author": {
         "name": "silee9019"
       },
@@ -113,12 +113,12 @@
     {
       "name": "review-flow",
       "source": "./review-flow",
-      "description": "설계부터 커밋까지의 전체 흐름에서 구조화된 검토를 통해 코드 품질을 보증하는 워크플로우 도구. 기존 리뷰 도구 위임 + codex 병렬 리뷰 지원.",
-      "version": "0.1.0",
+      "description": "설계·코드·스킬 문서를 일관된 기준으로 리뷰하는 워크플로우 도구. 의도 정합성 최우선 검증, 공식 Claude Code 가이드 라이브 페치, codex 병렬 리뷰, Fix Plan 컨펌 절차를 제공.",
+      "version": "0.1.1",
       "author": {
         "name": "silee9019"
       },
-      "keywords": ["review", "code-quality", "plan", "workflow"],
+      "keywords": ["review", "code-quality", "plan", "skill", "workflow"],
       "category": "workflow"
     }
   ]
