@@ -174,12 +174,12 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | 플러그인 | 버전 | 카테고리 | 컴포넌트 | 런타임 | 외부 의존성 |
 |----------|------|----------|----------|--------|-------------|
 | git-init | 1.4.1 | workflow | command | — | gh, curl |
-| silee-planner | 2.0.1 | workflow | command | Python 3 | obsidian CLI, git, Jira MCP, Atlassian MCP |
+| silee-planner | 2.2.0 | workflow | command | Python 3 | obsidian CLI, git, Jira MCP, Atlassian MCP |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
 | memento | 1.6.8 | utility | skill+hook+command | Bun | qmd |
-| agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
-| tutor | 0.1.3 | workflow | command + skill | Python 3 | obsidian CLI |
+| agentic-workflow | 1.1.0 | workflow | skill + command | — | gh |
+| tutor | 0.2.0 | workflow | command + skill | Python 3 | obsidian CLI |
 | knowledge-tools | 0.1.1 | workflow | skill | — | pandoc |
 | resume-coach | 0.1.1 | workflow | skill | — | 없음 |
 | review-flow | 0.1.2 | workflow | skill | — | 없음 (WebFetch는 선택적) |

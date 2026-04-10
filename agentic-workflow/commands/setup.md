@@ -10,6 +10,15 @@ allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion
 
 ## Workflow
 
+### Step 0: 플러그인 버전 읽기
+
+현재 설치된 플러그인 버전을 읽어 이후 단계에서 비교/기록에 사용한다.
+
+```sh
+PLUGIN_VERSION=$(grep '"version"' "${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json" \
+  | head -1 | sed 's/.*"version": *"\([^"]*\)".*/\1/')
+```
+
 ### Step 1: 저장소 확인
 
 `git remote -v`로 GitHub remote 존재 여부를 확인한다.
@@ -20,7 +29,76 @@ allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion
 | GitHub remote 없음 | "GitHub remote가 설정되지 않은 저장소입니다." 안내 후 중단 |
 | git 저장소 아님 | "git 저장소가 아닙니다. git init 후 다시 실행해주세요." 안내 후 중단 |
 
-### Step 2: 전제 조건 검증
+### Step 2: 기존 설정 확인 및 버전 비교
+
+`~/.claude/plugins/data/agentic-workflow-<repo>/config.md` (Step 1에서 얻은 repo 이름 사용)를 확인한다.
+
+**`setup_version` 파싱** (Part B.5 session-start.sh와 동일 패턴):
+
+```sh
+CONFIG_PATH="$HOME/.claude/plugins/data/agentic-workflow-<repo>/config.md"
+if [ -f "$CONFIG_PATH" ]; then
+  PREV_VERSION=$(sed -n 's/^setup_version: *"\(.*\)"$/\1/p' "$CONFIG_PATH" | head -1)
+else
+  PREV_VERSION=""
+fi
+```
+
+**버전 비교 준비 — `sort -V` 호환성 탐지**:
+
+```sh
+if printf '1\n2\n' | sort -V >/dev/null 2>&1; then
+  SORT_V_OK=1
+else
+  SORT_V_OK=0
+fi
+```
+
+**버전 비교 함수**:
+
+```sh
+compare_semver() {
+  a="$1"; b="$2"
+  if [ "$a" = "$b" ]; then echo equal; return; fi
+  if [ "$SORT_V_OK" = "1" ]; then
+    if [ "$(printf '%s\n%s\n' "$a" "$b" | sort -V | head -1)" = "$a" ]; then
+      echo upgrade
+    else
+      echo downgrade
+    fi
+  else
+    echo "$a $b" | awk '{
+      n=split($1,A,"."); split($2,B,".")
+      for (i=1; i<=n || i<=length(B); i++) {
+        av=(A[i]==""?0:A[i]+0); bv=(B[i]==""?0:B[i]+0)
+        if (av<bv) { print "upgrade"; exit }
+        if (av>bv) { print "downgrade"; exit }
+      }
+      print "equal"
+    }'
+  fi
+}
+```
+
+**분기 처리**:
+
+| 케이스 | 동작 |
+|--------|------|
+| config 없음 | 신규 설정 — Step 3으로 진행 |
+| config 있음 + `setup_version` 없음 | "이전 버전 기록 없음 — 업그레이드로 간주합니다" 안내 + 기존 값을 기본값으로 사용 |
+| `PREV_VERSION` == `PLUGIN_VERSION` | "이미 최신 버전입니다 (`<PLUGIN_VERSION>`)" 안내, AskUserQuestion으로 **계속/취소** |
+| `PREV_VERSION` < `PLUGIN_VERSION` | 업그레이드 알림 출력 + 기존 값을 기본값으로 유지하며 진행 |
+| `PREV_VERSION` > `PLUGIN_VERSION` | "설정 파일이 플러그인보다 높은 버전입니다" 경고 + 사용자 확인 후 진행 |
+
+**업그레이드 알림 블록**:
+
+```
+⬆ 플러그인 업그레이드 감지: <PREV_VERSION> → <PLUGIN_VERSION>
+이전 설정을 기본값으로 유지하며 재설정을 진행합니다.
+필요한 경우 각 단계에서 값을 조정할 수 있습니다.
+```
+
+### Step 3: 전제 조건 검증
 
 아래 항목을 순서대로 확인한다. 하나라도 실패하면 해당 안내를 출력하고 중단.
 
@@ -31,7 +109,7 @@ allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion
 3. **CLAUDE.md 존재**: 레포 루트에 `CLAUDE.md` 파일 존재 여부 확인
    - 없음 시: **경고만** 출력 (중단하지 않음). "CLAUDE.md가 없습니다. 에이전트가 코딩 가이드를 참조하지 못할 수 있습니다."
 
-### Step 3: 환경 자동 탐지
+### Step 4: 환경 자동 탐지
 
 아래 항목을 자동 탐지하여 기본값으로 사용한다.
 
@@ -57,8 +135,8 @@ allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion
 | claude | `claude -p` |
 | codex | `codex` |
 | gemini | `gemini` |
-| 여러 개 발견 | Step 4에서 AskUserQuestion으로 선택 |
-| 없음 | Step 4에서 직접 입력 요청 |
+| 여러 개 발견 | Step 5에서 AskUserQuestion으로 선택 |
+| 없음 | Step 5에서 직접 입력 요청 |
 
 **기존 워크플로우 스캔**:
 
@@ -67,35 +145,39 @@ allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion
 
 **기본 브랜치**: `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`
 
-### Step 4: 설정값 수집
+### Step 5: 설정값 수집
 
-Step 3의 탐지 결과를 기본값으로 제시하고 AskUserQuestion으로 확인/수정을 요청한다.
+Step 4의 탐지 결과를 기본값으로 제시하고 AskUserQuestion으로 확인/수정을 요청한다.
+**기존 config가 있으면 해당 값을 Step 4 탐지 결과보다 우선하여 기본값으로 제시한다.**
 
 **수집 항목**:
 
 | 항목 | 설명 | 기본값 |
 |------|------|--------|
-| agent_cli | 사용할 에이전트 CLI 이름 | Step 3 탐지 결과 |
-| agent_cmd | CLI 실행 명령 | Step 3 탐지 결과 |
-| agent_model | 모델명 (선택) | (빈 문자열) |
-| agent_model_flag | 모델 지정 플래그 | `--model` |
-| bot_account | Bot 계정명 | Step 3 탐지 결과 또는 빈 문자열 |
-| runner_label | GitHub Actions runner 라벨 | `ubuntu-latest` |
-| test_cmd | 테스트 실행 명령 | Step 3 탐지 결과 |
-| lint_cmd | 린트 실행 명령 | Step 3 탐지 결과 |
-| cron_daily | Daily 워크플로우 cron 표현식 | `0 4 * * *` (UTC 04:00) |
-| cron_weekly | Weekly 워크플로우 cron 표현식 | `0 1 * * 0` (UTC 01:00 일요일) |
-| daily_limit | Phase 3 일일 이슈 처리 상한 | `3` |
+| agent_cli | 사용할 에이전트 CLI 이름 | 기존 config > Step 4 탐지 결과 |
+| agent_cmd | CLI 실행 명령 | 기존 config > Step 4 탐지 결과 |
+| agent_model | 모델명 (선택) | 기존 config > (빈 문자열) |
+| agent_model_flag | 모델 지정 플래그 | 기존 config > `--model` |
+| bot_account | Bot 계정명 | 기존 config > Step 4 탐지 결과 또는 빈 문자열 |
+| runner_label | GitHub Actions runner 라벨 | 기존 config > `ubuntu-latest` |
+| test_cmd | 테스트 실행 명령 | 기존 config > Step 4 탐지 결과 |
+| lint_cmd | 린트 실행 명령 | 기존 config > Step 4 탐지 결과 |
+| cron_daily | Daily 워크플로우 cron 표현식 | 기존 config > `0 4 * * *` (UTC 04:00) |
+| cron_weekly | Weekly 워크플로우 cron 표현식 | 기존 config > `0 1 * * 0` (UTC 01:00 일요일) |
+| daily_limit | Phase 3 일일 이슈 처리 상한 | 기존 config > `3` |
 
-### Step 5: config.md 생성
+### Step 6: config.md 생성
 
 `~/.claude/plugins/data/agentic-workflow-<repo>/config.md` 경로에 설정 파일을 생성한다.
 디렉토리가 없으면 먼저 생성.
 
-**config.md 형식**:
+**config.md 형식** (frontmatter 최상단에 `setup_version` 추가):
 
 ```yaml
 ---
+# Plugin version (auto-managed by /agentic-workflow:setup)
+setup_version: "<PLUGIN_VERSION>"
+
 # Repository
 owner: "<owner>"
 repo: "<repo>"
@@ -129,12 +211,16 @@ updated: "<YYYY-MM-DD>"
 ---
 ```
 
-### Step 6: 설정 요약 출력
+`installed_phases`는 기존 config가 있으면 해당 값을 유지한다(재설치 여부 판단용).
+`created`도 기존 값을 유지, `updated`만 오늘 날짜로 갱신.
+
+### Step 7: 설정 요약 출력
 
 설정 완료 후 아래 형식으로 요약을 출력한다:
 
 ```
 agentic-workflow 설정 완료:
+  setup_version: <PLUGIN_VERSION>
   저장소:      <owner>/<repo> (<branch>)
   Agent CLI:   <agent_cmd>
   Runner:      <runner_label>
