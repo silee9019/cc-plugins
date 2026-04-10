@@ -10,7 +10,7 @@ Dump current session context to the daily raw log. Use when you want to persist 
 
 For full compaction (needs-summarization processing, tree propagation, qmd reindex), run memento-compaction skill after this.
 
-All files under `~/.claude/memento/projects/<project-id>/`.
+All files under `<MEMENTO_HOME>/projects/<project-id>/`. `<MEMENTO_HOME>`는 SessionStart hook이 주입한 실제 경로(config.md 기반 vault 경로 또는 레거시 `~/.claude/memento/`). system prompt의 Memento Memory Protocol 블록 참조.
 
 ## Steps
 
@@ -28,7 +28,7 @@ Gather a summary of everything discussed in this session so far. For each topic:
 
 ### 2. Write to daily log
 
-Append the session summary to `~/.claude/memento/projects/<project-id>/memory/YYYY-MM-DD.md` (today's date) using the Write tool (append) or Edit tool.
+Append the session summary to `<MEMENTO_HOME>/projects/<project-id>/memory/YYYY-MM-DD.md` (today's date) using the Write tool (append) or Edit tool.
 
 ### 3. Run compaction
 

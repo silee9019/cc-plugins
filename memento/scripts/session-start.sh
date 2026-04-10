@@ -1,19 +1,39 @@
 #!/bin/sh
 # memento session-start — SessionStart hook (POSIX compatible)
-# 1. Resolve project ID (git remote + CWD fallback, always lowercase)
-# 2. Create project directory structure + templates (idempotent)
-# 3. Output memory protocol to stdout for agent injection
+# 1. Resolve MEMENTO_HOME from config.md (fallback to legacy ~/.claude/memento/)
+# 2. Resolve project ID (git remote + CWD fallback, always lowercase)
+# 3. Create project directory structure + templates (idempotent)
+# 4. Output memory protocol to stdout for agent injection
 
 set -eu
 
 PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-MEMENTO_HOME="$HOME/.claude/memento"
 
 # ─── Helper: lowercase ───
 
 to_lower() {
   printf '%s' "$1" | tr '[:upper:]' '[:lower:]'
 }
+
+# ─── Resolve MEMENTO_HOME from config.md ───
+
+CONFIG_FILE="$HOME/.claude/plugins/data/memento-cc-plugins/config.md"
+VAULT_PATH=""
+if [ -f "$CONFIG_FILE" ]; then
+  VAULT_PATH=$(sed -n 's/^vault_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
+  MEMENTO_ROOT=$(sed -n 's/^memento_root: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
+  if [ -n "$VAULT_PATH" ] && [ -n "$MEMENTO_ROOT" ] && [ -d "$VAULT_PATH" ]; then
+    MEMENTO_HOME="$VAULT_PATH/$MEMENTO_ROOT"
+  else
+    MEMENTO_HOME="$HOME/.claude/memento"
+    VAULT_PATH=""
+    echo "[memento] config invalid, falling back to legacy path $MEMENTO_HOME" >&2
+  fi
+else
+  MEMENTO_HOME="$HOME/.claude/memento"
+  echo "[memento] DEPRECATED: legacy path ~/.claude/memento/ will be removed in 1.8.0." >&2
+  echo "[memento] Run /memento:setup to migrate data into your Obsidian vault." >&2
+fi
 
 # ─── Resolve project cwd from hook stdin JSON ───
 
@@ -38,15 +58,27 @@ if [ -z "$PROJECT_ID" ]; then
   if [ -n "$GIT_ROOT" ]; then
     PROJECT_ID=$(to_lower "$(printf '%s' "$GIT_ROOT" | tr '/' '-')")
   else
+    # VAULT_PATH가 설정된 상태에서 cwd가 vault 하위면 .obsidian 폴백을 건너뛴다
+    # (자기참조 경로 방지: <vault>/_memento/projects/<vault-name>/ 같은 경로가 생기는 것을 막는다)
+    SKIP_OBSIDIAN_FALLBACK=0
+    if [ -n "$VAULT_PATH" ]; then
+      case "$(pwd)" in
+        "$VAULT_PATH"|"$VAULT_PATH"/*) SKIP_OBSIDIAN_FALLBACK=1 ;;
+      esac
+    fi
+
     VAULT_ROOT=""
-    _dir=$(pwd)
-    while [ "$_dir" != "/" ]; do
-      if [ -d "$_dir/.obsidian" ]; then
-        VAULT_ROOT="$_dir"
-        break
-      fi
-      _dir=$(dirname "$_dir")
-    done
+    if [ "$SKIP_OBSIDIAN_FALLBACK" = "0" ]; then
+      _dir=$(pwd)
+      while [ "$_dir" != "/" ]; do
+        if [ -d "$_dir/.obsidian" ]; then
+          VAULT_ROOT="$_dir"
+          break
+        fi
+        _dir=$(dirname "$_dir")
+      done
+    fi
+
     if [ -n "$VAULT_ROOT" ]; then
       PROJECT_ID=$(to_lower "$(printf '%s' "$VAULT_ROOT" | tr '/' '-')")
     else

@@ -177,7 +177,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | silee-planner | 2.2.0 | workflow | command | Python 3 | obsidian CLI, git, Jira MCP, Atlassian MCP |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
-| memento | 1.6.8 | utility | skill+hook+command | Bun | qmd |
+| memento | 1.7.0 | utility | skill+hook+command | Bun | qmd |
 | agentic-workflow | 1.1.0 | workflow | skill + command | — | gh |
 | tutor | 0.2.0 | workflow | command + skill | Python 3 | obsidian CLI |
 | knowledge-tools | 0.1.1 | workflow | skill | — | pandoc |
@@ -343,26 +343,39 @@ memento/
 
 - **원본**: [hipocampus](https://github.com/kevin-hs-sohn/hipocampus) v0.1.6 (MIT)
 - **2-scope 3-layer 메모리**:
-  - **User Scope**: `~/.claude/memento/user/` — 크로스프로젝트 교훈/레시피 (`knowledge/*.md` + `ROOT.md`)
-  - **Project Scope**: `~/.claude/memento/projects/<project-id>/` — 작업 연속성, 일일 로그, 컴팩션 트리
+  - **MEMENTO_HOME**: `~/.claude/plugins/data/memento-cc-plugins/config.md`의 `vault_path`+`memento_root`로 결정. config 없으면 레거시 `~/.claude/memento/` 폴백 + deprecation 경고. **1.8.0에서 레거시 경로 제거 예정**.
+  - **User Scope**: `<MEMENTO_HOME>/user/` — 크로스프로젝트 교훈/레시피 (`knowledge/*.md` + `ROOT.md`)
+  - **Project Scope**: `<MEMENTO_HOME>/projects/<project-id>/` — 작업 연속성, 일일 로그, 컴팩션 트리
     - Layer 1 (System Prompt): WORKING.md, memory/ROOT.md — 세션 시작 시 자동 주입
     - Layer 2 (On-Demand): memory/YYYY-MM-DD.md, knowledge/*.md, plans/*.md
     - Layer 3 (Search): 5-level 컴팩션 트리 (raw→daily→weekly→monthly→ROOT)
+- **config.md 스키마** (`~/.claude/plugins/data/memento-cc-plugins/config.md`):
+  ```yaml
+  ---
+  setup_version: "1.7.0"
+  vault_path: "/absolute/path/to/vault"
+  memento_root: "_memento"
+  ---
+  ```
+  - `memento_root` 기본값: `_memento` (언더스코어 prefix로 Obsidian 사이드바 상단 고정)
 - **수정 시**:
   - session-start.sh의 프로젝트 ID 로직 변경 시 compact.mjs의 동일 로직도 동기화
+  - session-start.sh의 config 파싱 로직 변경 시 compact.mjs의 `resolveMementoHome`도 동기화
   - hooks.json은 auto-discovery → plugin.json에 hooks 필드 선언 금지
-  - User Scope 변경 시 session-start.sh 프로토콜 텍스트 + compact.mjs Step 5 + memento-core SKILL.md 승격 규칙 3곳 동기화
+  - User Scope 변경 시 session-start.sh 프로토콜 텍스트 + compact.mjs + memento-core SKILL.md 승격 규칙 3곳 동기화
 - **테스트**:
-  - 새 세션 시작 → 프로젝트 + user 디렉토리 생성 확인
-  - `/memento-setup` → qmd 설치 + user collection 등록 확인
+  - 새 세션 시작 → MEMENTO_HOME 해석 + 프로젝트/user 디렉토리 생성 확인
+  - 레거시 폴백: config 없는 상태에서 hook 실행 → deprecation 경고 2줄 출력 + `~/.claude/memento/` 사용
+  - `/memento:setup` → vault 탐지 + config.md 생성 + rsync 마이그레이션 컨펌 + qmd collection 재등록 확인
   - `bun run scripts/compact.mjs` → 에러 없이 완료 확인
+  - project_id 자기참조 가드: `cd <vault>/_memento/projects/test && session-start.sh` → vault 이름이 project_id로 해석되지 않는지 확인
 - **의존성**: Bun, qmd (`npm install -g qmd`)
 - **주의**:
-  - 프로젝트 데이터는 `~/.claude/memento/projects/` (프로젝트별 격리)
-  - 유저 데이터는 `~/.claude/memento/user/` (크로스프로젝트 공유)
+  - 프로젝트/유저 데이터는 config.md가 가리키는 경로 (기본: Obsidian vault 내부 `_memento/`)
   - 스킬/스크립트/템플릿은 플러그인 디렉토리 (데이터 아님)
-  - SessionStart hook stdout이 프로토콜 전문으로 세션 컨텍스트에 주입됨
-  - Knowledge 승격: 체크포인트 시 에이전트가 프로젝트 비종속 교훈을 user/knowledge/에 저장
+  - SessionStart hook stdout이 프로토콜 전문으로 세션 컨텍스트에 주입됨 — system prompt의 경로는 현재 세션에 고정, setup 후 경로 변경은 **다음 세션부터** 적용
+  - Knowledge 승격: 체크포인트 시 에이전트가 프로젝트 비종속 교훈을 `<MEMENTO_HOME>/user/knowledge/`에 저장
+  - 마이그레이션: `rsync -a --remove-source-files` 사용 (교차 볼륨 안전, 재실행 가능). ResilioSync 동기화 중 실행 시 일시 중지 권장.
 
 ### knowledge-tools
 

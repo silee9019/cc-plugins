@@ -7,7 +7,7 @@ description: "5-level 컴팩션 트리 빌드 (daily/weekly/monthly/root). smart
 
 5-level hierarchical index over raw memory logs. Compaction nodes are **search indices** — originals are never deleted.
 
-All files under `~/.claude/memento/projects/<project-id>/memory/`.
+All files under `<MEMENTO_HOME>/projects/<project-id>/memory/`. `<MEMENTO_HOME>`는 SessionStart hook이 주입한 실제 경로(config.md의 `<vault_path>/<memento_root>` 또는 레거시 `~/.claude/memento/`).
 
 ## Hierarchy
 
@@ -210,7 +210,7 @@ qmd embed
 
 ### Step 7: User Knowledge Index
 
-After project compaction, regenerate `~/.claude/memento/user/ROOT.md` from all `user/knowledge/*.md` files. This is handled mechanically by `compact.mjs` — no LLM summarization needed (knowledge files are already curated at write time).
+After project compaction, regenerate `<MEMENTO_HOME>/user/ROOT.md` from all `user/knowledge/*.md` files. This is handled mechanically by `compact.mjs` — no LLM summarization needed (knowledge files are already curated at write time).
 
 The User Scope has no compaction tree. ROOT.md is a flat index rebuilt by scanning knowledge file frontmatter (title, source-project, created).
 

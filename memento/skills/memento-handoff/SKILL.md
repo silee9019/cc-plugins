@@ -68,11 +68,11 @@ user_invocable: true
 
 **Write 도구로 직접 실행한다.** 서브에이전트에 위임하지 않는다 — 핸드오프는 메인 세션이 완료해야 정확성이 보장된다.
 
-1. **WORKING.md 덮어쓰기**: `~/.claude/memento/projects/<project-id>/WORKING.md`에 핸드오프 내용 저장
+1. **WORKING.md 덮어쓰기**: `<MEMENTO_HOME>/projects/<project-id>/WORKING.md`에 핸드오프 내용 저장 (`<MEMENTO_HOME>`은 SessionStart hook이 주입한 실제 경로 — system prompt 상단 Memento Memory Protocol 블록 참조)
    - Write 도구로 전체 내용 교체 (덮어쓰기)
    - WORKING.md는 "현재 진행 중인 작업" 문서 — 다음 세션 시작 시 자동 로드됨
 
-2. **일일 로그 append**: `~/.claude/memento/projects/<project-id>/memory/YYYY-MM-DD.md`에 세션 요약 append
+2. **일일 로그 append**: `<MEMENTO_HOME>/projects/<project-id>/memory/YYYY-MM-DD.md`에 세션 요약 append
    - memento-core End-of-Task Checkpoint 형식 사용
 
 ### Step 4: 다음 세션 재개 안내

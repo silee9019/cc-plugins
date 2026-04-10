@@ -58,7 +58,7 @@
       "name": "memento",
       "source": "./memento",
       "description": "크로스 프로젝트 2-scope 3-layer 에이전트 메모리. 5-level 컴팩션 트리, 세션 체크포인트, 일일 로그.",
-      "version": "1.6.8",
+      "version": "1.7.0",
       "author": {
         "name": "silee9019"
       },

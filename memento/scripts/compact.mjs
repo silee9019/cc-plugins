@@ -8,10 +8,42 @@
  * Project ID resolution: same logic as init.sh (git remote + CWD fallback, lowercase).
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { execSync } from "node:child_process";
 import { homedir } from "node:os";
+
+// ─── Resolve MEMENTO_HOME from config.md ───
+
+function resolveMementoHome() {
+  const configFile = join(homedir(), ".claude", "plugins", "data", "memento-cc-plugins", "config.md");
+  const legacy = join(homedir(), ".claude", "memento");
+
+  if (!existsSync(configFile)) {
+    console.error("[memento] DEPRECATED: legacy path ~/.claude/memento/ will be removed in 1.8.0.");
+    console.error("[memento] Run /memento:setup to migrate data into your Obsidian vault.");
+    return { home: legacy, vaultPath: null };
+  }
+
+  try {
+    const content = readFileSync(configFile, "utf8");
+    const vaultMatch = content.match(/^vault_path:\s*"(.*)"$/m);
+    const rootMatch = content.match(/^memento_root:\s*"(.*)"$/m);
+    const vaultPath = vaultMatch ? vaultMatch[1] : "";
+    const mementoRoot = rootMatch ? rootMatch[1] : "";
+
+    if (vaultPath && mementoRoot && existsSync(vaultPath) && statSync(vaultPath).isDirectory()) {
+      return { home: join(vaultPath, mementoRoot), vaultPath };
+    }
+    console.error(`[memento] config invalid, falling back to legacy path ${legacy}`);
+    return { home: legacy, vaultPath: null };
+  } catch (err) {
+    console.error(`[memento] config read error: ${err.message}, falling back to legacy path`);
+    return { home: legacy, vaultPath: null };
+  }
+}
+
+const { home: MEMENTO_HOME, vaultPath: VAULT_PATH } = resolveMementoHome();
 
 function localISOString() {
   const d = new Date();
@@ -38,21 +70,29 @@ function resolveProjectId() {
     return gitRoot.replace(/\//g, "-").toLowerCase();
   } catch { /* no git */ }
 
-  let dir = process.cwd();
-  while (dir !== "/") {
-    if (existsSync(join(dir, ".obsidian"))) {
-      return dir.replace(/\//g, "-").toLowerCase();
+  // VAULT_PATH가 설정된 상태에서 cwd가 vault 하위면 .obsidian 폴백을 건너뛴다
+  // (자기참조 경로 방지)
+  const cwd = process.cwd();
+  const skipObsidianFallback =
+    VAULT_PATH && (cwd === VAULT_PATH || cwd.startsWith(VAULT_PATH + "/"));
+
+  if (!skipObsidianFallback) {
+    let dir = cwd;
+    while (dir !== "/") {
+      if (existsSync(join(dir, ".obsidian"))) {
+        return dir.replace(/\//g, "-").toLowerCase();
+      }
+      dir = dirname(dir);
     }
-    dir = dirname(dir);
   }
 
-  return process.cwd().replace(/\//g, "-").toLowerCase();
+  return cwd.replace(/\//g, "-").toLowerCase();
 }
 
 const PROJECT_ID = resolveProjectId();
-const CWD = join(homedir(), ".claude", "memento", "projects", PROJECT_ID);
+const CWD = join(MEMENTO_HOME, "projects", PROJECT_ID);
 const MEMORY = join(CWD, "memory");
-const USER_DIR = join(homedir(), ".claude", "memento", "user");
+const USER_DIR = join(MEMENTO_HOME, "user");
 const USER_KNOWLEDGE = join(USER_DIR, "knowledge");
 
 // ─── Cooldown gate ───

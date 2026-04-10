@@ -32,8 +32,15 @@ Project Scope (per-project):
     Tree traversal: ROOT → monthly → weekly → daily → raw
 ```
 
-Project files: `~/.claude/memento/projects/<project-id>/`
-User knowledge: `~/.claude/memento/user/`
+Project files: `<MEMENTO_HOME>/projects/<project-id>/`
+User knowledge: `<MEMENTO_HOME>/user/`
+
+`<MEMENTO_HOME>`는 SessionStart hook이 주입한 실제 경로다:
+- `~/.claude/plugins/data/memento-cc-plugins/config.md`가 있으면 `<vault_path>/<memento_root>` (Obsidian vault 내부)
+- 없으면 레거시 경로 `~/.claude/memento/` (1.8.0에서 제거 예정)
+
+실제 경로는 system prompt 상단의 Memento Memory Protocol 블록에 이미 해석된 절대경로로 포함되어 있으니 그것을 참조한다.
+
 The project ID is determined by the SessionStart hook (git remote → org-repo, fallback → CWD path, always lowercase).
 
 ## Session Start
@@ -49,7 +56,7 @@ SessionStart hook (`session-start.sh`)이 매 세션 시작 시 자동으로:
 
 ## End-of-Task Checkpoint (MANDATORY)
 
-After completing any task, append a structured log to `~/.claude/memento/projects/<project-id>/memory/YYYY-MM-DD.md` using the Write tool (append) or Edit tool.
+After completing any task, append a structured log to `<MEMENTO_HOME>/projects/<project-id>/memory/YYYY-MM-DD.md` using the Write tool (append) or Edit tool.
 
 Log format:
 
@@ -70,7 +77,7 @@ During end-of-task checkpoint, evaluate whether any outcome is **project-indepen
 - Environment setup pattern
 - Cross-cutting architectural insight
 
-If yes, write to `~/.claude/memento/user/knowledge/<slug>.md`:
+If yes, write to `<MEMENTO_HOME>/user/knowledge/<slug>.md`:
 
 ```markdown
 ---
