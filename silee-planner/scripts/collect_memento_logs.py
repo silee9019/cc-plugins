@@ -37,7 +37,10 @@ def parse_day_log(body: str) -> list:
         for key in FIELD_KEYS:
             topic[key] = ""
         for line in current_raw:
-            stripped = line.lstrip("- ").strip()
+            cleaned = line.lstrip()
+            if cleaned.startswith("- "):
+                cleaned = cleaned[2:]
+            stripped = cleaned.strip()
             for key in FIELD_KEYS:
                 prefix = f"{key}:"
                 if stripped.lower().startswith(prefix):

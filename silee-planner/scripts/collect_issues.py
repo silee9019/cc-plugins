@@ -22,6 +22,13 @@ FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n?(.*)$", re.DOTALL)
 
 
 def parse_frontmatter(body: str) -> tuple:
+    """Parse flat YAML frontmatter (``key: value`` per line).
+
+    Limitations: does not handle nested mappings, lists, or multi-line
+    strings. Acceptable for Issue Box format which is always flat. If
+    richer frontmatter is needed in the future, switch to PyYAML via
+    optional import.
+    """
     match = FRONTMATTER_RE.match(body)
     if not match:
         return {}, body
@@ -62,14 +69,13 @@ def extract_summary(body: str) -> str:
 
 
 def normalize_date(value: str) -> str:
-    if not value:
+    """Parse first 10 chars as YYYY-MM-DD, return ISO date or ''."""
+    if not value or len(value) < 10:
         return ""
-    for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
-        try:
-            return datetime.strptime(value[: len(fmt)], fmt).date().isoformat()
-        except ValueError:
-            continue
-    return value[:10] if len(value) >= 10 else value
+    try:
+        return datetime.strptime(value[:10], "%Y-%m-%d").date().isoformat()
+    except ValueError:
+        return ""
 
 
 def in_range(iso_date: str, start: datetime, end: datetime) -> bool:

@@ -59,13 +59,22 @@ argument-hint: <기간>
 ```bash
 obsidian vaults verbose
 ```
-vault 이름 → 파일시스템 경로 매핑.
+
+**vault 이름 매칭 규칙**:
+1. config의 `vault` 값과 출력의 vault 이름을 **정확 일치** 우선 비교
+2. 정확 일치 실패 시 **대소문자 무시 substring** 매칭 (config 값이 출력 이름의 부분문자열이거나 그 반대)
+3. 모두 실패 시 AskUserQuestion으로 사용자에게 목록 제시 + 선택값으로 config의 `vault` 필드 갱신 (Edit 도구)
+
+매칭된 vault의 파일시스템 경로를 `$VAULT_PATH`로 사용.
 
 **임시 디렉토리 생성**:
 ```bash
-TMPDIR=$(mktemp -d)
-echo "$TMPDIR"  # 이후 Step에서 사용하기 위해 기록
+mktemp -d
 ```
+
+출력된 경로(예: `/tmp/tmp.AbC123`)를 **문자열로 기억**하여 이후 Step의 Bash 명령에 직접 치환한다.
+
+> **주의**: Bash 도구는 호출마다 새 셸을 띄우므로 `$TMPDIR` 같은 환경변수는 **영속되지 않는다**. 이후 Step의 명령에서는 `$TMPDIR` 참조 대신 Step 1에서 얻은 실제 경로 문자열을 인라인으로 치환해야 한다. 이 문서의 `$TMPDIR`은 편의 표기일 뿐이다.
 
 ### Step 2A: 로컬 수집 (Python 스크립트 병렬 실행)
 

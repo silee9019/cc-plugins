@@ -24,6 +24,8 @@ SECTION_ALIASES = {
     "log": ["log", "로그", "기록"],
 }
 
+DATE_PREFIX_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})")
+
 
 def substitute_path(pattern: str, d: date) -> str:
     return (
@@ -124,27 +126,38 @@ def main() -> int:
         if abs_dir not in seen_dirs and os.path.isdir(abs_dir):
             seen_dirs.add(abs_dir)
             try:
-                for entry in sorted(os.listdir(abs_dir)):
-                    if not entry.endswith(".md"):
-                        continue
-                    if entry == file_name:
-                        continue
-                    full = os.path.join(abs_dir, entry)
-                    if not os.path.isfile(full):
-                        continue
-                    try:
-                        with open(full, encoding="utf-8") as f:
-                            side_body = f.read()
-                    except OSError:
-                        continue
-                    side_notes.append({
-                        "date": d.isoformat(),
-                        "file": full,
-                        "name": entry,
-                        "body": side_body,
-                    })
+                entries = sorted(os.listdir(abs_dir))
             except OSError as e:
                 print(f"Scan error {abs_dir}: {e}", file=sys.stderr)
+                entries = []
+            for entry in entries:
+                if not entry.endswith(".md"):
+                    continue
+                if entry == file_name:
+                    continue
+                prefix_match = DATE_PREFIX_RE.match(entry)
+                if not prefix_match:
+                    continue
+                try:
+                    side_date = datetime.strptime(prefix_match.group(1), "%Y-%m-%d").date()
+                except ValueError:
+                    continue
+                if side_date < start or side_date > end:
+                    continue
+                full = os.path.join(abs_dir, entry)
+                if not os.path.isfile(full):
+                    continue
+                try:
+                    with open(full, encoding="utf-8") as f:
+                        side_body = f.read()
+                except OSError:
+                    continue
+                side_notes.append({
+                    "date": side_date.isoformat(),
+                    "file": full,
+                    "name": entry,
+                    "body": side_body,
+                })
 
     json.dump({"days": days, "side_notes": side_notes}, sys.stdout, ensure_ascii=False, indent=2)
     sys.stdout.write("\n")
