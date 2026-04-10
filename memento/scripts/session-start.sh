@@ -86,7 +86,7 @@ fi
 cat <<PROTOCOL
 ## Memento — Memory Protocol (MANDATORY)
 
-This project uses memento 3-tier memory. All files are stored under \`${PROJECT_DIR}/\`.
+This project uses memento 2-scope 3-layer memory. All files are stored under \`${PROJECT_DIR}/\`.
 **All memory write operations MUST be dispatched to subagents** to keep the main session context clean.
 
 ### FIRST RESPONSE RULE — MANDATORY

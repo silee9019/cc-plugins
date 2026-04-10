@@ -11,11 +11,11 @@ cc-plugins/
 ├── silee-planner/                    ← command: 일일 계획 + 백로그 + 주간 보고서 통합 플래너
 ├── andrej-karpathy-skills/           ← skill: LLM 코딩 실수 방지 가이드라인
 ├── claude-statusline/                ← hook: 2줄 HUD statusline
-├── memento/                          ← skill+hook+command: 3-tier 에이전트 메모리 시스템
+├── memento/                          ← skill+hook+command: 2-scope 3-layer 에이전트 메모리 시스템
 ├── agentic-workflow/                 ← skill+command: 에이전틱 워크플로우 scaffold
 ├── tutor/                            ← command: 학습 노트 생성 + 4지선다 퀴즈 튜터
 ├── knowledge-tools/                  ← skill: 온톨로지 워크숍 + 문서 공유
-└── backup/                           ← 기존 statusline 백업
+└── resume-coach/                     ← skill: 이력서 작성 + 모의 면접 + 커리어 멘토링
 ```
 
 각 플러그인은 독립 디렉토리에 `.claude-plugin/plugin.json` + 컴포넌트(command/skill/hook)로 구성.
@@ -177,10 +177,11 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | silee-planner | 1.5.0 | workflow | command | — | obsidian CLI, git, Jira MCP |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
-| memento | 1.6.6 | utility | skill+hook+command | Bun | qmd |
+| memento | 1.6.7 | utility | skill+hook+command | Bun | qmd |
 | agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
 | tutor | 0.1.3 | workflow | command + skill | Python 3 | obsidian CLI |
 | knowledge-tools | 0.1.1 | workflow | skill | — | pandoc |
+| resume-coach | 0.1.1 | workflow | skill | — | 없음 |
 
 ### agentic-workflow
 
@@ -338,9 +339,12 @@ memento/
 ```
 
 - **원본**: [hipocampus](https://github.com/kevin-hs-sohn/hipocampus) v0.1.6 (MIT)
-- **2-tier 메모리**:
-  - **프로젝트 티어**: `~/.claude/memento/projects/<project-id>/` — 작업 연속성, 일일 로그, 컴팩션 트리
-  - **유저 티어**: `~/.claude/memento/user/` — 크로스프로젝트 교훈/레시피 (`knowledge/*.md` + `ROOT.md`)
+- **2-scope 3-layer 메모리**:
+  - **User Scope**: `~/.claude/memento/user/` — 크로스프로젝트 교훈/레시피 (`knowledge/*.md` + `ROOT.md`)
+  - **Project Scope**: `~/.claude/memento/projects/<project-id>/` — 작업 연속성, 일일 로그, 컴팩션 트리
+    - Layer 1 (System Prompt): WORKING.md, memory/ROOT.md — 세션 시작 시 자동 주입
+    - Layer 2 (On-Demand): memory/YYYY-MM-DD.md, knowledge/*.md, plans/*.md
+    - Layer 3 (Search): 5-level 컴팩션 트리 (daily/weekly/monthly)
 - **수정 시**:
   - session-start.sh의 프로젝트 ID 로직 변경 시 compact.mjs의 동일 로직도 동기화
   - hooks.json은 auto-discovery → plugin.json에 hooks 필드 선언 금지
@@ -405,4 +409,18 @@ knowledge-tools/
   - 투표는 목적이 아니라 검증 수단 — 정의 확립이 우선
   - 리서치 에이전트와 검증 에이전트는 반드시 분리 (hallucination 방지)
   - vault 경로는 silee-planner config에서 읽음
+
+### resume-coach
+
+```
+resume-coach/
+├── .claude-plugin/plugin.json
+└── skills/
+    ├── setup/SKILL.md              ← 초기 설정
+    └── coach/SKILL.md              ← 이력서 코칭 + 모의 면접
+```
+
+- **수정 시**: 두 스킬(setup, coach) 간 교차 참조 동기화 확인
+- **테스트**: 이력서 코칭 시나리오 실행 확인
+- **의존성**: 없음
 
