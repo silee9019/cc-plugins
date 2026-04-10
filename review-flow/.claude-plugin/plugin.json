@@ -1,0 +1,8 @@
+{
+  "name": "review-flow",
+  "description": "설계부터 커밋까지의 전체 흐름에서 구조화된 검토를 통해 코드 품질을 보증하는 워크플로우 도구. 기존 리뷰 도구 위임 + codex 병렬 리뷰 지원.",
+  "version": "0.1.0",
+  "author": { "name": "silee9019" },
+  "keywords": ["review", "code-quality", "plan", "workflow"],
+  "skills": ["./skills/plan-review", "./skills/code-review"]
+}

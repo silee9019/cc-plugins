@@ -182,6 +182,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | tutor | 0.1.3 | workflow | command + skill | Python 3 | obsidian CLI |
 | knowledge-tools | 0.1.1 | workflow | skill | — | pandoc |
 | resume-coach | 0.1.1 | workflow | skill | — | 없음 |
+| review-flow | 0.1.0 | workflow | skill | — | 없음 |
 
 ### agentic-workflow
 
@@ -427,4 +428,27 @@ resume-coach/
 - **수정 시**: 두 스킬(setup, coach) 간 교차 참조 동기화 확인
 - **테스트**: 이력서 코칭 시나리오 실행 확인
 - **의존성**: 없음
+
+### review-flow
+
+```
+review-flow/
+├── .claude-plugin/plugin.json
+├── skills/
+│   ├── plan-review/SKILL.md        ← 설계/계획 검토
+│   └── code-review/SKILL.md        ← 코드 변경 검토
+└── reference/
+    └── review-criteria.md          ← 범용 리뷰 기준 (양 스킬 공유)
+```
+
+- **스킬 2개**: plan-review (설계 검토), code-review (코드 검토)
+- **수정 시**: review-criteria.md의 기준 변경 시 양 스킬의 워크플로우도 동기화 확인
+- **테스트**:
+  - plan-review: 설계 문서 입력 → 보고서 출력 확인 (codex 병렬 포함)
+  - code-review: `git diff` → 위임 판단 + 보고서 출력 확인
+- **의존성**: 없음 (codex, pr-review-toolkit은 선택적 위임)
+- **주의**:
+  - code-review는 pr-review-toolkit/gstack /review가 있으면 우선 위임
+  - codex 병렬 리뷰는 양 스킬 모두 필수
+  - 보고서는 왜(Why)/무엇을(What)/어떻게(How) 3축 구조
 
