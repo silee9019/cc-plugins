@@ -73,7 +73,7 @@ if [ ! -f "$PROJECT_DIR/memory/ROOT.md" ]; then
   cp "$PLUGIN_ROOT/templates/ROOT.md" "$PROJECT_DIR/memory/ROOT.md"
 fi
 
-# ─── User tier auto-setup (idempotent) ───
+# ─── User Scope auto-setup (idempotent) ───
 USER_DIR="$MEMENTO_HOME/user"
 mkdir -p "$USER_DIR/knowledge"
 

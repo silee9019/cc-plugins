@@ -177,7 +177,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | silee-planner | 1.5.0 | workflow | command | — | obsidian CLI, git, Jira MCP |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
-| memento | 1.6.7 | utility | skill+hook+command | Bun | qmd |
+| memento | 1.6.8 | utility | skill+hook+command | Bun | qmd |
 | agentic-workflow | 1.0.0 | workflow | skill + command | — | gh |
 | tutor | 0.1.3 | workflow | command + skill | Python 3 | obsidian CLI |
 | knowledge-tools | 0.1.1 | workflow | skill | — | pandoc |
@@ -344,11 +344,11 @@ memento/
   - **Project Scope**: `~/.claude/memento/projects/<project-id>/` — 작업 연속성, 일일 로그, 컴팩션 트리
     - Layer 1 (System Prompt): WORKING.md, memory/ROOT.md — 세션 시작 시 자동 주입
     - Layer 2 (On-Demand): memory/YYYY-MM-DD.md, knowledge/*.md, plans/*.md
-    - Layer 3 (Search): 5-level 컴팩션 트리 (daily/weekly/monthly)
+    - Layer 3 (Search): 5-level 컴팩션 트리 (raw→daily→weekly→monthly→ROOT)
 - **수정 시**:
   - session-start.sh의 프로젝트 ID 로직 변경 시 compact.mjs의 동일 로직도 동기화
   - hooks.json은 auto-discovery → plugin.json에 hooks 필드 선언 금지
-  - user tier 변경 시 session-start.sh 프로토콜 텍스트 + compact.mjs Step 5 + memento-core SKILL.md 승격 규칙 3곳 동기화
+  - User Scope 변경 시 session-start.sh 프로토콜 텍스트 + compact.mjs Step 5 + memento-core SKILL.md 승격 규칙 3곳 동기화
 - **테스트**:
   - 새 세션 시작 → 프로젝트 + user 디렉토리 생성 확인
   - `/memento-setup` → qmd 설치 + user collection 등록 확인
@@ -416,8 +416,12 @@ knowledge-tools/
 resume-coach/
 ├── .claude-plugin/plugin.json
 └── skills/
-    ├── setup/SKILL.md              ← 초기 설정
-    └── coach/SKILL.md              ← 이력서 코칭 + 모의 면접
+    ├── setup/
+    │   ├── SKILL.md                ← 초기 설정
+    │   └── templates/              ← SOUL 페르소나 + CLAUDE.md 템플릿 (7개)
+    └── coach/
+        ├── SKILL.md                ← 이력서 코칭 + 모의 면접
+        └── personas/              ← 면접관/멘토 페르소나 (5개)
 ```
 
 - **수정 시**: 두 스킬(setup, coach) 간 교차 참조 동기화 확인

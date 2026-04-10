@@ -27,7 +27,7 @@ echo '{}' | bash ${CLAUDE_PLUGIN_ROOT}/scripts/session-start.sh > /dev/null
 ```
 
 session-start.sh는 `mkdir -p` + 템플릿 복사(`[ ! -f ]` 가드)로 이미 존재하는 파일을 덮어쓰지 않음.
-session-start.sh는 user tier 디렉토리(`~/.claude/memento/user/knowledge/`)도 자동 생성.
+session-start.sh는 User Scope 디렉토리(`~/.claude/memento/user/knowledge/`)도 자동 생성.
 
 ### Step 3: qmd collection 등록
 

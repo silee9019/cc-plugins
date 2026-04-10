@@ -307,7 +307,7 @@ if (dailyUpdated || weeklyUpdated || monthlyUpdated) {
   }
 }
 
-// ─── Step 5: User tier — regenerate user/ROOT.md from knowledge files ───
+// ─── Step 5: User Scope — regenerate user/ROOT.md from knowledge files ───
 
 let userUpdated = false;
 

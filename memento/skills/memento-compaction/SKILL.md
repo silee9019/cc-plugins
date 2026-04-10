@@ -212,7 +212,7 @@ qmd embed
 
 After project compaction, regenerate `~/.claude/memento/user/ROOT.md` from all `user/knowledge/*.md` files. This is handled mechanically by `compact.mjs` — no LLM summarization needed (knowledge files are already curated at write time).
 
-The user tier has no compaction tree. ROOT.md is a flat index rebuilt by scanning knowledge file frontmatter (title, source-project, created).
+The User Scope has no compaction tree. ROOT.md is a flat index rebuilt by scanning knowledge file frontmatter (title, source-project, created).
 
 ## Guards
 
