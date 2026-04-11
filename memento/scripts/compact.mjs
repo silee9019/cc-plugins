@@ -182,7 +182,7 @@ for (const date of rawDates) {
     writeFileSync(dailyPath, frontmatter + rawContent);
     dailyUpdated = true;
   } else if (!existsSync(dailyPath) || isToday) {
-    const placeholder = `---\ntype: daily\nstatus: needs-summarization\nperiod: ${date}\nsource-files: [memory/${date}.md]\nlines: ${rawLines}\n---\n\nThis daily node exceeds ${DAILY_THRESHOLD} lines and needs LLM summarization.\nRun memento-compaction skill to generate the summary.\n`;
+    const placeholder = `---\ntype: daily\nstatus: needs-summarization\nperiod: ${date}\nsource-files: [memory/${date}.md]\nlines: ${rawLines}\n---\n\nThis daily node exceeds ${DAILY_THRESHOLD} lines and needs LLM summarization.\nRun rebuild-memory-tree skill to generate the summary.\n`;
     writeFileSync(dailyPath, placeholder);
     dailyUpdated = true;
   }
@@ -238,7 +238,7 @@ for (const [week, dates] of Object.entries(weekGroups)) {
     writeFileSync(weeklyPath, frontmatter + combined);
     weeklyUpdated = true;
   } else if (!existsSync(weeklyPath) || status === "tentative") {
-    const placeholder = `---\ntype: weekly\nstatus: needs-summarization\nperiod: ${week}\ndates: ${dates[0]} to ${dates[dates.length - 1]}\nlines: ${totalLines}\n---\n\nThis weekly node exceeds ${WEEKLY_THRESHOLD} lines and needs LLM summarization.\nRun memento-compaction skill to generate the summary.\n`;
+    const placeholder = `---\ntype: weekly\nstatus: needs-summarization\nperiod: ${week}\ndates: ${dates[0]} to ${dates[dates.length - 1]}\nlines: ${totalLines}\n---\n\nThis weekly node exceeds ${WEEKLY_THRESHOLD} lines and needs LLM summarization.\nRun rebuild-memory-tree skill to generate the summary.\n`;
     writeFileSync(weeklyPath, placeholder);
     weeklyUpdated = true;
   }
@@ -299,7 +299,7 @@ for (const [month, weeks] of Object.entries(monthGroups)) {
     writeFileSync(monthlyPath, frontmatter + combined);
     monthlyUpdated = true;
   } else if (!existsSync(monthlyPath) || status === "tentative") {
-    const placeholder = `---\ntype: monthly\nstatus: needs-summarization\nperiod: ${month}\nlines: ${totalLines}\n---\n\nThis monthly node exceeds ${MONTHLY_THRESHOLD} lines and needs LLM summarization.\nRun memento-compaction skill to generate the summary.\n`;
+    const placeholder = `---\ntype: monthly\nstatus: needs-summarization\nperiod: ${month}\nlines: ${totalLines}\n---\n\nThis monthly node exceeds ${MONTHLY_THRESHOLD} lines and needs LLM summarization.\nRun rebuild-memory-tree skill to generate the summary.\n`;
     writeFileSync(monthlyPath, placeholder);
     monthlyUpdated = true;
   }

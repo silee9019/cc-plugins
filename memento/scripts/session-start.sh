@@ -113,6 +113,40 @@ if [ ! -f "$USER_DIR/ROOT.md" ]; then
   cp "$PLUGIN_ROOT/templates/USER-ROOT.md" "$USER_DIR/ROOT.md"
 fi
 
+# ─── Mentor layer: active-reminders + daily note hint ───
+# 통합된 memento(기억) + me+mento(멘토) 레이어. 파일이 있고 미만료일 때만 주입.
+
+ACTIVE_REMINDERS_FILE="$USER_DIR/active-reminders.md"
+REMINDER_BLOCK=""
+if [ -f "$ACTIVE_REMINDERS_FILE" ]; then
+  EXPIRES_AT=$(sed -n 's/^expires_at: *"\{0,1\}\([0-9-]*\)"\{0,1\}$/\1/p' "$ACTIVE_REMINDERS_FILE" | head -1)
+  TODAY=$(date "+%Y-%m-%d")
+  if [ -z "$EXPIRES_AT" ] || [ "$EXPIRES_AT" \> "$TODAY" ] || [ "$EXPIRES_AT" = "$TODAY" ]; then
+    REMINDER_BLOCK=$(cat "$ACTIVE_REMINDERS_FILE")
+  else
+    echo "[memento] active-reminders expired ($EXPIRES_AT) — run /memento:review-week" >&2
+  fi
+fi
+
+# 오늘 Daily Note 존재 힌트 (config의 daily_notes_path가 있을 때만)
+DAILY_HINT=""
+if [ -n "$VAULT_PATH" ]; then
+  DAILY_NOTES_PATH=$(sed -n 's/^daily_notes_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
+  DAILY_NOTE_FORMAT=$(sed -n 's/^daily_note_format: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
+  if [ -n "$DAILY_NOTES_PATH" ] && [ -n "$DAILY_NOTE_FORMAT" ]; then
+    TODAY_Y=$(date "+%Y")
+    TODAY_M=$(date "+%m")
+    TODAY_D=$(date "+%d")
+    TODAY_PATH=$(printf '%s' "$DAILY_NOTE_FORMAT" | sed -e "s/{YYYY}/$TODAY_Y/g" -e "s/{MM}/$TODAY_M/g" -e "s/{DD}/$TODAY_D/g")
+    FULL_DAILY="$VAULT_PATH/$DAILY_NOTES_PATH/$TODAY_PATH"
+    if [ -f "$FULL_DAILY" ]; then
+      DAILY_HINT="오늘 Daily Note 존재: $FULL_DAILY"
+    else
+      DAILY_HINT="오늘 Daily Note 없음 — /memento:planning 권장"
+    fi
+  fi
+fi
+
 # ─── Output protocol to stdout ───
 
 cat <<PROTOCOL
@@ -171,9 +205,30 @@ Only promote genuinely reusable knowledge. When in doubt, don't promote. Prefer 
 - **Checkpoint writes are direct** — one Write call is minimal context impact. Use subagents only for heavy operations (compaction, search).
 - memory/YYYY-MM-DD.md (raw): **permanent**, never delete or edit after session
 - ROOT.md: managed by compaction process. Do not manually edit.
-- Search: use memento:memento-search skill
+- Search: use memento:search-memory skill
 - If this session ends NOW, the next session must be able to continue immediately
+
 PROTOCOL
+
+if [ -n "$REMINDER_BLOCK" ]; then
+  cat <<REMINDERS
+
+## Active Reminders (주간 회고)
+
+${REMINDER_BLOCK}
+
+REMINDERS
+fi
+
+if [ -n "$DAILY_HINT" ]; then
+  cat <<HINT
+
+## Mentor Hint
+${DAILY_HINT}
+HINT
+fi
+
+
 
 # ─── Check qmd ───
 

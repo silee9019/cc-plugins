@@ -1,6 +1,6 @@
 ---
-name: memento-flush
-description: "수동 메모리 플러시: 현재 세션 컨텍스트를 일일 로그에 저장. /memento-flush로 실행. 이후 memento-compaction으로 트리 전파 및 qmd reindex."
+name: save-session
+description: "수동 메모리 저장: 현재 세션 컨텍스트를 일일 로그에 저장. /memento:save-session으로 실행. 이후 rebuild-memory-tree로 트리 전파 및 qmd reindex."
 user_invocable: true
 ---
 
@@ -8,7 +8,7 @@ user_invocable: true
 
 Dump current session context to the daily raw log. Use when you want to persist what happened in this session without waiting for End-of-Task Checkpoint or context compression.
 
-For full compaction (needs-summarization processing, tree propagation, qmd reindex), run memento-compaction skill after this.
+For full compaction (needs-summarization processing, tree propagation, qmd reindex), run rebuild-memory-tree skill after this.
 
 All files under `<MEMENTO_HOME>/projects/<project-id>/`. `<MEMENTO_HOME>`는 SessionStart hook이 주입한 실제 경로(config.md 기반 vault 경로 또는 레거시 `~/.claude/memento/`). system prompt의 Memento Memory Protocol 블록 참조.
 

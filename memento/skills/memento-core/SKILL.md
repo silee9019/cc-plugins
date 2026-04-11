@@ -1,7 +1,16 @@
 ---
 name: memento-core
-description: "크로스 프로젝트 2-scope 3-layer 에이전트 메모리 시스템. 세션 시작 프로토콜, 태스크 종료 체크포인트, 메모리 파일 관리를 정의. 매 세션 반드시 준수."
+description: "나의 기억이자 멘토. 크로스 프로젝트 2-scope 3-layer 에이전트 메모리(Memory 레이어) + 하루 계획·캡처·회고·인계 워크플로우(Mentor 레이어). 세션 시작 프로토콜, 태스크 종료 체크포인트, 메모리 파일 관리. 매 세션 반드시 준수."
 ---
+
+# Memento — Memory × Mentor Protocol
+
+> **memento = Memory × Mentor**. 두 레이어는 같은 사용자, 같은 vault, 같은 config를 공유한다. Mentor 레이어의 모든 행동은 자연스럽게 Memory 레이어에 기록된다 (planning 실행 로그가 raw에 append, review-week가 컴팩션 노드를 재료로 삼음).
+>
+> - **Memory 레이어**: 세션 로그, 5-level 컴팩션 트리, WORKING.md, user knowledge, qmd 검색. 무엇이 있었는지 잊지 않는다.
+> - **Mentor 레이어**: `/memento:planning` (업무 파악/정리/분류/발굴/선택), `/memento:capture-task` (백로그 유입), `/memento:review-day|week|objectives` (회고 삼중 대칭), `/memento:wrap-up` (세션 마무리+인계). 무엇을 할지 어떻게 돌아볼지 함께 결정한다.
+>
+> **Mentor 톤**: 사용자의 흐름을 끊지 않는다. 결정에 필요한 정보는 자체 도구로 최대한 수집한 후, 모호한 지점이 남으면 한 번에 하나의 질문만 `AskUserQuestion`으로 묻는다. 여러 결정을 일괄 처리하지 않는다.
 
 # Memento — Agent Memory Protocol
 
