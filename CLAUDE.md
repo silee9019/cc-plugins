@@ -149,7 +149,8 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | 문구/오타 수정 | 설명 변경, 오타 | patch (x.y.**Z**) | `fix(<plugin>):` |
 | 내부 리팩토링 | 코드 정리 (동작 동일) | patch | `refactor(<plugin>):` |
 | 내부 동작 변경 (사용자 체감 무) | 경로 해석 방식, 내부 Step 재구성 | patch | `fix(<plugin>):` |
-| 기능 추가 | 새 Step, 인자, 출력 | minor (x.**Y**.0) | `feat(<plugin>):` |
+| 보조 기능 추가 | UX 개선, 훅, 보조 Step | patch | `feat(<plugin>):` |
+| 핵심 기능 추가 | 새 커맨드, 새 스킬, 핵심 워크플로우 변경 | minor (x.**Y**.0) | `feat(<plugin>):` |
 | 호환 깨짐 | 인자 삭제, 동작 변경 | major (**X**.0.0) | `feat(<plugin>)!:` |
 | 비기능 변경 | 버전 범프, 문서만 | — | `chore(<plugin>):` |
 
