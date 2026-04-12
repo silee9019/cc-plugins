@@ -37,6 +37,9 @@ if [ -f "$MARKETPLACE_PLUGIN" ]; then
   fi
 fi
 
+# ─── KST timestamp ───
+printf 'Current time (KST): %s\n' "$(TZ=Asia/Seoul LC_TIME=ko_KR.UTF-8 date '+%Y-%m-%d %H:%M %Z (%A)')"
+
 # ─── Run compaction ───
 if ! command -v bun >/dev/null 2>&1; then
   echo "[memento] bun not found — compaction skipped." >&2

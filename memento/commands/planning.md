@@ -13,6 +13,21 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 
 ## 다섯 단계
 
+### Step -1: 현재 시각 확인
+
+가장 먼저 Bash로 KST 현재 시각을 확인한다. 이후 모든 단계에서 이 값을 기준으로 사용한다.
+
+```bash
+TZ=Asia/Seoul LC_TIME=ko_KR.UTF-8 date "+%Y-%m-%d %H:%M %Z (%A)"
+```
+
+출력 예: `2026-04-13 09:15 KST (일요일)`
+
+이 결과에서:
+- **날짜**: 오늘/어제 Daily Note 경로 계산
+- **요일**: 출력 문맥에 반영
+- **시간대**: 아침/오후 모드 판별 기준
+
 ### Step 0: 설정 로드
 
 `~/.claude/plugins/data/memento-cc-plugins/config.md` 파일을 읽는다.

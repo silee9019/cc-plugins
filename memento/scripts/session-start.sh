@@ -147,9 +147,14 @@ if [ -n "$VAULT_PATH" ]; then
   fi
 fi
 
+# ─── KST timestamp ───
+KST_NOW=$(TZ=Asia/Seoul LC_TIME=ko_KR.UTF-8 date "+%Y-%m-%d %H:%M %Z (%A)")
+
 # ─── Output protocol to stdout ───
 
 cat <<PROTOCOL
+Current time (KST): ${KST_NOW}
+
 ## Memento — Memory Protocol (MANDATORY)
 
 This project uses memento 2-scope 3-layer memory. All files are stored under \`${PROJECT_DIR}/\`.
