@@ -147,7 +147,7 @@ if [ -n "$VAULT_PATH" ]; then
   fi
 fi
 
-# ─── KST + workday context (cooldown 무관, 세션당 1회) ───
+# ─── KST + workday + calendar context (cooldown 무관, 세션당 1회) ───
 KST_BLOCK=""
 if command -v python3 >/dev/null 2>&1; then
   KST_BLOCK="$(python3 "$PLUGIN_ROOT/scripts/workday_context.py" --plugin-root "$PLUGIN_ROOT" 2>/dev/null || true)"
@@ -156,11 +156,16 @@ if [ -z "${KST_BLOCK:-}" ]; then
   KST_BLOCK="Current time (KST): $(TZ=Asia/Seoul LC_TIME=ko_KR.UTF-8 date '+%Y-%m-%d %H:%M %Z (%A)')"
 fi
 
+CALENDAR_BLOCK=""
+if command -v python3 >/dev/null 2>&1; then
+  CALENDAR_BLOCK="$(python3 "$PLUGIN_ROOT/scripts/work_calendar_context.py" --plugin-root "$PLUGIN_ROOT" 2>/dev/null || true)"
+fi
+
 # ─── Output protocol to stdout ───
 
 cat <<PROTOCOL
 ${KST_BLOCK}
-
+${CALENDAR_BLOCK}
 ## Memento — Memory Protocol (MANDATORY)
 
 This project uses memento 2-scope 3-layer memory. All files are stored under \`${PROJECT_DIR}/\`.

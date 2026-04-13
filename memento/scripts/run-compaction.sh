@@ -39,7 +39,7 @@ fi
 
 # ─── Run compaction (cooldown gate owned by compact.mjs) ───
 # compact.mjs 는 cooldown 활성 시 stdout 에 "cooldown active, skipped" 라인을 emit 하고 exit 0.
-# wrapper 가 그 sentinel 을 capture 해서 cooldown 분기를 결정 — 같은 게이트로 workday 주입도 묶는다.
+# wrapper 가 그 sentinel 을 capture 해서 cooldown 분기를 결정 — 같은 게이트로 workday + calendar 주입도 묶는다.
 if ! command -v bun >/dev/null 2>&1; then
   echo "[memento] bun not found — compaction skipped." >&2
   exit 1
@@ -49,7 +49,7 @@ COMPACT_OUT="$(bun run "$SCRIPT_DIR/compact.mjs" "$@" 2>&1)" || COMPACT_RC=$?
 COMPACT_RC=${COMPACT_RC:-0}
 
 if printf '%s' "$COMPACT_OUT" | grep -q "cooldown active, skipped"; then
-  # cooldown 활성 — compaction + workday 둘 다 silent skip
+  # cooldown 활성 — compaction + workday + calendar 모두 silent skip
   exit 0
 fi
 
@@ -59,6 +59,7 @@ printf '%s\n' "$COMPACT_OUT"
 
 if command -v python3 >/dev/null 2>&1; then
   python3 "$SCRIPT_DIR/workday_context.py" --plugin-root "$PLUGIN_ROOT" || true
+  python3 "$SCRIPT_DIR/work_calendar_context.py" --plugin-root "$PLUGIN_ROOT" || true
 fi
 
 exit "$COMPACT_RC"
