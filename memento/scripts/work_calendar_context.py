@@ -7,7 +7,8 @@ account=ics-url) — the URL itself is a capability secret and must never be
 persisted to the repo.
 
 Cache: ~/.claude/data/memento/work-calendar.ics (raw feed)
-TTL: fresh <6h, stale-while-revalidate <24h, expired >=7d.
+TTL: fresh <6h. On fetch failure, falls back to any existing cache under
+7 days old; anything older (or absent) is treated as missing.
 
 Failure modes are all silent — an empty or "미설정" block is preferred over
 blocking the session start hook.
@@ -27,7 +28,6 @@ KST = timezone(timedelta(hours=9))
 UTC = timezone.utc
 WINDOW_DAYS = 14
 CACHE_FRESH_SECONDS = 6 * 3600
-CACHE_STALE_SECONDS = 24 * 3600
 CACHE_EXPIRED_SECONDS = 7 * 24 * 3600
 FETCH_TIMEOUT = 10
 KEYCHAIN_SERVICE = "work-calendar"
@@ -69,6 +69,9 @@ def get_ics_url() -> str | None:
     return url or None
 
 
+# NOTE: url is a capability secret (Outlook ICS publish link). Never
+# interpolate it into log messages or stdout — urllib's default exception
+# strings don't include it, keep it that way.
 def fetch_ics(url: str) -> str | None:
     try:
         req = urllib.request.Request(
@@ -120,12 +123,17 @@ def unfold(text: str) -> list[str]:
 
 
 def parse_dt(value: str, tzid: str | None) -> datetime | None:
-    """Parse ICS DTSTART/DTEND value into aware KST datetime.
+    """Parse ICS DTSTART/DTEND value into an aware KST datetime.
+
+    All non-Z timestamps are assumed to be KST. This is safe for the current
+    Imagoworks Outlook feed which guarantees TZID=Korea Standard Time. The
+    ``tzid`` argument is accepted but not interpreted — if future feeds mix
+    timezones, switch to ``zoneinfo.ZoneInfo(tzid)`` here.
 
     Accepts:
-    - YYYYMMDDTHHMMSS (with TZID -> treat as KST if "Korea" in tzid, else naive KST)
-    - YYYYMMDDTHHMMSSZ (UTC)
-    - YYYYMMDD (all-day -> 00:00 KST)
+    - YYYYMMDDTHHMMSS (naive → assumed KST)
+    - YYYYMMDDTHHMMSSZ (UTC → converted to KST)
+    - YYYYMMDD (all-day → 00:00 KST)
     """
     v = value.strip()
     try:
@@ -280,9 +288,6 @@ def expand_event(
                 if not in_bounds(occ):
                     stop = True
                     break
-                if occ < base:
-                    produced += 1
-                    continue
                 if (
                     window_start <= occ.date() <= window_end
                     and occ not in ev.exdates
@@ -347,9 +352,10 @@ def render(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    # --plugin-root accepted for shell-hook signature symmetry with
+    # workday_context.py. Not used here: this script has no fallback data dir.
     parser.add_argument("--plugin-root", required=True)
-    args = parser.parse_args()
-    _ = Path(args.plugin_root).resolve()
+    parser.parse_args()
 
     url = get_ics_url()
     if not url:
