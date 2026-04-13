@@ -158,7 +158,7 @@ fi
 
 CALENDAR_BLOCK=""
 if command -v python3 >/dev/null 2>&1; then
-  CALENDAR_BLOCK="$(python3 "$PLUGIN_ROOT/scripts/work_calendar_context.py" --plugin-root "$PLUGIN_ROOT" 2>/dev/null || true)"
+  CALENDAR_BLOCK="$(python3 "$PLUGIN_ROOT/scripts/calendar_context.py" --plugin-root "$PLUGIN_ROOT" 2>/dev/null || true)"
 fi
 
 # ─── Output protocol to stdout ───

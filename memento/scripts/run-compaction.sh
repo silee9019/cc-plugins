@@ -59,7 +59,7 @@ printf '%s\n' "$COMPACT_OUT"
 
 if command -v python3 >/dev/null 2>&1; then
   python3 "$SCRIPT_DIR/workday_context.py" --plugin-root "$PLUGIN_ROOT" || true
-  python3 "$SCRIPT_DIR/work_calendar_context.py" --plugin-root "$PLUGIN_ROOT" || true
+  python3 "$SCRIPT_DIR/calendar_context.py" --plugin-root "$PLUGIN_ROOT" || true
 fi
 
 exit "$COMPACT_RC"

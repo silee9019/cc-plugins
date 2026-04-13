@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
-"""memento work calendar context — Outlook ICS feed injection.
+"""memento calendar context — ICS feed injection for work + personal calendars.
 
-Emits a markdown block of upcoming work calendar events within a 14-day
-window. The ICS feed URL is read from macOS Keychain (service=work-calendar,
-account=ics-url) — the URL itself is a capability secret and must never be
-persisted to the repo.
+Emits a markdown block of upcoming events (14-day window) merged from
+multiple calendars. Each source's ICS URL is read from macOS Keychain.
+The URLs themselves are capability secrets and must never be persisted
+to the repo.
 
-Cache: ~/.claude/data/memento/work-calendar.ics (raw feed)
+Sources (see SOURCES): macOS Keychain ``service=<name>, account=ics-url``.
+Cache: ~/.claude/data/memento/<name>.ics (raw feed, one file per source)
 TTL: fresh <6h. On fetch failure, falls back to any existing cache under
 7 days old; anything older (or absent) is treated as missing.
 
-Failure modes are all silent — an empty or "미설정" block is preferred over
-blocking the session start hook.
+Trivial anniversaries (birthdays, generic "기념일") are filtered out — they
+flood the personal calendar and don't need Claude's attention.
+
+Also exposes ``get_vacation_dates(window_days)`` which workday_context.py
+imports to exclude vacation days from the business-day list. Detection is
+by SUMMARY keyword + full-day duration.
+
+Failure modes are all silent — partial output (some sources missing) is
+preferred over blocking the session start hook.
 """
 
 from __future__ import annotations
@@ -30,21 +38,51 @@ WINDOW_DAYS = 14
 CACHE_FRESH_SECONDS = 6 * 3600
 CACHE_EXPIRED_SECONDS = 7 * 24 * 3600
 FETCH_TIMEOUT = 10
-KEYCHAIN_SERVICE = "work-calendar"
 KEYCHAIN_ACCOUNT = "ics-url"
 WEEKDAY_KR = ["월", "화", "수", "목", "금", "토", "일"]
 BYDAY_MAP = {"MO": 0, "TU": 1, "WE": 2, "TH": 3, "FR": 4, "SA": 5, "SU": 6}
+
+# (keychain_service, display_label). Order controls both render order
+# for same-time events and the vacation scan sweep.
+SOURCES: list[tuple[str, str]] = [
+    ("work-calendar", "회사"),
+    ("personal-calendar", "개인"),
+]
+
+# SUMMARY substrings that mark trivial anniversaries (birthdays, etc.)
+# matched case-insensitively.
+ANNIVERSARY_KEYWORDS = (
+    "생일",
+    "기념일",
+    "birthday",
+    "b-day",
+    "bday",
+    "anniversary",
+)
+
+# SUMMARY substrings that mark vacation/OOO events. Matched case-insensitively.
+# Half-day (반차/반반차) keywords are included but only full-day events
+# (>= 8h duration) are actually excluded from business days.
+VACATION_KEYWORDS = (
+    "휴가",
+    "연차",
+    "반차",
+    "오프",
+    "pto",
+    "ooo",
+    "out of office",
+)
 
 
 def log(msg: str) -> None:
     print(f"[memento calendar] {msg}", file=sys.stderr)
 
 
-def cache_path() -> Path:
-    return Path.home() / ".claude" / "data" / "memento" / "work-calendar.ics"
+def cache_path(service: str) -> Path:
+    return Path.home() / ".claude" / "data" / "memento" / f"{service}.ics"
 
 
-def get_ics_url() -> str | None:
+def get_ics_url(service: str) -> str | None:
     try:
         r = subprocess.run(
             [
@@ -53,7 +91,7 @@ def get_ics_url() -> str | None:
                 "-a",
                 KEYCHAIN_ACCOUNT,
                 "-s",
-                KEYCHAIN_SERVICE,
+                service,
                 "-w",
             ],
             capture_output=True,
@@ -61,7 +99,7 @@ def get_ics_url() -> str | None:
             timeout=3,
         )
     except Exception as e:
-        log(f"keychain call failed: {e}")
+        log(f"keychain call failed for {service}: {e}")
         return None
     if r.returncode != 0:
         return None
@@ -69,9 +107,9 @@ def get_ics_url() -> str | None:
     return url or None
 
 
-# NOTE: url is a capability secret (Outlook ICS publish link). Never
-# interpolate it into log messages or stdout — urllib's default exception
-# strings don't include it, keep it that way.
+# NOTE: url is a capability secret (ICS publish link). Never interpolate
+# it into log messages or stdout — urllib's default exception strings don't
+# include it, keep it that way.
 def fetch_ics(url: str) -> str | None:
     try:
         req = urllib.request.Request(
@@ -84,9 +122,9 @@ def fetch_ics(url: str) -> str | None:
         return None
 
 
-def load_or_refresh(url: str) -> tuple[str | None, str]:
-    """Return (ics_text, source) where source ∈ {fresh, cache, stale, fetch, missing}."""
-    cache = cache_path()
+def load_or_refresh(service: str, url: str) -> tuple[str | None, str]:
+    """Return (ics_text, source_label) where source_label ∈ {cache, fetch, stale, missing}."""
+    cache = cache_path(service)
     cache.parent.mkdir(parents=True, exist_ok=True)
 
     age: float | None = None
@@ -96,13 +134,12 @@ def load_or_refresh(url: str) -> tuple[str | None, str]:
     if age is not None and age < CACHE_FRESH_SECONDS:
         return cache.read_text(encoding="utf-8"), "cache"
 
-    # Try fetch. On failure, fall back to any existing cache unless expired.
     text = fetch_ics(url)
     if text is not None:
         try:
             cache.write_text(text, encoding="utf-8")
         except Exception as e:
-            log(f"cache write failed: {e}")
+            log(f"cache write failed for {service}: {e}")
         return text, "fetch"
 
     if cache.exists() and age is not None and age < CACHE_EXPIRED_SECONDS:
@@ -126,9 +163,10 @@ def parse_dt(value: str, tzid: str | None) -> datetime | None:
     """Parse ICS DTSTART/DTEND value into an aware KST datetime.
 
     All non-Z timestamps are assumed to be KST. This is safe for the current
-    Imagoworks Outlook feed which guarantees TZID=Korea Standard Time. The
-    ``tzid`` argument is accepted but not interpreted — if future feeds mix
-    timezones, switch to ``zoneinfo.ZoneInfo(tzid)`` here.
+    Imagoworks Outlook feed (TZID=Korea Standard Time) and Google Calendar
+    personal feeds used from a KST machine. The ``tzid`` argument is accepted
+    but not interpreted — if future feeds mix timezones, switch to
+    ``zoneinfo.ZoneInfo(tzid)`` here.
 
     Accepts:
     - YYYYMMDDTHHMMSS (naive → assumed KST)
@@ -174,7 +212,15 @@ def ics_unescape(s: str) -> str:
 
 
 class VEvent:
-    __slots__ = ("summary", "dtstart", "dtend", "location", "rrule", "exdates")
+    __slots__ = (
+        "summary",
+        "dtstart",
+        "dtend",
+        "location",
+        "rrule",
+        "exdates",
+        "all_day",
+    )
 
     def __init__(self) -> None:
         self.summary: str = ""
@@ -183,6 +229,7 @@ class VEvent:
         self.location: str = ""
         self.rrule: dict[str, str] = {}
         self.exdates: set[datetime] = set()
+        self.all_day: bool = False
 
 
 def parse_vevents(lines: list[str]) -> list[VEvent]:
@@ -206,6 +253,10 @@ def parse_vevents(lines: list[str]) -> list[VEvent]:
             cur.location = ics_unescape(value)
         elif name == "DTSTART":
             cur.dtstart = parse_dt(value, params.get("TZID"))
+            if params.get("VALUE") == "DATE" or (
+                len(value.strip()) == 8 and value.strip().isdigit()
+            ):
+                cur.all_day = True
         elif name == "DTEND":
             cur.dtend = parse_dt(value, params.get("TZID"))
         elif name == "RRULE":
@@ -310,7 +361,6 @@ def expand_event(
                 results.append(occ)
             if occ.date() > window_end:
                 break
-            # advance interval months, keep day-of-month
             y = occ.year
             m = occ.month + interval
             while m > 12:
@@ -326,17 +376,113 @@ def expand_event(
     return results
 
 
+def is_trivial_anniversary(summary: str) -> bool:
+    s = summary.casefold()
+    return any(k.casefold() in s for k in ANNIVERSARY_KEYWORDS)
+
+
+def is_vacation(ev: VEvent) -> bool:
+    """Full-day-or-longer vacation/OOO events. Half-days (반차) are excluded
+    from business-day removal because half a business day is still a
+    business day."""
+    if ev.dtstart is None:
+        return False
+    s = ev.summary.casefold()
+    if not any(k.casefold() in s for k in VACATION_KEYWORDS):
+        return False
+    if ev.all_day:
+        return True
+    if ev.dtend is None:
+        return False
+    return (ev.dtend - ev.dtstart) >= timedelta(hours=8)
+
+
+def load_source_events(
+    service: str, window_days: int
+) -> tuple[list[tuple[datetime, VEvent]], str]:
+    """Fetch/cache/parse/expand a single source. Returns (occurrences, status).
+
+    ``status`` ∈ {cache, fetch, stale, missing, unset, parse_error}.
+    ``unset`` means keychain entry absent. Never raises."""
+    try:
+        url = get_ics_url(service)
+        if not url:
+            return [], "unset"
+        text, status = load_or_refresh(service, url)
+        if text is None:
+            return [], status  # missing
+        try:
+            events = parse_vevents(unfold(text))
+        except Exception as e:
+            log(f"parse failed for {service}: {e}")
+            return [], "parse_error"
+
+        now = datetime.now(KST)
+        today = now.date()
+        window_end = today + timedelta(days=window_days)
+        out: list[tuple[datetime, VEvent]] = []
+        for ev in events:
+            if ev.summary.strip().upper() in {"CANCELED", "CANCELLED"}:
+                continue
+            try:
+                for dt in expand_event(ev, today, window_end):
+                    if dt >= now - timedelta(hours=1):
+                        out.append((dt, ev))
+            except Exception as e:
+                log(f"expand failed for '{ev.summary}' in {service}: {e}")
+        return out, status
+    except Exception as e:
+        log(f"load_source_events({service}) unexpected failure: {e}")
+        return [], "parse_error"
+
+
+def get_vacation_dates(window_days: int) -> set[date]:
+    """Scan all configured sources for full-day vacation events and return
+    the set of KST dates they cover. Used by workday_context.py.
+
+    Defensive: any exception anywhere → returns an empty set."""
+    try:
+        result: set[date] = set()
+        today = datetime.now(KST).date()
+        window_end = today + timedelta(days=window_days)
+        for service, _label in SOURCES:
+            occ, _status = load_source_events(service, window_days)
+            # occ is already expanded — walk unique events by identity
+            seen_ids: set[int] = set()
+            for dt, ev in occ:
+                if id(ev) in seen_ids:
+                    continue
+                seen_ids.add(id(ev))
+                if not is_vacation(ev):
+                    continue
+                # Collect every date the vacation event covers.
+                start_d = dt.date()
+                if ev.dtend is not None:
+                    # DTEND is exclusive in ICS; subtract 1 second to cap.
+                    end_dt = ev.dtend
+                    end_d = (end_dt - timedelta(seconds=1)).date()
+                else:
+                    end_d = start_d
+                d = start_d
+                while d <= end_d:
+                    if today <= d <= window_end:
+                        result.add(d)
+                    d += timedelta(days=1)
+        return result
+    except Exception as e:
+        log(f"get_vacation_dates failed: {e}")
+        return set()
+
+
 def render(
-    today: date,
-    occurrences: list[tuple[datetime, VEvent]],
-    source: str,
-    warning: str | None,
+    occurrences: list[tuple[datetime, VEvent, str]],
+    warnings: list[str],
 ) -> str:
-    lines = [f"향후 회사 일정 (오늘~+{WINDOW_DAYS}일, 출처: {source}):"]
+    lines = [f"향후 일정 (오늘~+{WINDOW_DAYS}일, 회사+개인):"]
     if not occurrences:
         lines.append("- (일정 없음)")
     else:
-        for dt, ev in occurrences[:20]:
+        for dt, ev, label in occurrences[:20]:
             d = dt.date()
             label_date = f"{d.month:02d}-{d.day:02d}({WEEKDAY_KR[d.weekday()]})"
             time_label = dt.strftime("%H:%M")
@@ -344,63 +490,49 @@ def render(
             if len(summary) > 50:
                 summary = summary[:49] + "…"
             loc = f" @ {ev.location}" if ev.location else ""
-            lines.append(f"- {label_date} {time_label} {summary}{loc}")
-    if warning:
-        lines.append(f"⚠ {warning}")
+            lines.append(f"- {label_date} {time_label} [{label}] {summary}{loc}")
+    for w in warnings:
+        lines.append(f"⚠ {w}")
     return "\n".join(lines) + "\n"
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     # --plugin-root accepted for shell-hook signature symmetry with
-    # workday_context.py. Not used here: this script has no fallback data dir.
+    # workday_context.py. Not used here: no fallback data dir.
     parser.add_argument("--plugin-root", required=True)
     parser.parse_args()
 
-    url = get_ics_url()
-    if not url:
+    all_occ: list[tuple[datetime, VEvent, str]] = []
+    warnings: list[str] = []
+    any_configured = False
+
+    for service, label in SOURCES:
+        occ, status = load_source_events(service, WINDOW_DAYS)
+        if status == "unset":
+            continue  # silently skip sources not configured
+        any_configured = True
+        if status == "missing":
+            warnings.append(f"{label} 캘린더 조회 실패 (캐시 만료)")
+            continue
+        if status == "parse_error":
+            warnings.append(f"{label} 캘린더 파싱 실패")
+            continue
+        if status == "stale":
+            warnings.append(f"{label} 캘린더 stale (이전 캐시 사용)")
+        for dt, ev in occ:
+            if is_trivial_anniversary(ev.summary):
+                continue
+            all_occ.append((dt, ev, label))
+
+    if not any_configured:
         sys.stdout.write(
-            "향후 회사 일정: 미설정 (keychain work-calendar/ics-url 없음)\n"
+            "향후 일정: 미설정 (keychain work-calendar/personal-calendar 없음)\n"
         )
         return 0
 
-    text, source = load_or_refresh(url)
-    if text is None:
-        sys.stdout.write("향후 회사 일정: 조회 실패\n")
-        return 0
-
-    try:
-        lines = unfold(text)
-        events = parse_vevents(lines)
-    except Exception as e:
-        log(f"parse failed: {e}")
-        sys.stdout.write("향후 회사 일정: 파싱 실패\n")
-        return 0
-
-    now = datetime.now(KST)
-    today = now.date()
-    window_end = today + timedelta(days=WINDOW_DAYS)
-
-    occurrences: list[tuple[datetime, VEvent]] = []
-    for ev in events:
-        if ev.summary.strip().upper() in {"CANCELED", "CANCELLED"}:
-            continue
-        try:
-            for dt in expand_event(ev, today, window_end):
-                if dt >= now - timedelta(hours=1):
-                    occurrences.append((dt, ev))
-        except Exception as e:
-            log(f"expand failed for '{ev.summary}': {e}")
-
-    occurrences.sort(key=lambda t: t[0])
-
-    warning = None
-    if source == "stale":
-        warning = "캐시 stale (fetch 실패, 이전 캐시 사용)"
-    elif source == "missing":
-        warning = "fetch 실패 + 캐시 만료"
-
-    sys.stdout.write(render(today, occurrences, source, warning))
+    all_occ.sort(key=lambda t: (t[0], t[2]))
+    sys.stdout.write(render(all_occ, warnings))
     return 0
 
 

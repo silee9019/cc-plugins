@@ -4,11 +4,16 @@
 Emits:
 - Today's date (KST)
 - Current time (KST)
-- Next business days within a 7-day window (weekends + KR holidays excluded)
+- Next business days within a 7-day window (weekends + KR holidays + vacation excluded)
+- Vacation dates within the window (if any) — pulled from calendar_context
 
 Reads cache at ~/.claude/data/memento/kr-holidays.json.
 Falls back to bundled data/kr-holidays-fallback.json when cache is missing.
 Triggers a background refresh when cache is older than CACHE_STALE_DAYS.
+
+Vacation exclusion imports ``calendar_context.get_vacation_dates`` which
+scans the configured ICS feeds for full-day OOO/휴가/연차 events. Import
+is wrapped: any failure falls back to the previous (no-vacation) behavior.
 """
 
 from __future__ import annotations
@@ -20,6 +25,17 @@ import subprocess
 import sys
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
+
+try:
+    from calendar_context import get_vacation_dates as _cc_get_vacation_dates
+except Exception as _e:  # pragma: no cover — defensive
+    print(
+        f"[memento workday] calendar_context import failed: {_e}",
+        file=sys.stderr,
+    )
+
+    def _cc_get_vacation_dates(window_days: int) -> set:
+        return set()
 
 KST = timezone(timedelta(hours=9))
 CACHE_STALE_DAYS = 7
@@ -68,12 +84,15 @@ def load_holidays(plugin_root: Path) -> tuple[dict[str, str], str, datetime | No
 
 
 def business_days_in_window(
-    today: date, window: int, holidays: dict[str, str]
+    today: date,
+    window: int,
+    holidays: dict[str, str],
+    vacation_dates: set[date],
 ) -> list[tuple[date, str]]:
     """Return business days from today through today+window-1 (inclusive).
 
-    A business day is: weekday (Mon-Fri) AND not in the holidays map.
-    Returns list of (date, holiday_name_if_skipped_nearby_or_empty).
+    A business day is: weekday (Mon-Fri) AND not in the holidays map AND
+    not in ``vacation_dates``. Returns list of (date, annotation_or_empty).
     """
     result: list[tuple[date, str]] = []
     for offset in range(window):
@@ -81,6 +100,8 @@ def business_days_in_window(
         if d.weekday() >= 5:
             continue
         if d.isoformat() in holidays:
+            continue
+        if d in vacation_dates:
             continue
         result.append((d, ""))
     return result
@@ -138,6 +159,7 @@ def format_age(last_updated: datetime | None) -> str:
 def render(
     now_kst: datetime,
     business_days: list[tuple[date, str]],
+    vacation_dates: set[date],
     source: str,
     last_updated: datetime | None,
     warning: str | None,
@@ -146,10 +168,13 @@ def render(
     today_label = f"{today.isoformat()} ({WEEKDAY_KR_FULL[today.weekday()]})"
     time_label = now_kst.strftime("%H:%M KST")
 
+    label_suffix = (
+        "주말/공휴일/휴가 제외" if vacation_dates else "주말/공휴일 제외"
+    )
     lines = [
         f"오늘: {today_label}",
         f"현재 시각: {time_label}",
-        "향후 영업일 (오늘~+7일, 주말/공휴일 제외): "
+        f"향후 영업일 (오늘~+7일, {label_suffix}): "
         + (
             ", ".join(
                 f"{d.isoformat()}({WEEKDAY_KR[d.weekday()]})"
@@ -158,8 +183,22 @@ def render(
             if business_days
             else "(없음)"
         ),
-        f"공휴일 참조 캐시: {cache_path()}",
     ]
+
+    window_end = today + timedelta(days=WINDOW_DAYS)
+    in_window_vacations = sorted(
+        d for d in vacation_dates if today <= d < window_end
+    )
+    if in_window_vacations:
+        lines.append(
+            "휴가 (영업일 제외): "
+            + ", ".join(
+                f"{d.isoformat()}({WEEKDAY_KR[d.weekday()]})"
+                for d in in_window_vacations
+            )
+        )
+
+    lines.append(f"공휴일 참조 캐시: {cache_path()}")
 
     if warning:
         lines.append(f"⚠ {warning}")
@@ -195,9 +234,19 @@ def main() -> int:
     if source in {"kasi", "missing"} and should_refresh(last_updated):
         trigger_background_refresh(plugin_root)
 
-    business = business_days_in_window(today, WINDOW_DAYS, holidays)
+    try:
+        vacations = _cc_get_vacation_dates(WINDOW_DAYS)
+        if not isinstance(vacations, set):
+            vacations = set(vacations)
+    except Exception as e:
+        print(f"[memento workday] vacation lookup failed: {e}", file=sys.stderr)
+        vacations = set()
 
-    sys.stdout.write(render(now_kst, business, source, last_updated, warning))
+    business = business_days_in_window(today, WINDOW_DAYS, holidays, vacations)
+
+    sys.stdout.write(
+        render(now_kst, business, vacations, source, last_updated, warning)
+    )
     return 0
 
 
