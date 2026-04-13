@@ -147,11 +147,8 @@ def render(
     time_label = now_kst.strftime("%H:%M KST")
 
     lines = [
-        "## Session Context (KST)",
-        "",
         f"오늘: {today_label}",
         f"현재 시각: {time_label}",
-        "",
         "향후 영업일 (오늘~+7일, 주말/공휴일 제외): "
         + (
             ", ".join(
@@ -161,10 +158,7 @@ def render(
             if business_days
             else "(없음)"
         ),
-        "",
-        f"공휴일 캐시: {cache_path()} "
-        f"(source={source}, updated={format_age(last_updated)})",
-        "필요 시 스킬이 위 JSON을 직접 읽어 공휴일 이름·범위를 조회할 것.",
+        f"공휴일 참조 캐시: {cache_path()}",
     ]
 
     if warning:
