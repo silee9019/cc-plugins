@@ -44,17 +44,6 @@
       "category": "utility"
     },
     {
-      "name": "silee-planner",
-      "source": "./silee-planner",
-      "description": "일일 업무 계획, 할 일 캡처, 작업 완료/리마인드, 하루 마감 정리, 백로그 보관/선택, 주간 회고, 프로젝트 체크포인트 트래킹을 통합한 개인 플래너. Obsidian Daily Notes, Memento 로그, Issue Box, Jira/Confluence를 연동.",
-      "version": "2.2.0",
-      "author": {
-        "name": "silee9019"
-      },
-      "keywords": ["planner", "daily", "weekly", "obsidian", "issue", "review", "pick", "capture", "done", "checkpoint", "okr", "memento", "jira", "confluence"],
-      "category": "workflow"
-    },
-    {
       "name": "memento",
       "source": "./memento",
       "description": "크로스 프로젝트 2-scope 3-layer 에이전트 메모리 + 한국 영업일/공휴일 컨텍스트. 5-level 컴팩션 트리, 세션 체크포인트, 일일 로그.",
@@ -122,15 +111,15 @@
       "category": "workflow"
     },
     {
-      "name": "teams-fetch",
-      "source": "./teams-fetch",
+      "name": "msteams-fetch",
+      "source": "./msteams-fetch",
       "description": "MS Teams 채팅/채널 메시지를 별칭으로 지정해 Claude Code 세션으로 불러오는 도구. Microsoft Graph API delegated 권한(내 계정)으로 읽고 markdown으로 저장.",
-      "version": "0.1.0",
+      "version": "0.3.0",
       "author": {
         "name": "silee9019"
       },
       "license": "MIT",
-      "keywords": ["teams", "msgraph", "context", "chat", "channel"],
+      "keywords": ["teams", "msteams", "msgraph", "context", "chat", "channel", "search"],
       "category": "utility"
     }
   ]

@@ -66,7 +66,7 @@ export async function getAccessToken(cfg) {
       });
       if (silent?.accessToken) return silent.accessToken;
     } catch (err) {
-      process.stderr.write(`[teams-fetch] silent 갱신 실패, 재로그인 시도: ${err.message}\n`);
+      process.stderr.write(`[msteams-fetch] silent 갱신 실패, 재로그인 시도: ${err.message}\n`);
     }
   }
 

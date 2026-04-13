@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 import YAML from "yaml";
 
-const CONFIG_DIR = join(homedir(), ".config", "teams-fetch");
+const CONFIG_DIR = join(homedir(), ".config", "msteams-fetch");
 const CONFIG_FILE = join(CONFIG_DIR, "config.yaml");
 const ALIASES_FILE = join(CONFIG_DIR, "aliases.yaml");
 const TOKEN_CACHE_FILE = join(CONFIG_DIR, "token-cache.json");

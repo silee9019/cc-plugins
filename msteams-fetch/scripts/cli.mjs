@@ -12,12 +12,13 @@ import {
 } from "./graph.mjs";
 import { renderMessages } from "./render.mjs";
 import { parseTeamsUrl } from "./urlParser.mjs";
+import { runSearch } from "./search.mjs";
 
 const program = new Command();
 program
-  .name("teams-fetch")
+  .name("msteams-fetch")
   .description("MS Teams 채팅/채널 메시지를 별칭으로 가져와 markdown으로 저장")
-  .version("0.1.0");
+  .version("0.3.0");
 
 program
   .command("login")
@@ -35,7 +36,7 @@ program
     const aliases = loadAliases();
     const names = Object.keys(aliases);
     if (names.length === 0) {
-      process.stdout.write("(등록된 별칭이 없습니다. `teams-fetch add-alias <name> <url>`로 추가하세요.)\n");
+      process.stdout.write("(등록된 별칭이 없습니다. `msteams-fetch add-alias <name> <url>`로 추가하세요.)\n");
       return;
     }
     for (const name of names) {
@@ -124,6 +125,41 @@ program
       `✓ ${messages.length}개 메시지 저장: ${outPath}\n`,
     );
     process.stdout.write(`${outPath}\n`);
+  });
+
+program
+  .command("search")
+  .description("내가 멘션된 곳 / 이름이 등장한 곳을 검색 (가입 채팅 + 등록 채널)")
+  .option("--name <target>", "검색 대상 (기본: me, 또는 자유 문자열)", "me")
+  .option("--since <spec>", "시간 범위 (예: 2h, 1d, 7d, 2026-04-13)", undefined)
+  .option("--until <iso>", "종료 시각 (ISO 8601)", undefined)
+  .option("--mentions-only", "@mention만 매칭", false)
+  .option("--body-only", "본문 substring만 매칭", false)
+  .option("--limit <n>", "최대 결과 개수", undefined)
+  .option("--out <path>", "출력 파일 경로")
+  .action(async (opts) => {
+    if (opts.mentionsOnly && opts.bodyOnly) {
+      throw new Error("--mentions-only와 --body-only는 동시 사용 불가");
+    }
+    const cfg = loadConfig();
+    const aliases = loadAliases();
+    const sinceIso = parseSince(opts.since || cfg.defaults.since);
+    const token = await getAccessToken(cfg);
+
+    const result = await runSearch({
+      cfg,
+      token,
+      aliases,
+      name: opts.name,
+      sinceIso,
+      until: opts.until || null,
+      opts,
+    });
+
+    process.stderr.write(
+      `✓ ${result.totalMatches}건 매칭 (스캔: 채팅 ${result.scanned.chats} / 채널 메시지 ${result.scanned.channels}): ${result.outPath}\n`,
+    );
+    process.stdout.write(`${result.outPath}\n`);
   });
 
 function parseSince(spec) {

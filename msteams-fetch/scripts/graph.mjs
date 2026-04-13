@@ -78,3 +78,51 @@ export async function fetchThreadReplies({ token, teamId, channelId, messageId }
 export async function fetchChatInfo({ token, chatId }) {
   return graphGet(`${GRAPH_BASE}/me/chats/${encodeURIComponent(chatId)}`, token);
 }
+
+export async function fetchMeInfo({ token }) {
+  return graphGet(`${GRAPH_BASE}/me`, token);
+}
+
+export async function listMyChats({ token, limit = 200 }) {
+  const chats = [];
+  let url = `${GRAPH_BASE}/me/chats?$top=50`;
+  while (url && chats.length < limit) {
+    const data = await graphGet(url, token);
+    for (const c of data.value || []) {
+      chats.push(c);
+      if (chats.length >= limit) break;
+    }
+    url = data["@odata.nextLink"] || null;
+  }
+  return chats;
+}
+
+// delegated context에서 /me/chats/getAllMessages는 PreconditionFailed 발생.
+// 대신 /me/chats 목록을 받아 각 채팅별로 fetchChatMessages 호출.
+// 채팅이 많을 때 호출 횟수가 늘지만 throttling 위험은 낮음 (개인이 가입한 채팅 수 N).
+export async function fetchAllChatMessages({ token, sinceIso, limit = 2000, perChatLimit = 200 }) {
+  const chats = await listMyChats({ token });
+  const out = [];
+  for (const c of chats) {
+    if (out.length >= limit) break;
+    try {
+      const list = await fetchChatMessages({
+        token,
+        chatId: c.id,
+        sinceIso,
+        limit: perChatLimit,
+      });
+      for (const m of list) {
+        m.chatId = c.id;
+        m._chatTopic = c.topic || null;
+        m._chatType = c.chatType || null;
+        out.push(m);
+        if (out.length >= limit) break;
+      }
+    } catch (err) {
+      // 개별 채팅 접근 실패는 무시하고 다음 채팅으로
+      process.stderr.write(`[msteams-fetch] chat ${c.id.slice(0, 16)}... 스킵: ${err.message.slice(0, 80)}\n`);
+    }
+  }
+  return out;
+}
