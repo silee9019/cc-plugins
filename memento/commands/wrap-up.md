@@ -151,6 +151,25 @@ PROJECT_ID=$(
 
 Daily Note가 없으면 생략 (planning 먼저 권장은 하지 않음 — wrap-up은 항상 동일 동작 원칙).
 
+**캘린더 참고 — 오늘의 미팅도 Log에 타임라인 항목으로 포함**:
+
+Daily Note Log는 "오늘의 시간 순 타임라인"이므로 일하는 세션만이 아니라 미팅도 함께 보여야 하루 흐름이 복원된다. wrap-up 시 다음을 수행한다:
+
+1. 회사 일정 컨텍스트 스크립트 실행:
+   ```bash
+   python3 {PLUGIN_ROOT}/memento/scripts/work_calendar_context.py --plugin-root {PLUGIN_ROOT}/memento
+   ```
+   출력에서 **오늘 날짜에 해당하는 이벤트만** 추출 (형식 예: `- 04-13(월) 10:00 {제목} @ {장소}`).
+
+2. 각 오늘 이벤트에 대해 Daily Note Log에 이미 동일/유사 항목이 있는지 확인한다 (제목 substring 매칭). 없으면 시간 순 규칙에 따라 적절 위치에 삽입한다:
+   ```markdown
+   - {HH:MM} 📅 {제목} @ {장소}
+   ```
+
+3. 스크립트가 `미설정`을 반환하거나 Keychain 접근 실패 시 조용히 건너뛴다 (wrap-up의 본질은 체크포인트이므로 캘린더는 부가 정보).
+
+4. wrap-up 본인 엔트리(`- {HH:MM} wrap-up: ...`)를 쓸 때, 바로 직전 미팅과 시간적으로 인접하면(예: 미팅 종료 직후 wrap-up) 자연스럽게 "미팅 복귀 후 …" 같은 맥락을 본문에 녹여도 된다. 단, 억지로 엮지 않음.
+
 **교훈 추출 및 저장**: 세션 맥락에서 교훈(lessons learned)을 추출하여 `## Review` 섹션의 `- 배운 것:` 필드에 누적 append한다.
 
 교훈 추출 기준:
