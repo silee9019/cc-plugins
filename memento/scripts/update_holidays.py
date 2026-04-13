@@ -2,7 +2,7 @@
 """Fetch Korean holidays from KASI 특일정보 API and write cache.
 
 Reads the service key from ~/.netrc entry `machine apis.data.go.kr`.
-Writes to ~/.claude/data/kr-workday-context/kr-holidays.json atomically.
+Writes to ~/.claude/data/memento/kr-holidays.json atomically.
 Scope: current month + next month (2 months, sliding window).
 
 Usage:
@@ -62,7 +62,7 @@ def fetch_month(service_key: str, year: int, month: int, verbose: bool) -> dict[
     url = f"{ENDPOINT}?{urllib.parse.urlencode(params, safe=':/')}"
     log(f"fetching {year}-{month:02d}", verbose)
 
-    req = urllib.request.Request(url, headers={"User-Agent": "kr-workday-context/0.1"})
+    req = urllib.request.Request(url, headers={"User-Agent": "memento-workday/1.0"})
     with urllib.request.urlopen(req, timeout=10) as resp:
         body = resp.read()
 
@@ -115,7 +115,7 @@ def window_bounds(start: date, months: int) -> tuple[date, date]:
 
 
 def write_cache(holidays: dict[str, str], window: tuple[date, date]) -> Path:
-    cache_dir = Path.home() / ".claude" / "data" / "kr-workday-context"
+    cache_dir = Path.home() / ".claude" / "data" / "memento"
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_file = cache_dir / "kr-holidays.json"
 

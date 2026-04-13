@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""kr-workday-context main hook script.
+"""memento workday context — KST + Korean business day injection.
 
-Emits a system-reminder block with:
+Emits:
 - Today's date (KST)
 - Current time (KST)
 - Next business days within a 7-day window (weekends + KR holidays excluded)
 
-Reads cache at ~/.claude/data/kr-workday-context/kr-holidays.json.
+Reads cache at ~/.claude/data/memento/kr-holidays.json.
 Falls back to bundled data/kr-holidays-fallback.json when cache is missing.
 Triggers a background refresh when cache is older than CACHE_STALE_DAYS.
 """
@@ -30,7 +30,7 @@ WEEKDAY_KR_FULL = ["월요일", "화요일", "수요일", "목요일", "금요�
 
 
 def cache_path() -> Path:
-    return Path.home() / ".claude" / "data" / "kr-workday-context" / "kr-holidays.json"
+    return Path.home() / ".claude" / "data" / "memento" / "kr-holidays.json"
 
 
 def fallback_path(plugin_root: Path) -> Path:
@@ -54,7 +54,7 @@ def load_holidays(plugin_root: Path) -> tuple[dict[str, str], str, datetime | No
             )
             return holidays, source, last_updated
         except Exception as e:
-            print(f"[kr-workday-context] cache parse failed: {e}", file=sys.stderr)
+            print(f"[memento workday] cache parse failed: {e}", file=sys.stderr)
 
     fb = fallback_path(plugin_root)
     if fb.exists():
@@ -62,7 +62,7 @@ def load_holidays(plugin_root: Path) -> tuple[dict[str, str], str, datetime | No
             data = json.loads(fb.read_text(encoding="utf-8"))
             return data.get("holidays", {}) or {}, "fallback", None
         except Exception as e:
-            print(f"[kr-workday-context] fallback parse failed: {e}", file=sys.stderr)
+            print(f"[memento workday] fallback parse failed: {e}", file=sys.stderr)
 
     return {}, "missing", None
 
@@ -120,7 +120,7 @@ def trigger_background_refresh(plugin_root: Path) -> None:
             start_new_session=True,
         )
     except Exception as e:
-        print(f"[kr-workday-context] background refresh failed: {e}", file=sys.stderr)
+        print(f"[memento workday] background refresh failed: {e}", file=sys.stderr)
 
 
 def format_age(last_updated: datetime | None) -> str:
@@ -181,7 +181,7 @@ def main() -> int:
     warning: str | None = None
     if source == "missing":
         warning = (
-            "공휴일 데이터 없음 — `/kr-workday-context:update-holidays` 실행 권장"
+            "공휴일 데이터 없음 — `/memento:update-holidays` 실행 권장"
         )
     elif source == "fallback":
         # Silent — already mentioned in main body.
@@ -189,7 +189,7 @@ def main() -> int:
     elif source == "kasi" and is_expired(last_updated):
         warning = (
             f"캐시 만료 ({(datetime.now(KST) - (last_updated or now_kst)).days}일). "
-            "`/kr-workday-context:update-holidays` 실행 권장"
+            "`/memento:update-holidays` 실행 권장"
         )
 
     if source in {"kasi", "missing"} and should_refresh(last_updated):

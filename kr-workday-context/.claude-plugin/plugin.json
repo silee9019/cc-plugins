@@ -1,9 +1,0 @@
-{
-  "name": "kr-workday-context",
-  "description": "세션 시작 시 KST 현재 시각 + 오늘부터 향후 7일의 한국 영업일(주말/법정공휴일/대체공휴일/임시공휴일/선거일 제외) 목록을 system-reminder로 주입. KASI 특일정보 API 캐시 + holidays 패키지 fallback.",
-  "version": "0.1.0",
-  "author": { "name": "silee9019" },
-  "license": "MIT",
-  "keywords": ["kst", "korea", "workday", "business-day", "holiday", "session-context", "kasi"],
-  "commands": ["./commands"]
-}

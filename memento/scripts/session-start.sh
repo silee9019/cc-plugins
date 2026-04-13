@@ -147,13 +147,19 @@ if [ -n "$VAULT_PATH" ]; then
   fi
 fi
 
-# ─── KST timestamp ───
-KST_NOW=$(TZ=Asia/Seoul LC_TIME=ko_KR.UTF-8 date "+%Y-%m-%d %H:%M %Z (%A)")
+# ─── KST + workday context (cooldown 무관, 세션당 1회) ───
+KST_BLOCK=""
+if command -v python3 >/dev/null 2>&1; then
+  KST_BLOCK="$(python3 "$PLUGIN_ROOT/scripts/workday_context.py" --plugin-root "$PLUGIN_ROOT" 2>/dev/null || true)"
+fi
+if [ -z "${KST_BLOCK:-}" ]; then
+  KST_BLOCK="Current time (KST): $(TZ=Asia/Seoul LC_TIME=ko_KR.UTF-8 date '+%Y-%m-%d %H:%M %Z (%A)')"
+fi
 
 # ─── Output protocol to stdout ───
 
 cat <<PROTOCOL
-Current time (KST): ${KST_NOW}
+${KST_BLOCK}
 
 ## Memento — Memory Protocol (MANDATORY)
 
