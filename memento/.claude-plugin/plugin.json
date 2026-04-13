@@ -1,7 +1,7 @@
 {
   "name": "memento",
   "description": "나의 기억이자 멘토. 세션 컨텍스트를 잊지 않는 기억 장치(memento)이자 하루를 계획하고 따라가고 돌아보는 AI 동료(me + mento). Memory 레이어(세션 로그, 5-level 컴팩션 트리, 검색)와 Mentor 레이어(planning, capture, review, wrap-up)를 하나의 네임스페이스에서 제공.",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "author": { "name": "silee9019" },
   "license": "MIT",
   "keywords": ["memory", "compaction", "checkpoint", "session", "planning", "mentor", "daily-notes", "issue-box"],

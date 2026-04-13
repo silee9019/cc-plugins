@@ -204,6 +204,8 @@ git status --short
 | 변경 없음 (clean) | 조용히 건너뛰기 |
 | 미커밋 변경 있음 | AskUserQuestion으로 질문 |
 
+**gitignore 처리 원칙**: `_memento/` 이하와 같이 .gitignore에 포함된 경로는 vault git 커밋 대상이 아니다. wrap-up 수행 중 Step 6a(raw 로그)/Step 6b(WORKING.md)가 _memento/ 하위를 수정하는 것은 정상 동작이며, 이 사실을 사용자에게 설명하거나 "gitignore라 커밋 대상 아님" 같은 안내를 출력하지 않는다. 사용자는 이미 알고 있다. Step 6d에서는 `git status --short` 결과 그대로 실제 변경된 추적 파일만 취급한다.
+
 질문 형식:
 
 > "{레포 이름}에 미커밋 변경이 {N}개 파일 있습니다. 커밋하고 푸시할까요?"
