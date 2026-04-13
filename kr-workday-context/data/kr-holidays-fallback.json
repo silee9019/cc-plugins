@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "last_updated": "2026-04-13T09:32:05+09:00",
+  "source": "fallback",
+  "window": {
+    "from": "2026-04-01",
+    "to": "2026-05-31"
+  },
+  "note": "Generated from the `holidays` PyPI package. Window matches the runtime cache: current month + next month. Regenerate monthly, or whenever the plugin is updated.",
+  "holidays": {
+    "2026-05-05": "어린이날",
+    "2026-05-24": "부처님오신날",
+    "2026-05-25": "부처님오신날 대체 휴일"
+  }
+}

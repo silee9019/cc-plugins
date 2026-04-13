@@ -1,0 +1,16 @@
+{
+  "description": "KST 시각 + 한국 영업일 컨텍스트 주입",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/session-start.sh\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}
