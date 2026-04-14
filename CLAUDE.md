@@ -177,7 +177,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | git-init | 1.4.1 | workflow | command | — | gh, curl |
 | silee-planner | 2.3.0-deprecated | deprecated alias | command | — | (memento로 위임) |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
-| claude-statusline | 2.1.4 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
+| claude-statusline | 2.1.5 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
 | memento | 2.0.0 | workflow+utility | skill+hook+command | Bun + Python 3 | qmd, obsidian CLI, git, Jira/Atlassian MCP |
 | agentic-workflow | 1.1.0 | workflow | skill + command | — | gh |
 | tutor | 0.2.0 | workflow | command + skill | Python 3 | obsidian CLI |

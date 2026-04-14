@@ -11,6 +11,7 @@ RED=$(printf '\033[31m')
 MAGENTA=$(printf '\033[35m')
 BLUE75=$(printf '\033[38;5;75m')
 BLUE27=$(printf '\033[38;5;27m')
+AMBER214=$(printf '\033[38;5;214m')
 RST=$(printf '\033[0m')
 SEP="${DIM} | ${RST}"
 
@@ -118,10 +119,10 @@ format_gh() {
   local user
   user=$(cat "$cache")
   case "$user" in
-    silee9019)      printf '%sgh@me%s' "$BLUE75" "$RST" ;;
+    silee9019)      printf '%sgh@me%s' "$AMBER214" "$RST" ;;
     silee_imagogit) printf '%sgh@imago%s' "$BLUE27" "$RST" ;;
     "")             printf '%sgh@---%s' "$DIM" "$RST" ;;
-    *)              printf '%sgh@%s%s' "$BLUE75" "$user" "$RST" ;;
+    *)              printf '%sgh@%s%s' "$AMBER214" "$user" "$RST" ;;
   esac
 }
 
@@ -149,7 +150,13 @@ format_aws() {
   elif [ "$remaining" -gt 0 ]; then
     printf '%saws:⏳%sm%s' "$YELLOW" "$remaining" "$RST"
   else
-    printf '%saws:✗%s' "$RED" "$RST"
+    sf="${XDG_DATA_HOME:-$HOME/.local/share}/saml2aws-login-suppress"
+    today=$(date +%Y-%m-%d)
+    if [ -f "$sf" ] && grep -q "^value=${today}$" "$sf" 2>/dev/null; then
+      printf '%saws:-%s' "$DIM" "$RST"
+    else
+      printf '%saws:expired%s' "$RED" "$RST"
+    fi
   fi
 }
 
