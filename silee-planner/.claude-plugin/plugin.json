@@ -1,8 +1,0 @@
-{
-  "name": "silee-planner",
-  "description": "[DEPRECATED] memento v2.0.0에 흡수됨. 모든 커맨드는 /memento:* 네임스페이스로 이동했습니다. 기존 /silee-planner:* 호출은 호환성 유지 목적의 얇은 위임 래퍼로 동작합니다. 점진 이전 후 이 플러그인은 제거될 예정입니다.",
-  "version": "2.3.0-deprecated",
-  "author": { "name": "silee9019" },
-  "keywords": ["planner", "daily", "weekly", "obsidian", "issue", "review", "pick", "capture", "done", "checkpoint", "okr", "memento", "jira", "confluence"],
-  "commands": ["./commands"]
-}

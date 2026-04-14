@@ -37,16 +37,14 @@ Obsidian CLI가 설치되어 있지 않습니다.
 
 ### Step 2: 기존 설정 확인 및 버전 비교
 
-아래 순서로 설정을 찾는다:
+기존 설정 파일을 찾는다:
 
-1. `~/.claude/plugins/data/tutor-cc-plugins/config.md` (기존 tutor 설정)
-2. `~/.claude/plugins/data/silee-planner-cc-plugins/config.md` (vault 이름만 참조)
+`~/.claude/plugins/data/tutor-cc-plugins/config.md`
 
 | 케이스 | 처리 |
 |--------|------|
-| 1번 파일 존재 | 기존 값을 기본값으로 사용. 아래 **버전 비교** 분기 적용 후 Step 3으로 진행 |
-| 2번 파일만 존재 | `vault` 값만 기본값으로 가져오기. Step 3으로 진행 |
-| 둘 다 없음 | Step 3으로 진행 (신규 설정) |
+| 파일 존재 | 기존 값을 기본값으로 사용. 아래 **버전 비교** 분기 적용 후 Step 3으로 진행 |
+| 파일 없음 | Step 3으로 진행 (신규 설정) |
 
 **`setup_version` 파싱** (1번 파일이 존재할 때):
 

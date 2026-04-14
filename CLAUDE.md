@@ -8,7 +8,6 @@ Claude Code 플러그인 모노레포.
 cc-plugins/
 ├── .claude-plugin/marketplace.json   ← 중앙 카탈로그 (모든 플러그인 등록)
 ├── git-init/                         ← command: GitHub 저장소 초기화
-├── silee-planner/                    ← [DEPRECATED] memento v2.0.0 위임 래퍼
 ├── andrej-karpathy-skills/           ← skill: LLM 코딩 실수 방지 가이드라인
 ├── claude-statusline/                ← hook: 2줄 HUD statusline
 ├── memento/                          ← skill+hook+command: 2-scope 3-layer 에이전트 메모리 시스템
@@ -175,7 +174,6 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | 플러그인 | 버전 | 카테고리 | 컴포넌트 | 런타임 | 외부 의존성 |
 |----------|------|----------|----------|--------|-------------|
 | git-init | 1.4.1 | workflow | command | — | gh, curl |
-| silee-planner | 2.3.0-deprecated | deprecated alias | command | — | (memento로 위임) |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.5 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
 | memento | 2.0.0 | workflow+utility | skill+hook+command | Bun + Python 3 | qmd, obsidian CLI, git, Jira/Atlassian MCP |
@@ -216,32 +214,6 @@ git-init/
 - **수정 시**: `git-init.md`의 Step 순서 변경 시 번호 정합성 확인
 - **테스트**: `/git-init test-repo` 실행 후 GitHub에서 생성 확인, `gh repo delete`로 정리
 - **의존성**: `gh` CLI (인증 필요), `curl` (gitignore.io)
-
-### silee-planner (DEPRECATED → memento v2.0.0 흡수)
-
-silee-planner의 8개 커맨드는 모두 **memento v2.0.0**에 흡수되었다. 기존 경로는 얇은 위임 래퍼로 남겨 근육 기억 전환 기간 동안 동작한다.
-
-| 구 silee-planner | 신 memento | 비고 |
-|----|----|----|
-| `/silee-planner:setup` | `/memento:setup` | 통합 config 생성 + silee-planner 병합 + active-reminders 이전 + capture 룰 설치 |
-| `/silee-planner:plan-today` | `/memento:planning` | 파악/정리/분류/**발굴**/선택의 5단계 |
-| `/silee-planner:pick-task` | `/memento:planning` | planning의 선택 단계에 흡수 |
-| `/silee-planner:capture-task` | `/memento:capture-task` | vault `.claude/rules/memento-capture.md` 룰로 자연 캡처 자동 주입 |
-| `/silee-planner:finish-task` | `/memento:wrap-up` | 세션 맥락 기반 자동 완료 감지로 흡수 |
-| `/silee-planner:review-today` | `/memento:review-day` | 회고 삼중 대칭 day/week/objectives |
-| `/silee-planner:weekly-report` | `/memento:review-week` | |
-| `/silee-planner:project-checkpoint` | `/memento:review-objectives` | |
-
-- **수정 시**: 위임 래퍼만 유지. 본문 로직은 `memento/commands/`에서 수정하고 alias는 건드리지 않음
-- **설정**: 레거시 `~/.claude/plugins/data/silee-planner-cc-plugins/config.md`는 deprecated 마커(`deprecated: true`)가 붙은 채 보존됨. 실제 값은 `~/.claude/plugins/data/memento-cc-plugins/config.md`
-- **상태 라이프사이클**: `open | blocked → in-progress → resolved | dismissed` (각 상태별 폴더 이동)
-- **주의**:
-  - issue-box config(구 버전) 마이그레이션은 setup에서 자동 처리
-  - `capture-task`: 인자 있으면 빠른 캡처, 없으면 세션 대화에서 이슈 추출
-  - `weekly-report` (v2.0.0): 5개 Python 스크립트 + Atlassian MCP 하이브리드 수집. 본문은 산문 회고, 숫자는 `<details>` 부록에만. 이전 인자(`[레포]`, `[작성자]`)는 제거됨. 기존 파일은 `.bak`으로 백업
-  - `project-checkpoint`: KR1 프로세스 준수율 트래킹 (Jira MCP 연동, 3일 주기). 트래킹 파일 경로/에픽 키는 커맨드 파일에 하드코딩 (OKR 기간별 고정)
-  - `plan-today`: KR1 체크포인트 연체 감지 연동 (트래킹 파일의 `다음 업데이트` 날짜 확인)
-  - Python 스크립트는 모두 표준 라이브러리만 사용, stdin/stdout JSON 파이프라인
 
 ### andrej-karpathy-skills
 
@@ -288,7 +260,7 @@ tutor/
 - **의존성**: Obsidian CLI (`brew install obsidian-cli`), Python 3 (표준 라이브러리만)
 - **설정**: `~/.claude/plugins/data/tutor-cc-plugins/config.md`
 - **주의**:
-  - memento config에서 vault 이름 자동 감지 (있을 경우). 레거시 silee-planner config fallback 가능
+  - memento config에서 vault 이름 자동 감지 (있을 경우)
   - 학습 노트는 `> [!quiz]` callout으로 퀴즈 문항 내장 (quiz-schema.md 참조)
   - mastery 계산: 첫 퀴즈는 정답률 직접 설정, 이후 EMA (기존 60% + 이번 40%)
   - 계산/파싱/집계/셔플은 Python 스크립트로 결정론적 처리 (LLM 비결정론 보완)
@@ -425,7 +397,7 @@ knowledge-tools/
 - **주의**:
   - 투표는 목적이 아니라 검증 수단 — 정의 확립이 우선
   - 리서치 에이전트와 검증 에이전트는 반드시 분리 (hallucination 방지)
-  - vault 경로는 memento config에서 읽음 (레거시 silee-planner config fallback 가능)
+  - vault 경로는 memento config에서 읽음
 
 ### resume-coach
 

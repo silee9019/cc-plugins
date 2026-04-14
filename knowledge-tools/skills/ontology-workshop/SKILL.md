@@ -189,7 +189,7 @@ AskUserQuestion으로 최종 결과 제시:
 #### 5c. 기록
 
 **Obsidian vault 저장**:
-- silee-planner config (`~/.claude/plugins/data/silee-planner-cc-plugins/config.md`)에서 vault 경로 읽기
+- memento config (`~/.claude/plugins/data/memento-cc-plugins/config.md`)에서 vault 경로 읽기
 - `templates/decision-record.md` 템플릿 사용
 - 저장 위치: `{vault}/Resources/decisions/YYYY-MM-DD-{slug}.md`
 

@@ -1,12 +1,11 @@
 ---
-description: Memento 메모리+멘토 시스템 초기 설정 (통합 config 생성 + vault 이전 + silee-planner 병합 + qmd 등록 + capture 룰 설치)
+description: Memento 메모리+멘토 시스템 초기 설정 (통합 config 생성 + vault 이전 + qmd 등록 + capture 룰 설치)
 allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 ---
 
 # Memento Setup
 
 memento 데이터를 Obsidian vault 내부로 이전하고, Memory + Mentor 통합 config를 기록한다.
-silee-planner config가 존재하면 Mentor 키를 병합하고 active-reminders.md를 vault 내부로 이전한다.
 모든 단계는 멱등(idempotent) — 여러 번 실행해도 동일한 결과.
 
 > **인터뷰 원칙**: 결정에 필요한 정보를 자체 도구로 최대한 수집한 후, 여전히 모호한 지점이 있으면 가정하지 말 것. `AskUserQuestion`으로 한 번에 하나의 질문만 하고, 답을 받은 직후 다음 단계로 진행한다. 여러 결정을 일괄 처리하지 않는다.
@@ -106,80 +105,12 @@ PREV_ATLASSIAN_URL=$(sed -n 's/^atlassian_site_url: *"\(.*\)"$/\1/p' "$CONFIG_FI
 PREV_ATLASSIAN_CLOUD=$(sed -n 's/^atlassian_cloud_id: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 ```
 
-### Step 2a: silee-planner config 탐지 및 Mentor 키 수집
-
-silee-planner가 쓰던 config에서 Mentor 키들을 읽어 통합 config에 병합할 준비를 한다.
-
-```sh
-SP_CONFIG="$HOME/.claude/plugins/data/silee-planner-cc-plugins/config.md"
-SP_VAULT=""
-SP_DAILY_PATH=""
-SP_DAILY_FORMAT=""
-SP_WEEKLY_PATH=""
-SP_WEEKLY_FORMAT=""
-SP_MONTHLY_PATH=""
-SP_INBOX=""
-SP_INPROGRESS=""
-SP_RESOLVED=""
-SP_DISMISSED=""
-SP_FILE_TITLE=""
-SP_AUTHOR=""
-SP_REPOS=""
-SP_ATLASSIAN_URL=""
-SP_ATLASSIAN_CLOUD=""
-
-if [ -f "$SP_CONFIG" ]; then
-  SP_VAULT=$(sed -n 's/^vault: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_DAILY_PATH=$(sed -n 's/^daily_notes_path: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_DAILY_FORMAT=$(sed -n 's/^daily_note_format: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_WEEKLY_PATH=$(sed -n 's/^weekly_notes_path: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_WEEKLY_FORMAT=$(sed -n 's/^weekly_note_format: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_MONTHLY_PATH=$(sed -n 's/^monthly_notes_path: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_INBOX=$(sed -n 's/^inbox_folder_path: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_INPROGRESS=$(sed -n 's/^in_progress_folder_path: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_RESOLVED=$(sed -n 's/^resolved_folder_path: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_DISMISSED=$(sed -n 's/^dismissed_folder_path: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_FILE_TITLE=$(sed -n 's/^file_title_format: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_AUTHOR=$(sed -n 's/^author_email: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_REPOS=$(sed -n 's/^repos_base_path: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_ATLASSIAN_URL=$(sed -n 's/^atlassian_site_url: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  SP_ATLASSIAN_CLOUD=$(sed -n 's/^atlassian_cloud_id: *"\(.*\)"$/\1/p' "$SP_CONFIG" | head -1)
-  echo "[memento] silee-planner config 발견 — Mentor 키 병합 준비"
-fi
-```
-
-**스키마 정규화 주의**: silee-planner는 `daily_notes_path`에 `{YYYY}/{MM}` 같은 형식 마커를 포함했으나, 통합 스키마는 **base 경로(`01 Daily Notes`)와 format(`{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md`)을 분리**한다. 감지된 값에 `{` 마커가 포함되어 있으면 아래와 같이 분리한다:
-
-```sh
-normalize_notes_path() {
-  local path="$1" fmt="$2"
-  # path에 {YYYY}가 포함되어 있으면 base만 추출
-  case "$path" in
-    *"{"*)
-      BASE_PATH="${path%%/\{*}"
-      # format은 path의 나머지 + 기존 format + .md
-      TAIL="${path#${BASE_PATH}}"
-      NORMALIZED_FORMAT="${TAIL#/}/${fmt}.md"
-      ;;
-    *)
-      BASE_PATH="$path"
-      NORMALIZED_FORMAT="${fmt}"
-      ;;
-  esac
-}
-```
-
-병합은 **기존 memento config 값이 있으면 우선**, 없으면 silee-planner 값, 그것도 없으면 기본값 순으로 선택한다 (Step 7에서 실제 기록).
-
-**vault_path 충돌 감지**: `PREV_VAULT_PATH`가 있고 `SP_VAULT` 이름에서 유도된 경로와 다르면 AskUserQuestion으로 확인한다.
-
 ### Step 3: vault 탐지 & 선택
 
 `obsidian vaults verbose` 실행하여 vault 목록과 경로 파악.
 
-1. **silee-planner config 우선 참조**: `~/.claude/plugins/data/silee-planner-cc-plugins/config.md`가 있으면 `vault` 값을 1순위 기본값으로 제시.
-2. **기존 memento config가 있으면** `PREV_VAULT_PATH`를 1순위로 사용 (Step 2에서 읽음).
-3. vault 선택:
+1. **기존 memento config가 있으면** `PREV_VAULT_PATH`를 1순위로 사용 (Step 2에서 읽음).
+2. vault 선택:
    - 0개: "Obsidian vault가 없습니다." 안내 후 중단
    - 1개: 자동 선택
    - 2개+: AskUserQuestion으로 선택
@@ -270,7 +201,7 @@ setup_version: "<PLUGIN_VERSION>"
 # Memory 레이어
 vault_path: "<VAULT_PATH>"
 memento_root: "<MEMENTO_ROOT>"
-# Mentor 레이어 (silee-planner에서 이전)
+# Mentor 레이어
 daily_notes_path: "<DAILY_PATH>"
 daily_note_format: "<DAILY_FORMAT>"
 weekly_notes_path: "<WEEKLY_PATH>"
@@ -292,8 +223,7 @@ atlassian_cloud_id: "<ATLASSIAN_CLOUD>"
 **값 선택 우선순위** (각 Mentor 키별):
 
 1. `PREV_*` (기존 memento config v2 이상)
-2. `SP_*` (silee-planner config, 정규화 후)
-3. 기본값:
+2. 기본값:
    - `daily_notes_path`: `"01 Daily Notes"`
    - `daily_note_format`: `"{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md"`
    - `weekly_notes_path`: `"02 Weekly Notes"`
@@ -306,43 +236,10 @@ atlassian_cloud_id: "<ATLASSIAN_CLOUD>"
    - `file_title_format`: `"{date} {category} {title}"`
    - 기타(`author_email`/`repos_base_path`/`atlassian_*`): 빈 문자열
 
-**모호한 경우 인터뷰**: `PREV_*`와 `SP_*`가 모두 존재하고 서로 다르면 한 번에 하나씩 AskUserQuestion으로 선택. 예: `"daily_notes_path: memento는 A, silee-planner는 B. 어느 쪽을 쓸까요?"` — 가정하지 말 것.
-
 이 단계가 성공해야 이후 hook/compact 스크립트가 새 경로를 인식한다.
 실패 시 setup 전체를 재실행해도 멱등하다.
 
-### Step 7a: silee-planner config deprecation 마킹
-
-병합 성공 후 원본 silee-planner config를 삭제하지 않고 frontmatter에 `deprecated: true` 마커만 추가한다. 데이터 손실 방지용.
-
-```sh
-if [ -f "$SP_CONFIG" ] && ! grep -q '^deprecated: true' "$SP_CONFIG"; then
-  # frontmatter 첫 줄(---) 다음에 deprecated 마커 삽입
-  awk 'NR==1 && /^---$/ {print; print "deprecated: true"; print "deprecated_at: \"'"$(date +%Y-%m-%d)"'\""; print "deprecated_reason: \"merged into memento v2.0.0\""; next} {print}' "$SP_CONFIG" > "$SP_CONFIG.tmp" && mv "$SP_CONFIG.tmp" "$SP_CONFIG"
-  echo "[memento] silee-planner config deprecated 마킹 완료"
-fi
-```
-
-### Step 7b: active-reminders.md 이전
-
-silee-planner가 쓰던 `active-reminders.md`를 vault 내부 `_memento/user/` 아래로 복사한다. ResilioSync로 장비 간 공유 가능해진다.
-
-```sh
-SP_REMINDERS="$HOME/.claude/plugins/data/silee-planner-cc-plugins/active-reminders.md"
-NEW_REMINDERS="$NEW_HOME/user/active-reminders.md"
-
-if [ -f "$SP_REMINDERS" ]; then
-  if [ ! -f "$NEW_REMINDERS" ]; then
-    cp "$SP_REMINDERS" "$NEW_REMINDERS"
-    mv "$SP_REMINDERS" "$SP_REMINDERS.migrated"
-    echo "[memento] active-reminders.md → $NEW_REMINDERS 이전 완료 (원본: .migrated 접미사 보존)"
-  else
-    echo "[memento] $NEW_REMINDERS가 이미 존재 — 이전 스킵 (수동 병합 필요 시 직접 처리)"
-  fi
-fi
-```
-
-### Step 7c: vault `.claude/rules/memento-capture.md` 설치
+### Step 7a: vault `.claude/rules/memento-capture.md` 설치
 
 자연 캡처 룰 파일을 vault에 설치한다. vault CLAUDE.md 룰 시스템이 모든 세션에 자동 주입하므로, 사용자가 "이거 담아둬" 같은 자연어를 쓰면 Claude가 즉시 `/memento:capture-task`를 호출한다. 별도 capture 스킬 신설하지 않음.
 
