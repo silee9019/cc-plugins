@@ -46,7 +46,7 @@ Obsidian CLI가 설치되어 있지 않습니다.
 | 파일 존재 | 기존 값을 기본값으로 사용. 아래 **버전 비교** 분기 적용 후 Step 3으로 진행 |
 | 파일 없음 | Step 3으로 진행 (신규 설정) |
 
-**`setup_version` 파싱** (1번 파일이 존재할 때):
+**`setup_version` 파싱** (파일이 존재할 때):
 
 ```sh
 CONFIG_PATH="$HOME/.claude/plugins/data/tutor-cc-plugins/config.md"
