@@ -51,6 +51,85 @@ function renderMentions(body, mentions) {
   return out;
 }
 
+// Merge adjacent <at> tags that refer to the same user (split Korean family/given
+// name case). Teams sometimes emits `<at id="A">성</at>&nbsp;<at id="B">이름</at>` for
+// a single mention; we collapse them to one `<at>` carrying the full displayName.
+//
+// Priority rules:
+//   1. Same mentioned.user.id → merge, text = displayName if it contains every child
+//      token, otherwise the deduped concatenation of children.
+//   2. Different ids, but displayName tokens contain both child texts → merge.
+//   3. Otherwise → leave alone.
+//
+// Multi-pass with a small guard so chains of 3+ mentions collapse left-to-right.
+// mA.mentionText is updated so the downstream renderMentions substitution matches.
+export function mergeAdjacentMentions(html, mentions) {
+  if (!html || !Array.isArray(mentions) || mentions.length < 2) {
+    return { html: html || "", mentions: mentions || [] };
+  }
+  const byId = new Map();
+  for (const m of mentions) {
+    byId.set(String(m.id), m);
+  }
+  // Allow plain whitespace AND `&nbsp;` between adjacent tags — Teams emits either.
+  const pattern = /<at id="(\d+)">([^<]*)<\/at>(?:\s|&nbsp;)*<at id="(\d+)">([^<]*)<\/at>/;
+  let out = html;
+  let guard = 10;
+  while (guard-- > 0) {
+    let merged = false;
+    const next = out.replace(pattern, (match, idA, textA, idB, textB) => {
+      const mA = byId.get(idA);
+      const mB = byId.get(idB);
+      if (!mA || !mB) return match;
+      const userA = mA.mentioned?.user?.id;
+      const userB = mB.mentioned?.user?.id;
+      const dnA = mA.mentioned?.user?.displayName || mA.mentionText || "";
+      const dnB = mB.mentioned?.user?.displayName || mB.mentionText || "";
+      // Rule 1: same user id. Graph often splits displayName to match each
+      // mentionText fragment, so we can't trust dnA alone. Combine tokens from both
+      // children, dedupe, and prefer dnA only when it already contains every token.
+      if (userA && userB && userA === userB) {
+        merged = true;
+        const allTokens = [
+          ...textA.trim().split(/\s+/),
+          ...textB.trim().split(/\s+/),
+        ].filter(Boolean);
+        const dnTokens = dnA ? dnA.split(/\s+/).filter(Boolean) : [];
+        const allInDn = dnTokens.length > 0 && allTokens.every((t) => dnTokens.includes(t));
+        let name;
+        if (allInDn) {
+          name = dnA;
+        } else {
+          const seen = new Set();
+          const parts = [];
+          for (const t of allTokens) {
+            if (!seen.has(t)) {
+              seen.add(t);
+              parts.push(t);
+            }
+          }
+          name = parts.join(" ");
+        }
+        mA.mentionText = name;
+        return `<at id="${idA}">${name}</at>`;
+      }
+      // Rule 2: A's displayName token set contains both child texts
+      const tokensA = new Set(dnA.split(/\s+/).filter(Boolean));
+      const ta = textA.trim();
+      const tb = textB.trim();
+      if (ta && tb && tokensA.has(ta) && tokensA.has(tb)) {
+        merged = true;
+        mA.mentionText = dnA;
+        return `<at id="${idA}">${dnA}</at>`;
+      }
+      return match;
+    });
+    if (!merged) break;
+    out = next;
+  }
+  return { html: out, mentions };
+}
+
 function isCardAttachment(a) {
   return a && CARD_CONTENT_TYPES.has(a.contentType);
 }
@@ -267,12 +346,13 @@ function renderOneMessage(m, { isReply = false } = {}) {
     m.from?.device?.displayName ||
     "(알 수 없음)";
   const time = formatKstTime(m.createdDateTime);
-  const bodyHtml = m.body?.content || "";
+  const bodyHtmlRaw = m.body?.content || "";
   const contentType = m.body?.contentType || "text";
+  const { html: mergedHtml } = mergeAdjacentMentions(bodyHtmlRaw, m.mentions);
   const body =
     contentType === "html"
-      ? htmlToMarkdown(renderMentions(bodyHtml, m.mentions))
-      : bodyHtml;
+      ? htmlToMarkdown(renderMentions(mergedHtml, m.mentions))
+      : bodyHtmlRaw;
 
   const cardBlock = renderCardBlock(m.attachments);
   const files = renderFileAttachments(m.attachments);
