@@ -256,7 +256,7 @@ function hasUsefulContent(m) {
   return false;
 }
 
-function renderOneMessage(m) {
+function renderOneMessage(m, { isReply = false } = {}) {
   if (m.messageType && m.messageType !== "message") {
     const summary = m.summary || m.messageType;
     return `_(system: ${summary})_`;
@@ -278,7 +278,14 @@ function renderOneMessage(m) {
   const files = renderFileAttachments(m.attachments);
   const reactions = renderReactions(m.reactions);
 
-  return `### ${time} - ${sender}\n\n${body}${cardBlock}${files}${reactions}`;
+  const heading = isReply ? "####" : "###";
+  const block = `${heading} ${time} - ${sender}\n\n${body}${cardBlock}${files}${reactions}`;
+  if (!isReply) return block;
+  // Indent replies as blockquotes so threading is visually obvious in markdown viewers.
+  return block
+    .split("\n")
+    .map((l) => (l.length > 0 ? `> ${l}` : ">"))
+    .join("\n");
 }
 
 export function plainBodyText(m) {
@@ -329,7 +336,7 @@ export function renderMessages({ meta, messages }) {
       sections.push(`\n## ${date}\n`);
       currentDate = date;
     }
-    sections.push(renderOneMessage(m));
+    sections.push(renderOneMessage(m, { isReply: Boolean(m.replyToId) }));
     sections.push("");
   }
 

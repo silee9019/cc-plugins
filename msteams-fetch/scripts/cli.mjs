@@ -7,7 +7,7 @@ import { loadConfig, loadAliases, saveAlias, findSimilarAlias } from "./config.m
 import { login, getAccessToken } from "./auth.mjs";
 import {
   fetchChatMessages,
-  fetchChannelMessages,
+  fetchChannelMessagesWithReplies,
   fetchThreadReplies,
 } from "./graph.mjs";
 import { renderMessages } from "./render.mjs";
@@ -85,7 +85,7 @@ program
       messages = await fetchChatMessages({ token, chatId: entry.id, sinceIso, limit });
       metaBase.chat_id = entry.id;
     } else if (entry.type === "channel") {
-      messages = await fetchChannelMessages({
+      messages = await fetchChannelMessagesWithReplies({
         token,
         teamId: entry.team_id,
         channelId: entry.channel_id,
