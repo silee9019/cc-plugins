@@ -1,6 +1,7 @@
 ---
 description: 업무 파악/정리/분류/발굴/선택. 수시 호출 가능. plan-today + pick-task의 역할을 흡수한 적극적 계획 행위.
 allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
+argument-hint: "[tomorrow] [--orchestrated]"
 ---
 
 > **인터뷰 원칙**: 결정에 필요한 정보를 자체 도구로 최대한 수집한 후, 여전히 모호한 지점이 있으면 가정하지 말 것. `AskUserQuestion`으로 한 번에 하나의 질문만 하고, 답을 받은 직후 다음 단계로 진행한다. 여러 결정을 일괄 처리하지 않는다.
@@ -11,11 +12,19 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 
 아침 호출은 자연스럽게 "하루 시작 계획"처럼 동작하고, 오후 호출은 "진행 점검 + 재조정 + 새로 떠오른 것 발굴"이 된다. Daily Note Plan 섹션은 비어 있을 수도 있고 갱신될 수도 있다 — 강제하지 않는다.
 
+## 인자
+
+- **(없음)**: 기본 모드. 기준 날짜 = 오늘. 대화형 질문 활성.
+- **`tomorrow`**: 기준 날짜 = 내일(오늘 +1일, 영업일 보정 없음). Daily Note 경로·"어제 Daily Note"·리마인더 만료 판정 등 모든 날짜 파생값이 내일 기준으로 이동. review-day가 하루 마감 의례에서 호출하는 주 경로.
+- **`--orchestrated`**: 상위 커맨드(review-day 등)가 오케스트레이션 호출 시 전달. 각 Step의 `AskUserQuestion`을 최소화하고, 모호 항목은 기본값으로 처리. 최종 출력은 내부 컨텍스트에 요약 블록만 반환.
+
+두 인자는 조합 가능 (`tomorrow --orchestrated`). 인자 순서는 상관없다.
+
 ## 다섯 단계
 
-### Step -1: 현재 시각 확인
+### Step -1: 현재 시각 + 기준 날짜 결정
 
-가장 먼저 Bash로 KST 현재 시각을 확인한다. 이후 모든 단계에서 이 값을 기준으로 사용한다.
+가장 먼저 Bash로 KST 현재 시각을 확인한다.
 
 ```bash
 TZ=Asia/Seoul LC_TIME=ko_KR.UTF-8 date "+%Y-%m-%d %H:%M %Z (%A)"
@@ -23,10 +32,25 @@ TZ=Asia/Seoul LC_TIME=ko_KR.UTF-8 date "+%Y-%m-%d %H:%M %Z (%A)"
 
 출력 예: `2026-04-13 09:15 KST (일요일)`
 
+**기준 날짜(`TARGET_DATE`) 분기**:
+
+| 인자 | TARGET_DATE | "이전 일자" = PREV_DATE | 시간대 해석 |
+|------|-------------|------------------------|--------------|
+| (없음) | 오늘 | 어제 | 실제 현재 시각 기준 아침/오후 모드 |
+| `tomorrow` | 내일 (오늘 +1일) | 오늘 | "저녁에 내일 준비" 고정 모드 — 아침/오후 분기 비활성 |
+
+내일 계산 (Bash):
+
+```bash
+TZ=Asia/Seoul date -v+1d "+%Y-%m-%d"   # macOS
+# 또는 GNU: date -d "tomorrow" "+%Y-%m-%d"
+```
+
 이 결과에서:
-- **날짜**: 오늘/어제 Daily Note 경로 계산
+- **TARGET_DATE**: 대상 Daily Note 경로 계산 (Plan 섹션 작성 대상)
+- **PREV_DATE**: "이전 일자 미완료" 수집 대상 (오늘 모드면 어제, 내일 모드면 오늘)
 - **요일**: 출력 문맥에 반영
-- **시간대**: 아침/오후 모드 판별 기준
+- **시간대**: 오늘 모드에서만 아침/오후 판별 기준. `tomorrow` 모드는 항상 "내일 준비" 톤으로 고정.
 
 ### Step 0: 설정 로드
 
@@ -70,10 +94,10 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 현재 진행 중·대기 중·예정된 일을 한 번에 수집한다. 아래 소스를 병렬로 읽는다.
 
 1. **Issue Box in-progress** (`in_progress_folder_path`): 지금 착수되어 있는 이슈들. 각 파일의 제목·카테고리·우선순위·started_at 수집
-2. **오늘 Daily Note Tasks**의 미완료 체크박스(`- [ ]`): 섹션별(Projects/Areas/Inbox) 수집
+2. **대상(TARGET_DATE) Daily Note Tasks**의 미완료 체크박스(`- [ ]`): 파일이 이미 있으면 섹션별(Projects/Areas/Inbox) 수집. 없으면 이 소스는 비움.
 3. **Issue Box inbox** (`inbox_folder_path`): 백로그. open + blocked 구분하여 수집. 우선순위·카테고리·생성일 메타 포함
-4. **어제 Daily Note 미완료**: 어제 날짜 경로를 생성해 읽기. 존재 시 미완료 항목 수집
-5. **예정된 미팅/마감**: 사용자가 명시적으로 언급한 게 있는지 세션 맥락 확인. 불확실하면 Step 1 끝에 **한 번만** "오늘 고정 일정이 있나요? (없으면 건너뛰기)" 질문
+4. **이전(PREV_DATE) Daily Note 미완료**: 해당 날짜 경로를 생성해 읽기. 존재 시 미완료 항목 수집. `tomorrow` 모드에서는 "오늘 미완료"가 수집되어 내일 이월 후보가 된다.
+5. **예정된 미팅/마감**: 사용자가 명시적으로 언급한 게 있는지 세션 맥락 확인. 불확실하면 Step 1 끝에 **한 번만** "{TARGET_DATE}에 고정 일정이 있나요? (없으면 건너뛰기)" 질문. `--orchestrated` 모드에서는 이 질문을 생략하고 캘린더 스크립트 출력만 참고.
 
 수집 결과를 그룹별 요약 표로 정리해둔다 (아직 출력하지 않음).
 
@@ -146,6 +170,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 
 | 상황 | 기본 동작 |
 |------|---------|
+| `tomorrow` 인자 | "내일 준비" 고정 모드. TARGET_DATE Daily Note를 생성하거나 Plan 섹션을 채운다. 선택(in-progress 이동)은 수행하지 않음 — 내일 아침 재호출 시 실행 |
 | 아침 첫 호출 + 오늘 Daily Note 없음/비어 있음 | 제안 후 Daily Note Plan + Tasks 생성 (기존 plan-today 역할) |
 | 오후/저녁 재호출 + 오늘 Daily Note 있음 + 기존 계획 존재 | 선택은 선택사항. Daily Note Plan 섹션을 **강제 덮어쓰지 않음**. 사용자가 원하면 Tasks에 새 항목 append |
 | in-progress가 이미 있는데 추가 선택 요청 | 현재 진행 중인 것을 먼저 상기시킨 후 확인 |
@@ -169,6 +194,22 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 
 **오후 모드일 때**: Daily Note Plan은 건드리지 않고 Tasks에만 append. 필요시 Log 섹션에 "오후 재조정: ..." 한 줄 메모.
 
+**`tomorrow` 모드일 때** (review-day에서 호출되는 주 경로):
+
+- 대상: TARGET_DATE(내일) Daily Note
+- 파일 없으면 `/memento:setup`의 템플릿 구조로 새로 생성
+- Plan 섹션이 비어 있으면 Step 3 분류 결과에서 high priority 1-3건 + 오늘 미완료 이월 후보를 상단에 채운다
+- Plan 섹션이 이미 충분히 채워져 있으면(3건 이상) **덮어쓰지 않고 건너뛰기** + Tasks에만 부족분 append
+- in-progress 이동은 수행하지 않음 (내일 아침 재호출 시 사용자가 직접 pick)
+- Log 섹션은 건드리지 않는다 (내일 타임라인이므로 비어 있어야 정상)
+
+**`--orchestrated` 모드일 때**:
+
+- 모호 결정은 "건너뛰기/기본값"으로 자동 처리 (사용자 질문 대신)
+- "병합 vs 덮어쓰기" 질문은 자동 "병합"으로 처리 (안전 기본값)
+- blocked 이슈 리뷰에서 한 건씩 확인하는 질문 생략
+- 발굴(Step 4) 후보는 Plan에 추가하지 않고 보고에만 포함
+
 **연체/리마인드 플래그**:
 
 - KR1 체크포인트 연체 감지 시 (Step 1 스캔 중 `{vault_path}/10 Projects/2026 Imagoworks/26 OKR/kr1-tracking.md`의 "다음 업데이트" 날짜가 과거면): Plan 상단에 `> ⚠ KR1 체크포인트 업데이트가 {N}일 연체되었습니다. /memento:review-objectives 실행 권장.` 경고
@@ -177,6 +218,17 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 ### Step 6: 완료 출력
 
 생성/갱신된 Daily Note 경로와 지금 선택된 작업(있다면), 그리고 발굴된 후보 중 미처리로 남긴 것의 요약을 출력한다.
+
+**`--orchestrated` 모드에서의 반환 포맷** (review-day 등 상위가 집계 가능하도록 축약):
+
+```
+[planning/orchestrated target={TARGET_DATE}]
+  plan_section=<filled|skipped|merged>
+  tasks_added=N carryover=M discoveries=K
+  daily_note=<경로>
+```
+
+일반 사용자 출력(장문)은 생략하고 위 블록만 반환한다.
 
 ## Do / Don't
 

@@ -8,9 +8,17 @@ description: "나의 기억이자 멘토. 세션 간 컨텍스트 보존(Memory)
 > **memento = Memory × Mentor**. 두 레이어는 같은 사용자, 같은 vault, 같은 config를 공유한다. Mentor 레이어의 모든 행동은 자연스럽게 Memory 레이어에 기록된다 (planning 실행 로그가 raw에 append, review-week가 컴팩션 노드를 재료로 삼음).
 >
 > - **Memory 레이어**: 세션 로그, 5-level 컴팩션 트리, WORKING.md, user knowledge, qmd 검색. 무엇이 있었는지 잊지 않는다.
-> - **Mentor 레이어**: `/memento:planning` (업무 파악/정리/분류/발굴/선택), `/memento:capture-task` (백로그 유입), `/memento:review-day|week|objectives` (회고 삼중 대칭), `/memento:wrap-up` (세션 마무리+인계). 무엇을 할지 어떻게 돌아볼지 함께 결정한다.
+> - **Mentor 레이어**:
+>   - `/memento:planning` (업무 파악/정리/분류/발굴/선택 — `tomorrow` 인자로 내일 준비 모드)
+>   - `/memento:capture-task` (백로그 유입)
+>   - `/memento:checkpoint` (**작업 단위 정리 + 종료/임시 저장 판단** — 자주 호출해 세션 가볍게 유지)
+>   - `/memento:review-day|week|objectives` (회고 삼중 대칭 — review-day는 누락 checkpoint 실행 + 오늘 회고 + 내일 준비를 합친 **하루 마감 의례**)
+>
+>   무엇을 할지 어떻게 돌아볼지 함께 결정한다.
 >
 > **Mentor 톤**: 사용자의 흐름을 끊지 않는다. 결정에 필요한 정보는 자체 도구로 최대한 수집한 후, 모호한 지점이 남으면 한 번에 하나의 질문만 `AskUserQuestion`으로 묻는다. 여러 결정을 일괄 처리하지 않는다.
+>
+> **checkpoint vs review-day 구분**: 주제 전환/잠깐 저장/퇴근 직전 안전 저장은 `/memento:checkpoint`. 하루 전체를 매듭짓고 내일로 넘기는 의례는 `/memento:review-day`.
 
 # Memento — Agent Memory Protocol
 
@@ -28,7 +36,7 @@ memento 플러그인이 반응하는 이벤트와 그 결과. "지금 무엇이 
 
 **자동 vs 명시 구분**:
 - **자동(hooks)**: 세션 setup, 시각 갱신, 컴팩션 쿨다운 게이트 — 사용자 개입 없이 작동
-- **명시(skills/commands)**: 체크포인트 작성, knowledge 승격, `/memento:planning`, `/memento:review-*`, `/memento:wrap-up`, `/memento:capture-task`, `/memento:search-memory` — 사용자 의도가 필요한 변환
+- **명시(skills/commands)**: knowledge 승격, `/memento:planning`, `/memento:checkpoint`, `/memento:review-day|week|objectives`, `/memento:capture-task`, `/memento:search-memory` — 사용자 의도가 필요한 변환
 
 프로토콜 전문(규칙·형식)은 아래 섹션에 있다. `session-start.sh`는 이 파일을 중복 주입하지 않고, 동적 컨텍스트 + Layer 1 경로 지시만 세션에 주입한다.
 
