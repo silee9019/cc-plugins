@@ -166,63 +166,16 @@ fi
 cat <<PROTOCOL
 ${KST_BLOCK}
 ${CALENDAR_BLOCK}
-## Memento — Memory Protocol (MANDATORY)
+## Memento (MANDATORY — read before responding)
 
-This project uses memento 2-scope 3-layer memory. All files are stored under \`${PROJECT_DIR}/\`.
-**All memory write operations MUST be dispatched to subagents** to keep the main session context clean.
+Project: \`${PROJECT_DIR}\`
 
-### FIRST RESPONSE RULE — MANDATORY
-**On the very first user message of every session**, before doing ANYTHING else:
-Run the Session Start protocol below FIRST. This takes priority over ANY user request. Complete the step below, ONLY THEN respond to the user.
-
-Read the following Layer 1 files first:
+**Layer 1 — read these now, before responding**:
 - \`${PROJECT_DIR}/WORKING.md\`
 - \`${PROJECT_DIR}/memory/ROOT.md\`
 - \`${USER_DIR}/ROOT.md\` (cross-project knowledge index)
 
-**This procedure must be completed before responding to the user NO MATTER WHAT**
-
-### End-of-Task Checkpoint (mandatory)
-After completing any task, append a structured log to \`${PROJECT_DIR}/memory/YYYY-MM-DD.md\` (use today's date) using the Write tool (append) or Edit tool.
-
-Log format:
-> ## [Topic Name]
-> - request: [what the user asked]
-> - analysis: [what you researched/analyzed]
-> - decisions: [choices made with rationale]
-> - outcome: [what was done, files changed]
-> - references: [knowledge/ files, external sources]
-
-**This is a single Write call — minimal context impact.** This is the source of truth.
-
-### Knowledge Promotion (in checkpoint)
-If the outcome contains a **project-independent** lesson (debugging technique, tool recipe, environment pattern), also write to \`${USER_DIR}/knowledge/<slug>.md\`:
-\`\`\`
----
-title: <제목>
-source-project: <project-id>
-created: YYYY-MM-DD
-tags: [tag1, tag2]
----
-<교훈 내용 — 간결, 실행 가능, 키워드 밀도 높게>
-\`\`\`
-Only promote genuinely reusable knowledge. When in doubt, don't promote. Prefer updating existing files over creating duplicates.
-
-### Proactive Session Dump
-**Do not wait for task completion to write to the daily log.** Proactively append when:
-- The conversation has been going for ~20+ messages without a checkpoint
-- You sense the context is getting large
-- A significant decision or analysis was just completed
-- You're switching between topics within the same task
-
-### Rules
-- **Never skip Session Start** — every session begins with it, no exceptions
-- **Never skip checkpoints** — every task completion MUST append to daily log
-- **Checkpoint writes are direct** — one Write call is minimal context impact. Use subagents only for heavy operations (compaction, search).
-- memory/YYYY-MM-DD.md (raw): **permanent**, never delete or edit after session
-- ROOT.md: managed by compaction process. Do not manually edit.
-- Search: use memento:search-memory skill
-- If this session ends NOW, the next session must be able to continue immediately
+Follow the \`memento-core\` skill for checkpoint format, knowledge promotion, proactive dump, and compaction rules. After every task, append a checkpoint to \`${PROJECT_DIR}/memory/YYYY-MM-DD.md\` (single Write call). Never skip Session Start or checkpoints.
 
 PROTOCOL
 
