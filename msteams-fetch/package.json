@@ -9,6 +9,9 @@
   "bin": {
     "msteams-fetch": "./scripts/cli.mjs"
   },
+  "scripts": {
+    "test": "node --test test/"
+  },
   "dependencies": {
     "@azure/msal-node": "^2.16.0",
     "commander": "^12.1.0",

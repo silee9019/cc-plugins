@@ -28,7 +28,18 @@ export function loadConfig() {
   cfg.defaults = cfg.defaults || {};
   cfg.defaults.since = cfg.defaults.since || "7d";
   cfg.defaults.limit = cfg.defaults.limit || 200;
+  cfg.defaults.context_minutes = cfg.defaults.context_minutes ?? 0;
   cfg.auth.scopes = cfg.auth.scopes || ["Chat.Read", "User.Read"];
+
+  // 0.4.0 cache layer defaults.
+  cfg.cache = cfg.cache || {};
+  cfg.cache.dir = expandHome(cfg.cache.dir || "~/.cache/msteams-fetch");
+  cfg.cache.retention_days = cfg.cache.retention_days ?? 30;
+  cfg.cache.log_retention_days = cfg.cache.log_retention_days ?? 14;
+  cfg.cache.sync_lock_path = expandHome(
+    cfg.cache.sync_lock_path || join(cfg.cache.dir, "sync.lock"),
+  );
+  cfg.cache.seed_since = cfg.cache.seed_since || "30d";
   return cfg;
 }
 
