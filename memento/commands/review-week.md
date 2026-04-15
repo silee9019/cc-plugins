@@ -1,6 +1,6 @@
 ---
 description: 주간 회고. Daily Notes, Memento 세션, Jira/Confluence, 커밋을 포함한 한 주의 총체적 흐름을 순간·질문·배움 중심으로 회고.
-allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, mcp__plugin_atlassian_atlassian__getAccessibleAtlassianResources, mcp__plugin_atlassian_atlassian__searchJiraIssuesUsingJql, mcp__plugin_atlassian_atlassian__searchConfluenceUsingCql
+allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, mcp__plugin_atlassian_atlassian__getAccessibleAtlassianResources, mcp__plugin_atlassian_atlassian__atlassianUserInfo, mcp__plugin_atlassian_atlassian__searchJiraIssuesUsingJql, mcp__plugin_atlassian_atlassian__searchConfluenceUsingCql
 argument-hint: <기간>
 ---
 
@@ -23,7 +23,7 @@ argument-hint: <기간>
 /memento:review-week 2026-04-06~2026-04-12
 ```
 
-**Breaking change**: 이전 버전의 `[레포 목록]`, `[작성자]` 인자는 제거됨. 레포는 `repos_base_path`에서 자동 탐지, 작성자는 config의 `author_email` 사용. 이전 구문 사용 시 경고 1줄 후 기본값으로 진행.
+**Breaking change**: 이전 버전의 `[레포 목록]`, `[작성자]` 인자는 제거됨. 레포는 `repos_base_path`에서 자동 탐지, 작성자는 config의 `email` 사용. 이전 구문 사용 시 경고 1줄 후 기본값으로 진행.
 
 ## 워크플로우
 
@@ -33,7 +33,7 @@ argument-hint: <기간>
 
 | 케이스 | 처리 |
 |--------|------|
-| 파일 존재 | `vault`, `daily_notes_path`, `daily_note_format`, `weekly_notes_path`, `weekly_note_format`, `author_email`, `inbox_folder_path`, `in_progress_folder_path`, `resolved_folder_path`, `dismissed_folder_path`, `repos_base_path`, `atlassian_site_url`, `atlassian_cloud_id` 로드 |
+| 파일 존재 | `vault`, `daily_notes_path`, `daily_note_format`, `weekly_notes_path`, `weekly_note_format`, `inbox_folder_path`, `in_progress_folder_path`, `resolved_folder_path`, `dismissed_folder_path`, `repos_base_path`, `atlassian_site_url`, `atlassian_cloud_id`, `display_name_ko`, `display_name_en`, `initials`, `user_id`, `nickname`, `email`, `aliases`, `atlassian_account_id` 로드 |
 | 파일 없음 | "설정이 없습니다. `/memento:setup`을 먼저 실행해주세요." 안내 후 중단 |
 
 **기간 파싱**:
@@ -56,6 +56,41 @@ argument-hint: <기간>
 **Atlassian 설정 확인**:
 - `atlassian_site_url`이 빈 문자열이면 Step 2B 전체 스킵
 - `atlassian_site_url` 있고 `atlassian_cloud_id` 없으면 `getAccessibleAtlassianResources` 호출하여 URL 매칭 후 config에 `atlassian_cloud_id` 캐시
+- `atlassian_account_id` 자동 캐시 (setup Step 6.6과 평행 구조의 2차 안전망):
+
+```
+if [ -n "$ATLASSIAN_ACCOUNT_ID" ]; then
+  : # 기존 값 사용, 스킵
+elif [ -n "$ATLASSIAN_SITE_URL" ]; then
+  echo "[memento] atlassian_account_id 누락 — atlassianUserInfo MCP 재시도..."
+  # ——— LLM 수행 단계 ———
+  # 1. mcp__plugin_atlassian_atlassian__atlassianUserInfo 호출 (파라미터 없음)
+  # 2. 응답 JSON에서 accountId 필드 추출
+  # 3a. 성공: ATLASSIAN_ACCOUNT_ID="<accountId>"
+  #          Edit 도구로 config.md frontmatter의 atlassian_account_id 라인을 갱신 (캐시)
+  #          echo "[memento] atlassian_account_id 캐시됨: $ATLASSIAN_ACCOUNT_ID"
+  # 3b. 실패: ATLASSIAN_ACCOUNT_ID=""
+  #          echo "[memento] ⚠ 자동 조회 실패 — JQL은 currentUser() fallback 사용"
+fi
+```
+
+**사용자 식별 컨텍스트 주입**:
+
+`display_name_ko`/`display_name_en`/`initials`/`user_id`/`nickname`/`email`/`aliases`/`atlassian_account_id` 중 비어있지 않은 값을 모아 내부 컨텍스트에 2-3줄 블록으로 고정:
+
+```
+사용자 식별:
+- 표시 이름: "<DISPLAY_KO>" / "<DISPLAY_EN>" (이니셜: <INITIALS>, 닉네임: <NICKNAME>)
+- 아이디: <USER_ID> (aliases: <ALIASES>)
+- 이메일: <EMAIL>
+- Jira accountId: <ATLASSIAN_AID>
+
+회고 본문에서 "나"/"내가"/"본인"은 이 사용자를 가리킨다.
+```
+
+렌더링 규칙:
+- 빈 값 필드는 괄호/줄 통째로 생략
+- 모든 식별 필드가 빈 값이면 블록 자체 생략
 
 **vault 경로 파악**:
 ```bash
@@ -92,7 +127,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/collect_memento_logs.py" \
   > "$TMPDIR/memento.json" 2>"$TMPDIR/memento.err" &
 
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/collect_commits.py" \
-  "$REPOS_BASE_PATH" "$AUTHOR_EMAIL" "$START" "$END" \
+  "$REPOS_BASE_PATH" "$EMAIL" "$START" "$END" \
   > "$TMPDIR/commits.json" 2>"$TMPDIR/commits.err" &
 
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/collect_issues.py" \
@@ -121,7 +156,7 @@ echo '{"pages": []}' > "$TMPDIR/confluence.json"
    - 호출: `mcp__plugin_atlassian_atlassian__searchJiraIssuesUsingJql`
    - 파라미터:
      - `cloudId`: config의 `atlassian_cloud_id`
-     - `jql`: `(assignee = currentUser() OR worklogAuthor = currentUser()) AND updated >= "{START}" AND updated <= "{END}" ORDER BY updated DESC`
+     - `jql`: `atlassian_account_id`가 있으면 `(assignee = "{ACCOUNT_ID}" OR worklogAuthor = "{ACCOUNT_ID}") AND updated >= "{START}" AND updated <= "{END}" ORDER BY updated DESC`, 없으면 `(assignee = currentUser() OR worklogAuthor = currentUser()) AND updated >= "{START}" AND updated <= "{END}" ORDER BY updated DESC`
      - `fields`: `["summary", "status", "issuetype", "priority", "updated", "description"]`
      - `limit`: 50
    - 결과를 다음 형식으로 간소화하여 Write 도구로 `$TMPDIR/jira.json`에 저장:
@@ -146,7 +181,7 @@ echo '{"pages": []}' > "$TMPDIR/confluence.json"
    - 호출: `mcp__plugin_atlassian_atlassian__searchConfluenceUsingCql`
    - 파라미터:
      - `cloudId`: config의 `atlassian_cloud_id`
-     - `cql`: `type = page AND contributor = currentUser() AND lastmodified >= "{START}" AND lastmodified <= "{END}" ORDER BY lastmodified DESC`
+     - `cql`: `atlassian_account_id`가 있으면 `type = page AND contributor = "{ACCOUNT_ID}" AND lastmodified >= "{START}" AND lastmodified <= "{END}" ORDER BY lastmodified DESC`, 없으면 `type = page AND contributor = currentUser() AND lastmodified >= "{START}" AND lastmodified <= "{END}" ORDER BY lastmodified DESC`
      - `limit`: 50
    - 결과 간소화하여 `$TMPDIR/confluence.json`에 저장:
      ```json

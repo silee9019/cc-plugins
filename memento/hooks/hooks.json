@@ -28,15 +28,19 @@
         "hooks": [
           {
             "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/task-completed-timestamp.sh\"",
+            "timeout": 2000
+          },
+          {
+            "type": "command",
             "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-compaction.sh\"",
             "timeout": 30000
           }
         ]
       }
     ],
-    "PostToolUse": [
+    "UserPromptSubmit": [
       {
-        "matcher": "TaskUpdate",
         "hooks": [
           {
             "type": "command",

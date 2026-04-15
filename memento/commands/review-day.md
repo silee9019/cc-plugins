@@ -17,8 +17,24 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
 
 | 케이스 | 처리 |
 |--------|------|
-| 파일 존재 | `vault`, `daily_notes_path`, `daily_note_format`, `inbox_folder_path`, `file_title_format` 값을 로드 |
+| 파일 존재 | `vault`, `daily_notes_path`, `daily_note_format`, `inbox_folder_path`, `file_title_format`, `display_name_ko`, `display_name_en`, `initials`, `user_id`, `nickname`, `email`, `aliases`, `atlassian_account_id` 값을 로드 |
 | 파일 없음 | "설정이 없습니다. `/memento:setup`을 먼저 실행해주세요." 안내 후 중단 |
+
+**사용자 식별 컨텍스트 주입**:
+
+식별 필드 중 비어있지 않은 값이 있으면 내부 컨텍스트에 2-3줄 블록으로 고정:
+
+```
+사용자 식별:
+- 표시 이름: "<DISPLAY_KO>" / "<DISPLAY_EN>" (이니셜: <INITIALS>, 닉네임: <NICKNAME>)
+- 아이디: <USER_ID> (aliases: <ALIASES>)
+- 이메일: <EMAIL>
+- Jira accountId: <ATLASSIAN_AID>
+
+Review 분류/해석 시 "나"/"내가"/"본인"은 이 사용자를 가리킨다.
+```
+
+빈 값 필드는 괄호/줄 생략. 모든 식별 필드가 빈 값이면 블록 자체 생략.
 
 ### Step 1.5: Active Reminders 주입
 

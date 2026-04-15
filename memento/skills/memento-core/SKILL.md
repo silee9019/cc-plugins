@@ -52,6 +52,56 @@ User knowledge: `<MEMENTO_HOME>/user/`
 
 The project ID is determined by the SessionStart hook (git remote → org-repo, fallback → CWD path, always lowercase).
 
+## Config Schema
+
+`~/.claude/plugins/data/memento-cc-plugins/config.md`는 setup 명령의 산출물이자 모든 memento 스킬의 단일 참조점이다. 키 추가/변경은 반드시 `commands/setup.md`에서 먼저 수행한다 (이 섹션은 요약 참조용).
+
+### Memory 레이어
+
+| key | 기본값 | 용도 |
+|-----|--------|------|
+| `setup_version` | plugin.json 버전 | 업그레이드 판별 |
+| `vault_path` | (인터뷰) | Obsidian vault 절대경로 |
+| `memento_root` | `_memento` | vault 내 memento 서브디렉토리 |
+
+### Mentor 레이어
+
+| key | 기본값 | 용도 |
+|-----|--------|------|
+| `daily_notes_path` | `01 Daily Notes` | 일일 노트 루트 |
+| `daily_note_format` | `{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md` | 파일명 포맷 |
+| `weekly_notes_path` | `02 Weekly Notes` | 주간 노트 루트 |
+| `weekly_note_format` | `{YYYY}/{YYYY} Week-{WW}.md` | 파일명 포맷 |
+| `monthly_notes_path` | `02 Weekly Notes` | 월간 노트 루트 |
+| `inbox_folder_path` | `00 Issue Box/00-inbox` | Issue Box inbox |
+| `in_progress_folder_path` | `00 Issue Box/01-in-progress` | 진행 중 |
+| `resolved_folder_path` | `00 Issue Box/02-done` | 완료 |
+| `dismissed_folder_path` | `00 Issue Box/03-dismissed` | 폐기 |
+| `file_title_format` | `{date} {category} {title}` | 이슈 파일명 포맷 |
+
+### 사용자 식별
+
+| key | 기본값 | 용도 |
+|-----|--------|------|
+| `display_name_ko` | 빈 값 | 표시 이름 (국문) |
+| `display_name_en` | 빈 값 | 표시 이름 (영문) |
+| `initials` | 빈 값 | 이니셜 - 짧은 형식 멘션 감지 |
+| `user_id` | 빈 값 | 주 아이디/로그인 핸들 - GitHub author 등 |
+| `nickname` | 빈 값 | 닉네임 - 비공식 호칭 감지 |
+| `email` | 빈 값 | 주 이메일 주소 - git commit author |
+| `aliases` | 빈 값 | alias 쉼표 구분 - 멀티 핸들/과거 이름 |
+| `atlassian_account_id` | **setup 자동 조회** | Jira JQL assignee 필터. setup Step 6.6이 `atlassianUserInfo` MCP로 자동 채움. 실패 시 review-week 첫 실행에서 재시도 |
+
+`atlassian_account_id`는 사용자에게 묻지 않는다. 나머지는 인터뷰로 수집하며 빈 값 허용.
+
+### 외부 연동 (옵션)
+
+| key | 기본값 | 용도 |
+|-----|--------|------|
+| `repos_base_path` | 빈 값 | review-week 레포 자동 탐지 루트 |
+| `atlassian_site_url` | 빈 값 | Atlassian 연동 활성 스위치 (URL 저장) |
+| `atlassian_cloud_id` | 빈 값 | Jira/Confluence MCP cloudId (자동 캐시) |
+
 ## Session Start
 
 SessionStart hook (`session-start.sh`)이 매 세션 시작 시 자동으로:
@@ -134,6 +184,7 @@ This protects against context compression — if the platform compresses your co
 - Checkpoint writes are direct — one Write call is minimal context impact. Use subagents only for heavy operations (compaction, search).
 - If this session ends NOW, the next session must be able to continue immediately.
 - Don't skip checkpoints — lost context means you forget.
+- 사용자 식별 필드(`display_name_*`, `initials`, `user_id`, `nickname`, `email`, `aliases`, `atlassian_account_id`)는 모든 memento 스킬이 Step 1 설정 로드에서 동일한 방식으로 읽고 내부 컨텍스트에 2-3줄 블록으로 고정한다. 신규 스킬 추가 시 누락 금지. `atlassian_account_id`는 setup이 `atlassianUserInfo` MCP로 자동 채우므로 스킬이 사용자에게 물어서는 안 된다.
 
 ## Edge Cases
 
