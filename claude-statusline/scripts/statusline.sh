@@ -12,6 +12,7 @@ MAGENTA=$(printf '\033[35m')
 BLUE75=$(printf '\033[38;5;75m')
 BLUE27=$(printf '\033[38;5;27m')
 AMBER214=$(printf '\033[38;5;214m')
+GREY240=$(printf '\033[38;5;240m')
 RST=$(printf '\033[0m')
 SEP="${DIM} | ${RST}"
 
@@ -112,6 +113,8 @@ if [ -f "$cost_cache" ]; then
 fi
 
 # --- GitHub 계정 표시기 ---
+# 쉘 프롬프트(~/.zshrc.common _zsh_setup_prompt)의 gh 색상과 1:1 매칭.
+# silee9019 → %F{214}, silee_imagogit → %F{27}, "" → %F{240}, * → %F{214}
 
 format_gh() {
   local cache="${XDG_DATA_HOME:-$HOME/.local/share}/gh-prompt-user"
@@ -121,7 +124,7 @@ format_gh() {
   case "$user" in
     silee9019)      printf '%sgh@me%s' "$AMBER214" "$RST" ;;
     silee_imagogit) printf '%sgh@imago%s' "$BLUE27" "$RST" ;;
-    "")             printf '%sgh@---%s' "$DIM" "$RST" ;;
+    "")             printf '%sgh@---%s' "$GREY240" "$RST" ;;
     *)              printf '%sgh@%s%s' "$AMBER214" "$user" "$RST" ;;
   esac
 }
