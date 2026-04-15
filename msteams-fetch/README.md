@@ -139,6 +139,16 @@ SDS 초안 공유드립니다. 검토 부탁드려요.
 *reactions*: like 3
 ```
 
+## 캐시 정리 (선택)
+
+`~/tmp/teams-context/` 은 fetch/search 호출마다 누적된다. 주기적으로 오래된 파일을 삭제하려면 crontab 한 줄:
+
+```cron
+0 3 * * * find ~/tmp/teams-context -type f -mtime +30 -delete
+```
+
+30일 경과한 파일을 매일 03:00에 지운다. 보존 기간은 취향대로 조정.
+
 ## 권한 범위 주의
 
 - `Chat.ReadWrite` / `Chat.Read` (delegated): 내가 참여 중인 1:1/그룹 채팅만
@@ -178,5 +188,8 @@ msteams-fetch/
 - [x] Phase 1+: 팀 채널 (`ChannelMessage.Read.All`)
 - [x] AdaptiveCard / Hero / O365 connector 카드 본문 추출
 - [x] `search` 서브커맨드: 가입 채팅 + 등록 채널에서 멘션/이름 검색 (날짜 범위)
-- [ ] 한국 이름 멘션 머지 (@Sangin @Lee → @Sangin Lee)
-- [ ] 30일 이상 된 출력 파일 자동 정리
+- [x] 0.3.1: 채널 fetch에 thread replies 자동 병합 (root 아래 `####` + blockquote 들여쓰기)
+- [x] 0.3.1: 한국 이름 멘션 머지 (`@Sangin @Lee` → `@Sangin Lee`)
+- [x] 0.3.1: search가 본인 발신 메시지까지 매칭 (target=me 시 `from.user.id` 기반)
+- [x] 0.3.1: `~/tmp/teams-context/` GC crontab 가이드
+- [ ] 0.4.0 (보류): 로컬 캐시 SSOT + sync cron (Phase 0 검증 결과 재평가 후 진행)
