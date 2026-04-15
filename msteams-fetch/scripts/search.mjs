@@ -26,6 +26,14 @@ async function resolveTarget(token, name) {
 function matchMessage(m, target, opts) {
   const matchedBy = [];
 
+  // Self-authored: I sent this. Useful for recalling "what did I say to them?".
+  // Always on for target=me unless caller explicitly narrowed to mentions/body only.
+  if (!opts.bodyOnly && !opts.mentionsOnly && target.mode === "me") {
+    if (m.from?.user?.id && m.from.user.id === target.userId) {
+      matchedBy.push("self");
+    }
+  }
+
   if (!opts.bodyOnly) {
     const mentions = m.mentions || [];
     if (target.mode === "me") {
@@ -52,7 +60,12 @@ function matchMessage(m, target, opts) {
   }
 
   if (matchedBy.length === 0) return null;
-  return matchedBy.length === 2 ? "both" : matchedBy[0];
+  if (matchedBy.length === 1) return matchedBy[0];
+  // Multi-mode match: preserve legacy "both" label for mention+body, otherwise join.
+  if (matchedBy.length === 2 && matchedBy.includes("mention") && matchedBy.includes("body")) {
+    return "both";
+  }
+  return matchedBy.join("+");
 }
 
 function tagMessages(messages, source) {
@@ -179,7 +192,10 @@ function appendDateGrouped(sections, messages, dateHeading = "###") {
       currentDate = date;
     }
     const tag = m._matchedBy ? `   [${m._matchedBy}]` : "";
-    const rendered = renderOneMessage(m).replace(/^### /, `#### `).replace(/(— [^\n]+)/, `$1${tag}`);
+    // sender format: `#### HH:MM - Name` (hyphen, not em dash). Stamp the matched-by tag at line end.
+    const rendered = renderOneMessage(m)
+      .replace(/^### /, `#### `)
+      .replace(/^(#### [0-9]{2}:[0-9]{2} - [^\n]+)/m, `$1${tag}`);
     sections.push(rendered);
     if (m.webUrl) sections.push(`\n🔗 [Teams에서 열기](${m.webUrl})`);
     sections.push("");
