@@ -1,7 +1,7 @@
 {
   "name": "msteams-fetch",
   "description": "MS Teams 채팅/채널 메시지를 별칭으로 지정해 Claude Code 세션으로 불러오는 도구. Microsoft Graph API delegated 권한(내 계정)으로 읽고 markdown으로 저장.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": { "name": "silee9019" },
   "license": "MIT",
   "keywords": ["teams", "msteams", "msgraph", "context", "chat", "channel"],
