@@ -10,7 +10,7 @@ cc-plugins/
 ├── git-init/                         ← command: GitHub 저장소 초기화
 ├── andrej-karpathy-skills/           ← skill: LLM 코딩 실수 방지 가이드라인
 ├── claude-statusline/                ← hook: 2줄 HUD statusline
-├── memento/                          ← skill+hook+command: 2-scope 3-layer 에이전트 메모리 시스템
+├── memento/                          ← skill+hook+command: 세션 간 컨텍스트 보존(Memory) + 하루 계획·캡처·회고·인계(Mentor)
 ├── agentic-workflow/                 ← skill+command: 에이전틱 워크플로우 scaffold
 ├── tutor/                            ← command: 학습 노트 생성 + 4지선다 퀴즈 튜터
 ├── knowledge-tools/                  ← skill: 온톨로지 워크숍 + 문서 공유
@@ -176,7 +176,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | git-init | 1.4.1 | workflow | command | — | gh, curl |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.6 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
-| memento | 2.0.0 | workflow+utility | skill+hook+command | Bun + Python 3 | qmd, obsidian CLI, git, Jira/Atlassian MCP |
+| memento | 2.0.12 | workflow+utility | skill+hook+command | Bun + Python 3 | qmd, obsidian CLI, git, Jira/Atlassian MCP |
 | agentic-workflow | 1.1.0 | workflow | skill + command | — | gh |
 | tutor | 0.2.0 | workflow | command + skill | Python 3 | obsidian CLI |
 | knowledge-tools | 0.1.1 | workflow | skill | — | pandoc |

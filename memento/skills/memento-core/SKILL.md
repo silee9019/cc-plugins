@@ -1,6 +1,6 @@
 ---
 name: memento-core
-description: "나의 기억이자 멘토. 크로스 프로젝트 2-scope 3-layer 에이전트 메모리(Memory 레이어) + 하루 계획·캡처·회고·인계 워크플로우(Mentor 레이어). 세션 시작 프로토콜, 태스크 종료 체크포인트, 메모리 파일 관리. 매 세션 반드시 준수."
+description: "나의 기억이자 멘토. 세션 간 컨텍스트 보존(Memory) + 하루 계획·캡처·회고·인계(Mentor). 세션 시작 프로토콜, 태스크 종료 체크포인트, 지식 승격, 컴팩션 규칙. 매 세션 반드시 준수."
 ---
 
 # Memento — Memory × Mentor Protocol
@@ -14,6 +14,24 @@ description: "나의 기억이자 멘토. 크로스 프로젝트 2-scope 3-layer
 
 # Memento — Agent Memory Protocol
 
+## Events × Handlers × Results
+
+memento 플러그인이 반응하는 이벤트와 그 결과. "지금 무엇이 자동으로 일어나는가"를 이 표로 확인한다.
+
+| Event | Handler | 효과 |
+|---|---|---|
+| `SessionStart` | `scripts/session-start.sh` | 프로젝트/user 디렉토리 멱등 setup. 동적 컨텍스트 주입(KST, 캘린더, Layer 1 경로, active-reminders, daily hint). Layer 1 파일 읽기 지시. |
+| `PreCompact` | `scripts/run-compaction.sh` → `compact.mjs` | 기계적 컴팩션(raw→daily→weekly→monthly→ROOT). 3시간 쿨다운 게이트. |
+| `TaskCompleted` | `scripts/task-completed-timestamp.sh` + `run-compaction.sh` | 현재 KST 시각 주입 + 컴팩션(쿨다운 게이트). |
+| `UserPromptSubmit` | `scripts/task-completed-timestamp.sh` | 다음 턴을 위한 KST 시각 갱신. |
+| `Stop` | `afplay` (메모리 도메인 외, 개인 설정) | 세션 종료 사운드 큐. |
+
+**자동 vs 명시 구분**:
+- **자동(hooks)**: 세션 setup, 시각 갱신, 컴팩션 쿨다운 게이트 — 사용자 개입 없이 작동
+- **명시(skills/commands)**: 체크포인트 작성, knowledge 승격, `/memento:planning`, `/memento:review-*`, `/memento:wrap-up`, `/memento:capture-task`, `/memento:search-memory` — 사용자 의도가 필요한 변환
+
+프로토콜 전문(규칙·형식)은 아래 섹션에 있다. `session-start.sh`는 이 파일을 중복 주입하지 않고, 동적 컨텍스트 + Layer 1 경로 지시만 세션에 주입한다.
+
 ## Memory Architecture
 
 ```
@@ -23,7 +41,7 @@ User Scope (Cross-Project — shared across all projects):
 
 Project Scope (per-project):
 
-  Layer 1 (System Prompt — SessionStart hook이 프로토콜 전문을 stdout으로 세션에 주입):
+  Layer 1 (System Prompt — SessionStart hook이 절대 경로 + 동적 컨텍스트만 주입):
     WORKING.md       ~100 lines  session handoff / active tasks
     memory/ROOT.md   ~100 lines  topic index of all memory (~3K tokens)
 
@@ -105,13 +123,21 @@ The project ID is determined by the SessionStart hook (git remote → org-repo, 
 ## Session Start
 
 SessionStart hook (`session-start.sh`)이 매 세션 시작 시 자동으로:
-1. 프로젝트 디렉토리 생성 (idempotent)
-2. 프로토콜 전문을 stdout 출력 → LLM 세션에 주입
-3. compact.mjs 실행으로 기계적 컴팩션 수행
+1. 프로젝트/user 디렉토리 생성 (idempotent)
+2. **동적 컨텍스트만** stdout 출력 → LLM 세션에 주입:
+   - 해석된 KST 시각 + 영업일 블록
+   - 캘린더 컨텍스트 (회사 + 개인)
+   - Layer 1 파일의 **절대 경로**
+   - active-reminders (미만료 시)
+   - 오늘 Daily Note 힌트
+   - 짧은 지시문 ("Read Layer 1 now, follow memento-core skill rules")
+3. 정적 규칙·형식(프로토콜 전문)은 이 SKILL.md 본문에 있으며, hook이 중복 주입하지 않는다 — 토큰 효율성을 위해
 
-주입된 프로토콜에 의해 LLM은:
-- Layer 1 파일 4개를 읽고
-- compact.mjs가 쿨다운을 자체 관리 (3시간). needs-summarization 노드 존재 시 서브에이전트 디스패치
+주입된 지시문에 따라 LLM은:
+- Layer 1 파일(WORKING.md, memory/ROOT.md, user/ROOT.md)을 읽고
+- 필요 시 이 SKILL.md의 체크포인트·승격·컴팩션 규칙을 조회한다
+
+컴팩션(`compact.mjs`)은 SessionStart가 아닌 PreCompact/TaskCompleted 훅에서 실행되며, 3시간 쿨다운을 자체 관리한다. needs-summarization 노드 존재 시 서브에이전트 디스패치.
 
 ## End-of-Task Checkpoint (MANDATORY)
 
