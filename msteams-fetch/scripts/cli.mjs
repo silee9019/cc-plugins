@@ -18,7 +18,7 @@ const program = new Command();
 program
   .name("msteams-fetch")
   .description("MS Teams 채팅/채널 메시지를 별칭으로 가져와 markdown으로 저장")
-  .version("0.3.0");
+  .version("0.3.1");
 
 program
   .command("login")
