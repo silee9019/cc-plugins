@@ -11,8 +11,9 @@ description: "나의 기억이자 멘토. 세션 간 컨텍스트 보존(Memory)
 > - **Mentor 레이어**:
 >   - `/memento:planning` (업무 파악/정리/분류/발굴/선택)
 >   - `/memento:capture-task` (백로그 유입)
+>   - `/memento:tag-decision` (결정 즉시 태깅 → `user/decisions/`)
 >   - `/memento:handoff` (세션 인계 메모 - 진행 중 상태 저장, 수시 호출)
->   - `/memento:checkpoint` (작업 완료 + 정리 - 커밋/푸시/PR 포함)
+>   - `/memento:checkpoint` (작업 완료 + 정리 - 커밋/푸시/PR 포함, 결정 후보 감지)
 >   - `/memento:review-day|week|objectives` (회고 - review-day는 **하루 마감 의례**)
 >   - `/memento:review-memento` (산출물 품질 평가 - 스킬 지속 개선)
 >
@@ -36,7 +37,7 @@ memento 플러그인이 반응하는 이벤트와 그 결과. "지금 무엇이 
 
 **자동 vs 명시 구분**:
 - **자동(hooks)**: 세션 setup, 시각 갱신, 컴팩션 쿨다운 게이트 — 사용자 개입 없이 작동
-- **명시(skills/commands)**: knowledge 승격, `/memento:planning`, `/memento:checkpoint`, `/memento:review-day|week|objectives`, `/memento:capture-task`, `/memento:search-memory` — 사용자 의도가 필요한 변환
+- **명시(skills/commands)**: knowledge 승격, `/memento:planning`, `/memento:tag-decision`, `/memento:checkpoint`, `/memento:review-day|week|objectives`, `/memento:capture-task`, `/memento:search-memory` — 사용자 의도가 필요한 변환
 
 프로토콜 전문(규칙·형식)은 아래 섹션에 있다. `session-start.sh`는 이 파일을 중복 주입하지 않고, 동적 컨텍스트 + Layer 1 경로 지시만 세션에 주입한다.
 

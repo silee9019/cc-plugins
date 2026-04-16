@@ -60,6 +60,46 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Skill
 
 2 field만. 간결하게.
 
+## Step 4.5: 결정 후보 감지
+
+이 세션에서 내린 결정 후보를 스캔한다. checkpoint의 raw 로그 훑기 pass에 결정 감지를 얹는 방식.
+
+**스캔 소스**: 이 세션의 대화 컨텍스트 + Step 4에서 작성한 raw 로그
+
+**이미 태깅된 결정 스킵**: `RAW_LOG` tail의 `<!-- promoted: user/decisions/*.md -->` HTML 주석 마커를 확인한다. 마커가 가리키는 결정은 이미 `/memento:tag-decision`으로 즉시 태깅됨 → 후보에서 제외.
+
+**결정 정의 4조건** (4개 모두 충족해야 후보):
+1. 사용자가 명확히 선택한 것 (대안 중 하나를 고른 흔적)
+2. 코드/행동/규칙이 바뀌는 것 (단순 의견/브레인스토밍 제외)
+3. 이 세션 이후에도 참조/적용되어야 할 것
+4. 1~2문장으로 요약 가능한 것
+
+**후보가 없으면**: 조용히 건너뛰기 (Step 5로 진행).
+
+**후보가 있으면**: 번호 매긴 리스트로 출력 후 AskUserQuestion:
+
+```
+결정 후보 {N}건:
+1. {요약} — {근거 한 줄}
+2. {요약} — {근거 한 줄}
+
+태깅할 항목을 선택하세요 (번호/전부/건너뛰기)
+```
+
+**선택된 각 후보 처리** (기본값 사용, 빠른 처리):
+
+1. 영문 slug 생성 (결정 내용에서 3~5 영단어 kebab-case 도출)
+2. 중복 검사: `user/decisions/` 최근 7일 스캔, slug base 일치 또는 summary 토큰 겹침 60%↑ 시 경고 (차단 아님)
+3. 결정 파일 생성 (`{DECISIONS_DIR}/YYYY-MM-DD-{slug}.md`):
+   - `projects: ["*"]` (전역)
+   - `lifetime: 2w`, `expires: {오늘+14일}`
+   - `source_project: {project_id}`
+   - frontmatter + 본문은 `/memento:tag-decision` Step 8과 동일 스키마
+4. `RAW_LOG` tail에 `<!-- promoted: user/decisions/{파일명} -->` 마커 append
+5. "결정 태깅: {파일명}" 출력
+
+**커스텀이 필요한 경우**: checkpoint에서는 스코프(`*`)/기간(`2w`) 기본값으로 빠르게 처리. 나중에 파일을 직접 편집하거나 `/memento:refresh-decisions --verbose`로 확인 가능.
+
 ## Step 5: Daily Note Log append
 
 `TODAY_DAILY`의 `## Log` 섹션에 추가:

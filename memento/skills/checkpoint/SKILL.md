@@ -28,10 +28,11 @@ handoff는 진행 중 상태를 저장하는 가벼운 행위. checkpoint는 작
 
 1. 완료 항목 감지 + Issue Box/Daily Note Tasks 완료 처리
 2. raw 로그 append (`## [done: ...]`, 2 field)
-3. Daily Note Log append (프로젝트별 서브섹션)
-4. 캘린더 동기화 (오늘 일정 중 미반영 항목)
-5. WORKING.md 정리 (완료 건 제거, 추가는 안 함)
-6. 커밋/푸시/PR 제안
+3. 결정 후보 감지 (세션 내 결정을 후보로 제안, 확인 시 `user/decisions/` 태깅)
+4. Daily Note Log append (프로젝트별 서브섹션)
+5. 캘린더 동기화 (오늘 일정 중 미반영 항목)
+6. WORKING.md 정리 (완료 건 제거, 추가는 안 함)
+7. 커밋/푸시/PR 제안
 
 상세 절차는 `commands/checkpoint.md` 참조.
 
