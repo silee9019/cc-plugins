@@ -155,6 +155,14 @@ revoked_reason: ~
 
 RAW_LOG 파일이 아직 없으면 (오늘 첫 로그) 파일 생성 후 마커 append.
 
+메트릭 이벤트 기록 (Bash 실행):
+```bash
+. "${CLAUDE_PLUGIN_ROOT}/scripts/metrics-db.sh" "$MEMENTO_HOME"
+metrics_init
+metrics_emit "llm" "tag_decision" "$PROJECT_ID" '{"slug":"SLUG","scope":"SCOPE","lifetime":"LIFETIME"}'
+```
+SLUG, SCOPE, LIFETIME은 실제 값으로 치환. `$MEMENTO_HOME`과 `$PROJECT_ID`는 세션 컨텍스트의 값 사용.
+
 ## Step 10: 완료 보고
 
 ```

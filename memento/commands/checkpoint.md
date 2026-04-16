@@ -98,6 +98,18 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Skill
 4. `RAW_LOG` tail에 `<!-- promoted: user/decisions/{파일명} -->` 마커 append
 5. "결정 태깅: {파일명}" 출력
 
+6. RAW_LOG tail에 통계 마커 append:
+   `<!-- decision-candidates: proposed=N, accepted=M -->`
+   후보 0건이면 `proposed=0, accepted=0`으로 기록.
+
+7. 메트릭 이벤트 기록 (Bash 실행):
+   ```bash
+   . "${CLAUDE_PLUGIN_ROOT}/scripts/metrics-db.sh" "$MEMENTO_HOME"
+   metrics_init
+   metrics_emit "llm" "decision_candidates" "$PROJECT_ID" '{"proposed":N,"accepted":M}'
+   ```
+   N, M은 실제 숫자로 치환. `$MEMENTO_HOME`과 `$PROJECT_ID`는 세션 컨텍스트의 값 사용.
+
 **커스텀이 필요한 경우**: checkpoint에서는 스코프(`*`)/기간(`2w`) 기본값으로 빠르게 처리. 나중에 파일을 직접 편집하거나 `/memento:refresh-decisions --verbose`로 확인 가능.
 
 ## Step 5: Daily Note Log append

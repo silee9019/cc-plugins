@@ -135,6 +135,9 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/collect_issues.py" \
   "$START" "$END" \
   > "$TMPDIR/issues.json" 2>"$TMPDIR/issues.err" &
 
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/metrics-report.sh" "$MEMENTO_HOME" \
+  > "$TMPDIR/metrics-report.md" 2>/dev/null || true &
+
 wait
 ```
 
@@ -352,6 +355,12 @@ bullet로 3개 이내. 각 항목:
 
 | 제목 | 스페이스 | 최종 수정 |
 |------|----------|-----------|
+
+</details>
+
+<details><summary>Decision Injection & Skill Usage Metrics</summary>
+
+{metrics-report.md 내용 — 파일이 비어있거나 없으면 이 섹션 생략}
 
 </details>
 ```

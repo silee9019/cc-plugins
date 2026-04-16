@@ -176,7 +176,7 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | git-init | 1.4.1 | workflow | command | — | gh, curl |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.6 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
-| memento | 2.3.0 | workflow+utility | skill+hook+command | Bun + Python 3 | qmd, obsidian CLI, git, Jira/Atlassian MCP |
+| memento | 2.5.0 | workflow+utility | skill+hook+command | Bun + Python 3 | qmd, obsidian CLI, git, Jira/Atlassian MCP |
 | agentic-workflow | 1.1.0 | workflow | skill + command | — | gh |
 | tutor | 0.2.0 | workflow | command + skill | Python 3 | obsidian CLI |
 | knowledge-tools | 0.1.1 | workflow | skill | — | pandoc |
@@ -333,7 +333,7 @@ memento/
   - `memento_root` 기본값: `_memento` (언더스코어 prefix로 Obsidian 사이드바 상단 고정)
 - **수정 시**:
   - session-start.sh의 프로젝트 ID 로직 변경 시 compact.mjs의 동일 로직도 동기화
-  - session-start.sh의 config 파싱 로직 변경 시 compact.mjs의 `resolveMementoHome`도 동기화
+  - config 파싱(MEMENTO_HOME 해석)은 `resolve-home.sh`에 집중. 변경 시 compact.mjs의 `resolveMementoHome`도 동기화
   - hooks.json은 auto-discovery → plugin.json에 hooks 필드 선언 금지
   - User Scope 변경 시 session-start.sh 프로토콜 텍스트 + compact.mjs + memento-core SKILL.md 승격 규칙 3곳 동기화
 - **테스트**:

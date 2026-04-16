@@ -232,6 +232,12 @@ ${DECISION_LINES}
   fi
 fi
 
+# ─── Metrics: session_start event ───
+ACTIVE_COUNT="${DECISION_COUNT:-0}"
+. "$PLUGIN_ROOT/scripts/metrics-db.sh" "$MEMENTO_HOME"
+metrics_init
+metrics_emit "hook" "session_start" "$PROJECT_ID" "{\"active_decisions\":$ACTIVE_COUNT}" 2>/dev/null || true
+
 # ─── Mentor layer: active-reminders + daily note hint ───
 # 통합된 memento(기억) + me+mento(멘토) 레이어. 파일이 있고 미만료일 때만 주입.
 
