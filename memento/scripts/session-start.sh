@@ -108,9 +108,107 @@ fi
 # ─── User Scope auto-setup (idempotent) ───
 USER_DIR="$MEMENTO_HOME/user"
 mkdir -p "$USER_DIR/knowledge"
+mkdir -p "$USER_DIR/decisions"
 
 if [ ! -f "$USER_DIR/ROOT.md" ]; then
   cp "$PLUGIN_ROOT/templates/USER-ROOT.md" "$USER_DIR/ROOT.md"
+fi
+
+# ─── Active Decisions injection (Format B) ───
+# Scan user/decisions/*.md for active decisions (not expired, not revoked, project scope match)
+# Output: numbered list, max 10, sorted by created DESC then filename ASC
+
+DECISIONS_DIR="$USER_DIR/decisions"
+DECISION_BLOCK=""
+if [ -d "$DECISIONS_DIR" ]; then
+  TODAY=$(date "+%Y-%m-%d")
+  # Collect eligible decision files into a temp file: "created\tfilename\ttitle\tsummary_or_first_line\texpires"
+  DECISION_TMP="${TMPDIR:-/tmp}/memento-decisions-$$"
+  : > "$DECISION_TMP"
+
+  for f in "$DECISIONS_DIR"/*.md; do
+    [ -f "$f" ] || continue
+    fname=$(basename "$f")
+
+    # Parse frontmatter fields (between first --- and second ---)
+    _fm=$(sed -n '/^---$/,/^---$/p' "$f" | sed '1d;$d')
+
+    # Skip revoked
+    _revoked=$(printf '%s\n' "$_fm" | sed -n 's/^revoked: *//p' | head -1)
+    case "$_revoked" in true|True|TRUE) continue ;; esac
+
+    # Skip expired
+    _expired_flag=$(printf '%s\n' "$_fm" | sed -n 's/^expired: *//p' | head -1)
+    case "$_expired_flag" in true|True|TRUE) continue ;; esac
+
+    # Check expires date
+    _expires=$(printf '%s\n' "$_fm" | sed -n 's/^expires: *//p' | head -1)
+    if [ -n "$_expires" ] && [ "$_expires" \< "$TODAY" ]; then
+      continue
+    fi
+
+    # Check project scope
+    _projects=$(printf '%s\n' "$_fm" | sed -n 's/^projects: *\[//p' | sed 's/\].*$//')
+    _match=0
+    case "$_projects" in
+      *'"*"'*|*"'*'"*) _match=1 ;;
+      *)
+        # Check if PROJECT_ID is in the list
+        if printf '%s' "$_projects" | grep -q "\"$PROJECT_ID\""; then
+          _match=1
+        fi
+        ;;
+    esac
+    [ "$_match" = "1" ] || continue
+
+    # Extract created, summary, title (H1)
+    _created=$(printf '%s\n' "$_fm" | sed -n 's/^created: *//p' | head -1)
+    _summary=$(printf '%s\n' "$_fm" | sed -n 's/^summary: *//p' | head -1)
+    _title=$(sed -n '/^---$/,/^---$/d; s/^# *//p' "$f" | head -1)
+    # First non-empty body line as fallback
+    if [ -z "$_summary" ]; then
+      _summary=$(sed -n '/^---$/,/^---$/d; /^$/d; /^#/d; p' "$f" | head -1)
+    fi
+
+    printf '%s\t%s\t%s\t%s\t%s\n' "${_created:-0000-00-00}" "$fname" "$_title" "$_summary" "$_expires" >> "$DECISION_TMP"
+  done
+
+  # Sort: created DESC (reverse), then filename ASC (stable sort trick: reverse created for sort -r)
+  DECISION_COUNT=0
+  DECISION_LINES=""
+  if [ -s "$DECISION_TMP" ]; then
+    # sort by created desc (field 1 reverse), then filename asc (field 2)
+    SORTED=$(sort -t"$(printf '\t')" -k1,1r -k2,2 "$DECISION_TMP" | head -10)
+    DECISION_COUNT=$(printf '%s\n' "$SORTED" | wc -l | tr -d ' ')
+    _n=0
+    IFS='
+'
+    for line in $SORTED; do
+      _n=$((_n + 1))
+      _title=$(printf '%s' "$line" | cut -f3)
+      _summary=$(printf '%s' "$line" | cut -f4)
+      _expires=$(printf '%s' "$line" | cut -f5)
+      _exp_label=""
+      if [ -n "$_expires" ]; then
+        _exp_label=" (exp $_expires)"
+      fi
+      _display="${_summary}"
+      if [ -z "$_display" ]; then
+        _display="(no summary)"
+      fi
+      DECISION_LINES="${DECISION_LINES}${_n}. **${_title}** — ${_display}${_exp_label}
+"
+    done
+    unset IFS
+  fi
+  rm -f "$DECISION_TMP"
+
+  if [ "$DECISION_COUNT" -gt 0 ]; then
+    DECISION_BLOCK="## Active Decisions (${DECISION_COUNT} active · \`/memento:refresh-decisions\` to reload)
+
+${DECISION_LINES}
+> 전문: \`cat ${DECISIONS_DIR}/<file>\` 또는 \`/memento:search-memory <keyword>\`"
+  fi
 fi
 
 # ─── Mentor layer: active-reminders + daily note hint ───
@@ -178,6 +276,14 @@ Project: \`${PROJECT_DIR}\`
 Follow the \`memento-core\` skill for checkpoint format, knowledge promotion, proactive dump, and compaction rules. After every task, append a checkpoint to \`${PROJECT_DIR}/memory/YYYY-MM-DD.md\` (single Write call). Never skip Session Start or checkpoints.
 
 PROTOCOL
+
+if [ -n "$DECISION_BLOCK" ]; then
+  cat <<DECISIONS
+
+${DECISION_BLOCK}
+
+DECISIONS
+fi
 
 if [ -n "$REMINDER_BLOCK" ]; then
   cat <<REMINDERS
