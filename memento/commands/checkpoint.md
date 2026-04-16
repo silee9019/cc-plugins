@@ -46,6 +46,8 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Skill
 - Daily Note Tasks: `- [ ]` -> `- [x]` + 간단 주석
 - 모호 항목: AskUserQuestion으로 한 건씩 확인
 
+**WORKING.md 미완료 항목 교차 확인**: 세션 맥락에서 감지되지 않았지만 WORKING.md "미완료 작업"에 남아있는 항목이 있으면, 목록을 보여주고 AskUserQuestion으로 "이 중 완료된 항목이 있나요?" 한 번에 확인. 사용자 응답에 따라 완료 처리.
+
 ## Step 4: raw 로그 append
 
 `RAW_LOG`에 다음 형식으로 append:
