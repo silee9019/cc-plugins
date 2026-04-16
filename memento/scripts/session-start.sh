@@ -15,6 +15,25 @@ to_lower() {
   printf '%s' "$1" | tr '[:upper:]' '[:lower:]'
 }
 
+# ─── Helper: freshness label ───
+# Input: YYYY-MM-DD date string
+# Output: human-readable age (today, 1d, 3d, 1w, 2w, etc.)
+
+freshness_label() {
+  _target=$(date -j -f "%Y-%m-%d" "$1" "+%s" 2>/dev/null || date -d "$1" "+%s" 2>/dev/null || echo "")
+  if [ -z "$_target" ]; then
+    printf "?"; return
+  fi
+  _now=$(date "+%s")
+  _days=$(( (_now - _target) / 86400 ))
+  if [ "$_days" -le 0 ]; then printf "today"
+  elif [ "$_days" -eq 1 ]; then printf "1d"
+  elif [ "$_days" -lt 7 ]; then printf "%dd" "$_days"
+  elif [ "$_days" -lt 30 ]; then printf "%dw" $((_days / 7))
+  else printf "%dm" $((_days / 30))
+  fi
+}
+
 # ─── Resolve MEMENTO_HOME from config.md ───
 
 CONFIG_FILE="$HOME/.claude/plugins/data/memento-cc-plugins/config.md"
@@ -185,6 +204,7 @@ if [ -d "$DECISIONS_DIR" ]; then
 '
     for line in $SORTED; do
       _n=$((_n + 1))
+      _created_val=$(printf '%s' "$line" | cut -f1)
       _title=$(printf '%s' "$line" | cut -f3)
       _summary=$(printf '%s' "$line" | cut -f4)
       _expires=$(printf '%s' "$line" | cut -f5)
@@ -196,7 +216,8 @@ if [ -d "$DECISIONS_DIR" ]; then
       if [ -z "$_display" ]; then
         _display="(no summary)"
       fi
-      DECISION_LINES="${DECISION_LINES}${_n}. **${_title}** — ${_display}${_exp_label}
+      _fresh=$(freshness_label "$_created_val")
+      DECISION_LINES="${DECISION_LINES}${_n}. **${_title}** — ${_display}${_exp_label} \`[source: decision, fresh: ${_fresh}]\`
 "
     done
     unset IFS
@@ -204,7 +225,7 @@ if [ -d "$DECISIONS_DIR" ]; then
   rm -f "$DECISION_TMP"
 
   if [ "$DECISION_COUNT" -gt 0 ]; then
-    DECISION_BLOCK="## Active Decisions (${DECISION_COUNT} active · \`/memento:refresh-decisions\` to reload)
+    DECISION_BLOCK="### Active Decisions (${DECISION_COUNT} active · \`/memento:refresh-decisions\` to reload)
 
 ${DECISION_LINES}
 > 전문: \`cat ${DECISIONS_DIR}/<file>\` 또는 \`/memento:search-memory <keyword>\`"
@@ -216,11 +237,16 @@ fi
 
 ACTIVE_REMINDERS_FILE="$USER_DIR/active-reminders.md"
 REMINDER_BLOCK=""
+REMINDER_FRESH=""
 if [ -f "$ACTIVE_REMINDERS_FILE" ]; then
   EXPIRES_AT=$(sed -n 's/^expires_at: *"\{0,1\}\([0-9-]*\)"\{0,1\}$/\1/p' "$ACTIVE_REMINDERS_FILE" | head -1)
+  REMINDER_UPDATED=$(sed -n 's/^updated: *"\{0,1\}\([0-9-]*\)"\{0,1\}$/\1/p' "$ACTIVE_REMINDERS_FILE" | head -1)
   TODAY=$(date "+%Y-%m-%d")
   if [ -z "$EXPIRES_AT" ] || [ "$EXPIRES_AT" \> "$TODAY" ] || [ "$EXPIRES_AT" = "$TODAY" ]; then
     REMINDER_BLOCK=$(cat "$ACTIVE_REMINDERS_FILE")
+    if [ -n "$REMINDER_UPDATED" ]; then
+      REMINDER_FRESH=$(freshness_label "$REMINDER_UPDATED")
+    fi
   else
     echo "[memento] active-reminders expired ($EXPIRES_AT) — run /memento:review-week" >&2
   fi
@@ -259,23 +285,151 @@ if command -v python3 >/dev/null 2>&1; then
   CALENDAR_BLOCK="$(python3 "$PLUGIN_ROOT/scripts/calendar_context.py" --plugin-root "$PLUGIN_ROOT" 2>/dev/null || true)"
 fi
 
+# ─── Confidence Console: 4-section data collection ───
+
+BRIEFING_DATE=$(date "+%Y-%m-%d")
+
+# Section 1: Why This Matters Now (top 3 WORKING.md uncompleted items)
+WHY_NOW_BLOCK=""
+if [ -f "$PROJECT_DIR/WORKING.md" ]; then
+  _items=$(grep -E '^\- \[ \]' "$PROJECT_DIR/WORKING.md" | head -3 | sed 's/^- \[ \] //')
+  if [ -n "$_items" ]; then
+    _why_lines=""
+    _why_n=0
+    IFS='
+'
+    for _item in $_items; do
+      _why_n=$((_why_n + 1))
+      _why_lines="${_why_lines}${_why_n}. ${_item} \`[source: working]\`
+"
+    done
+    unset IFS
+    WHY_NOW_BLOCK="${_why_lines}"
+  fi
+fi
+
+# Section 2: Open Loops (summary counts)
+_working_count=0
+if [ -f "$PROJECT_DIR/WORKING.md" ]; then
+  _working_count=$(grep -c -E '^\- \[ \]' "$PROJECT_DIR/WORKING.md" 2>/dev/null || echo "0")
+fi
+
+# Section 3: What Changed Since Last Session
+LAST_SESSION_FILE="$PROJECT_DIR/.last-session-ts"
+_since_label="24h"
+_since_arg="24 hours ago"
+if [ -f "$LAST_SESSION_FILE" ]; then
+  _last_ts=$(cat "$LAST_SESSION_FILE")
+  _since_arg="$_last_ts"
+  _last_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%S" "$_last_ts" "+%s" 2>/dev/null || date -d "$_last_ts" "+%s" 2>/dev/null || echo "")
+  if [ -n "$_last_epoch" ]; then
+    _now_epoch=$(date "+%s")
+    _hours=$(( (_now_epoch - _last_epoch) / 3600 ))
+    if [ "$_hours" -lt 24 ]; then
+      _since_label="${_hours}h"
+    else
+      _since_label="$(( _hours / 24 ))d"
+    fi
+  fi
+fi
+
+WHAT_CHANGED_LINES=""
+if command -v git >/dev/null 2>&1; then
+  _git_log=$(git log --since="$_since_arg" --oneline -10 2>/dev/null || true)
+  if [ -n "$_git_log" ]; then
+    IFS='
+'
+    for _line in $_git_log; do
+      WHAT_CHANGED_LINES="${WHAT_CHANGED_LINES}- ${_line} \`[source: git]\`
+"
+    done
+    unset IFS
+  fi
+fi
+
+# Save current timestamp for next session
+date "+%Y-%m-%dT%H:%M:%S" > "$LAST_SESSION_FILE" 2>/dev/null || true
+
+# Section 4: Possible Misses (active decisions not touched in 7+ days)
+POSSIBLE_MISSES_LINES=""
+if [ -d "$DECISIONS_DIR" ]; then
+  for _sf in $(find "$DECISIONS_DIR" -name '*.md' -mtime +7 2>/dev/null); do
+    [ -f "$_sf" ] || continue
+    _fm=$(sed -n '/^---$/,/^---$/p' "$_sf" | sed '1d;$d')
+    _revoked=$(printf '%s\n' "$_fm" | sed -n 's/^revoked: *//p' | head -1)
+    case "$_revoked" in true|True|TRUE) continue ;; esac
+    _expired_flag=$(printf '%s\n' "$_fm" | sed -n 's/^expired: *//p' | head -1)
+    case "$_expired_flag" in true|True|TRUE) continue ;; esac
+    _expires_val=$(printf '%s\n' "$_fm" | sed -n 's/^expires: *//p' | head -1)
+    if [ -n "$_expires_val" ] && [ "$_expires_val" \< "$BRIEFING_DATE" ]; then
+      continue
+    fi
+    _title=$(sed -n '/^---$/,/^---$/d; s/^# *//p' "$_sf" | head -1)
+    _fname=$(basename "$_sf")
+    POSSIBLE_MISSES_LINES="${POSSIBLE_MISSES_LINES}- **${_title}** — 7일+ 터치 없음 (\`${_fname}\`)
+"
+  done
+fi
+
 # ─── Output protocol to stdout ───
 
 cat <<PROTOCOL
 ${KST_BLOCK}
 ${CALENDAR_BLOCK}
-## Memento (MANDATORY — read before responding)
-
-Project: \`${PROJECT_DIR}\`
+## Memento Briefing (${BRIEFING_DATE}, ${PROJECT_ID})
 
 **Layer 1 — read these now, before responding**:
-- \`${PROJECT_DIR}/WORKING.md\`
-- \`${PROJECT_DIR}/memory/ROOT.md\`
-- \`${USER_DIR}/ROOT.md\` (cross-project knowledge index)
+- \`${PROJECT_DIR}/WORKING.md\` \`[source: working]\`
+- \`${PROJECT_DIR}/memory/ROOT.md\` \`[source: memory]\`
+- \`${USER_DIR}/ROOT.md\` \`[source: user-knowledge]\`
 
 Follow the \`memento-core\` skill for checkpoint format, knowledge promotion, proactive dump, and compaction rules. After every task, append a checkpoint to \`${PROJECT_DIR}/memory/YYYY-MM-DD.md\` (single Write call). Never skip Session Start or checkpoints.
 
 PROTOCOL
+
+# ─── 4-section briefing ───
+
+if [ -n "$WHY_NOW_BLOCK" ]; then
+  cat <<WHY_NOW
+### Why This Matters Now
+
+${WHY_NOW_BLOCK}
+WHY_NOW
+fi
+
+cat <<OPEN_LOOPS
+### Open Loops I'm Tracking
+
+- WORKING.md 미완료: ${_working_count}건 \`[source: working]\`
+- Active Decisions: ${DECISION_COUNT:-0}건 \`[source: decision]\`
+
+OPEN_LOOPS
+
+if [ -n "$WHAT_CHANGED_LINES" ]; then
+  cat <<WHAT_CHANGED
+### What Changed Since Last Session (${_since_label})
+
+${WHAT_CHANGED_LINES}
+WHAT_CHANGED
+else
+  cat <<WHAT_CHANGED_EMPTY
+### What Changed Since Last Session
+
+- (이전 세션 이후 커밋 없음)
+
+WHAT_CHANGED_EMPTY
+fi
+
+if [ -n "$POSSIBLE_MISSES_LINES" ]; then
+  cat <<POSSIBLE_MISSES
+### Possible Misses
+
+> memento가 놓쳤을 수 있는 것:
+${POSSIBLE_MISSES_LINES}
+POSSIBLE_MISSES
+fi
+
+# ─── Existing subsections ───
 
 if [ -n "$DECISION_BLOCK" ]; then
   cat <<DECISIONS
@@ -286,9 +440,13 @@ DECISIONS
 fi
 
 if [ -n "$REMINDER_BLOCK" ]; then
+  _reminder_tag=""
+  if [ -n "$REMINDER_FRESH" ]; then
+    _reminder_tag=" \`[source: reminder, fresh: ${REMINDER_FRESH}]\`"
+  fi
   cat <<REMINDERS
 
-## Active Reminders (주간 회고)
+### Active Reminders${_reminder_tag}
 
 ${REMINDER_BLOCK}
 
@@ -298,7 +456,7 @@ fi
 if [ -n "$DAILY_HINT" ]; then
   cat <<HINT
 
-## Mentor Hint
+### Today \`[source: daily-note]\`
 ${DAILY_HINT}
 HINT
 fi
