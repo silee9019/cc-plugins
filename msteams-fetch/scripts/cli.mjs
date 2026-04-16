@@ -2,8 +2,8 @@
 import { Command } from "commander";
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { subHours, subDays, parseISO, formatISO } from "date-fns";
 import { loadConfig, loadAliases, saveAlias, findSimilarAlias } from "./config.mjs";
+import { parseSinceKst, toUtcForGraph, nowKst } from "./tz.mjs";
 import { login, getAccessToken } from "./auth.mjs";
 import {
   fetchChatMessages,
@@ -74,7 +74,9 @@ program
       throw new Error(`별칭 '${alias}'을(를) 찾을 수 없습니다${hint}`);
     }
 
-    const sinceIso = parseSince(opts.since || cfg.defaults.since);
+    const sinceSpec = opts.since || cfg.defaults.since;
+    const sinceKst = sinceSpec ? parseSinceKst(sinceSpec) : null;
+    const sinceUtc = sinceKst ? toUtcForGraph(sinceKst) : null;
     const limit = Number(opts.limit || cfg.defaults.limit);
     const token = await getAccessToken(cfg);
 
@@ -82,14 +84,14 @@ program
     const metaBase = { alias, label: entry.label || alias, type: entry.type };
 
     if (entry.type === "chat") {
-      messages = await fetchChatMessages({ token, chatId: entry.id, sinceIso, limit });
+      messages = await fetchChatMessages({ token, chatId: entry.id, sinceIso: sinceUtc, limit });
       metaBase.chat_id = entry.id;
     } else if (entry.type === "channel") {
       messages = await fetchChannelMessagesWithReplies({
         token,
         teamId: entry.team_id,
         channelId: entry.channel_id,
-        sinceIso,
+        sinceIso: sinceUtc,
         limit,
       });
       metaBase.team_id = entry.team_id;
@@ -108,16 +110,16 @@ program
       throw new Error(`지원하지 않는 별칭 type: ${entry.type}`);
     }
 
-    const now = new Date();
+    const nowStr = nowKst();
     const meta = {
       ...metaBase,
-      fetched_at: formatISO(now),
-      range: sinceIso ? `${sinceIso} ~ ${formatISO(now)}` : "all",
+      fetched_at: nowStr,
+      range: sinceKst ? `${sinceKst} ~ ${nowStr}` : "all",
     };
 
     const markdown = renderMessages({ meta, messages });
 
-    const outPath = opts.out || defaultOutPath(cfg, alias, now);
+    const outPath = opts.out || defaultOutPath(cfg, alias, new Date());
     ensureParentDir(outPath);
     writeFileSync(outPath, markdown, "utf8");
 
@@ -143,7 +145,10 @@ program
     }
     const cfg = loadConfig();
     const aliases = loadAliases();
-    const sinceIso = parseSince(opts.since || cfg.defaults.since);
+    const sinceSpec = opts.since || cfg.defaults.since;
+    const sinceKst = sinceSpec ? parseSinceKst(sinceSpec) : null;
+    const sinceUtc = sinceKst ? toUtcForGraph(sinceKst) : null;
+    const untilUtc = opts.until ? toUtcForGraph(opts.until) : null;
     const token = await getAccessToken(cfg);
 
     const result = await runSearch({
@@ -151,8 +156,9 @@ program
       token,
       aliases,
       name: opts.name,
-      sinceIso,
-      until: opts.until || null,
+      sinceIso: sinceUtc,
+      sinceKst,
+      until: untilUtc,
       opts,
     });
 
@@ -162,22 +168,6 @@ program
     process.stdout.write(`${result.outPath}\n`);
   });
 
-function parseSince(spec) {
-  if (!spec) return null;
-  const m = /^(\d+)([hd])$/.exec(spec);
-  if (m) {
-    const n = Number(m[1]);
-    const now = new Date();
-    const d = m[2] === "h" ? subHours(now, n) : subDays(now, n);
-    return formatISO(d);
-  }
-  // 절대 날짜 시도
-  try {
-    const d = parseISO(spec);
-    if (!Number.isNaN(d.getTime())) return formatISO(d);
-  } catch {}
-  throw new Error(`--since 형식 오류: ${spec} (예: 2h, 1d, 7d, 2026-04-13)`);
-}
 
 function defaultOutPath(cfg, alias, now) {
   const dir = cfg.output.dir;

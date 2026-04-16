@@ -1,7 +1,7 @@
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { formatISO } from "date-fns";
 import YAML from "yaml";
+import { nowKst } from "./tz.mjs";
 import {
   fetchAllChatMessages,
   fetchChannelMessages,
@@ -211,7 +211,7 @@ function safeFileSlug(s) {
   return s.replace(/[^\w가-힣-]/g, "_").slice(0, 40);
 }
 
-export async function runSearch({ cfg, token, aliases, name, sinceIso, until, opts }) {
+export async function runSearch({ cfg, token, aliases, name, sinceIso, sinceKst, until, opts }) {
   const target = await resolveTarget(token, name);
 
   const channelEntries = dedupeChannelAliases(aliases);
@@ -266,8 +266,8 @@ export async function runSearch({ cfg, token, aliases, name, sinceIso, until, op
     limited.filter((m) => m._source?.kind === "chat"),
   );
 
-  const now = new Date();
-  const range = sinceIso ? `${sinceIso} ~ ${formatISO(now)}` : "all";
+  const nowStr = nowKst();
+  const range = sinceKst ? `${sinceKst} ~ ${nowStr}` : sinceIso ? `${sinceIso} ~ ${nowStr}` : "all";
   const markdown = renderSearchOutput({
     target,
     opts,
@@ -275,10 +275,10 @@ export async function runSearch({ cfg, token, aliases, name, sinceIso, until, op
     channelGroups,
     chatGroups,
     range,
-    fetchedAt: formatISO(now),
+    fetchedAt: nowStr,
   });
 
-  const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}${pad(now.getMinutes())}`;
+  const stamp = nowStr.slice(0, 16).replace(":", "");
   const slug = safeFileSlug(target.mode === "me" ? "me" : target.text);
   const outPath =
     opts.out || join(cfg.output.dir, `search-${slug}-${stamp}.md`);

@@ -9,16 +9,16 @@ description: "나의 기억이자 멘토. 세션 간 컨텍스트 보존(Memory)
 >
 > - **Memory 레이어**: 세션 로그, 5-level 컴팩션 트리, WORKING.md, user knowledge, qmd 검색. 무엇이 있었는지 잊지 않는다.
 > - **Mentor 레이어**:
->   - `/memento:planning` (업무 파악/정리/분류/발굴/선택 — `tomorrow` 인자로 내일 준비 모드)
+>   - `/memento:planning` (업무 파악/정리/분류/발굴/선택)
 >   - `/memento:capture-task` (백로그 유입)
->   - `/memento:checkpoint` (**작업 단위 정리 + 종료/임시 저장 판단** — 자주 호출해 세션 가볍게 유지)
->   - `/memento:review-day|week|objectives` (회고 삼중 대칭 — review-day는 누락 checkpoint 실행 + 오늘 회고 + 내일 준비를 합친 **하루 마감 의례**)
+>   - `/memento:handoff` (세션 인계 메모 - 진행 중 상태 저장, 수시 호출)
+>   - `/memento:checkpoint` (작업 완료 + 정리 - 커밋/푸시/PR 포함)
+>   - `/memento:review-day|week|objectives` (회고 - review-day는 **하루 마감 의례**)
+>   - `/memento:review-memento` (산출물 품질 평가 - 스킬 지속 개선)
 >
->   무엇을 할지 어떻게 돌아볼지 함께 결정한다.
+> **스킬 구분**: handoff=진행 중 저장(가볍고 수시), checkpoint=작업 완료 정리(커밋/캘린더), review-day=하루 마감 의례.
 >
-> **Mentor 톤**: 사용자의 흐름을 끊지 않는다. 결정에 필요한 정보는 자체 도구로 최대한 수집한 후, 모호한 지점이 남으면 한 번에 하나의 질문만 `AskUserQuestion`으로 묻는다. 여러 결정을 일괄 처리하지 않는다.
->
-> **checkpoint vs review-day 구분**: 주제 전환/잠깐 저장/퇴근 직전 안전 저장은 `/memento:checkpoint`. 하루 전체를 매듭짓고 내일로 넘기는 의례는 `/memento:review-day`.
+> **Mentor 톤**: 사용자의 흐름을 끊지 않는다. 모호한 지점이 남으면 한 번에 하나의 질문만 `AskUserQuestion`으로 묻는다.
 
 # Memento — Agent Memory Protocol
 

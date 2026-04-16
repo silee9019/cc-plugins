@@ -1,44 +1,43 @@
 ---
 name: checkpoint
-description: "현재 작업 단위 정리 + 종료 vs 임시 저장 판단. 주제가 끝날 때마다 가볍게 호출해 raw 로그/Daily Log를 기록하고, 필요 시 WORKING.md 핸드오프/커밋 제안까지 진행. 기존 wrap-up의 '자주 호출해 세션 가볍게 유지' 원칙 계승. '체크포인트', '정리', '잠깐 저장', '지금까지 저장', 'checkpoint', 'save progress' 키워드에 트리거."
+description: "작업 완료 + 정리. 완료 기록, 메모리 정리, WORKING.md 완료 항목 제거, 커밋/푸시, PR 제안. 작업 단위가 끝났을 때 호출."
 user_invocable: true
 ---
 
-> **인터뷰 원칙**: 결정에 필요한 정보를 자체 도구로 최대한 수집한 후, 여전히 모호한 지점이 있으면 가정하지 말 것. `AskUserQuestion`으로 한 번에 하나의 질문만 하고, 답을 받은 직후 다음 단계로 진행한다. 여러 결정을 일괄 처리하지 않는다.
+# Checkpoint - 작업 완료 + 정리
 
-# Memento Checkpoint
+작업을 의식적으로 마무리할 때 호출. 완료 기록, 메모리 정리, 커밋/푸시, PR 제안까지.
 
-한 작업 단위를 매듭짓는다. **항상 raw 로그/Daily Log에 기록**하고, 이어서 **"세션 종료 vs 임시 저장"을 판단**해 WORKING.md 핸드오프·커밋 제안까지 갈지를 결정한다. 자주 호출해 세션 컨텍스트가 부풀지 않게 유지하는 것이 주 목적이다.
+handoff는 진행 중 상태를 저장하는 가벼운 행위. checkpoint는 작업을 끝내고 정리하는 의식적 행위.
 
-**하루 마감 의례(review-day)와 구분**: checkpoint는 "작업 단위" 레벨이고, review-day는 "하루" 레벨이다. 저녁에 하루를 마감할 때는 `/memento:review-day`를 사용한다. review-day 내부에서 누락된 checkpoint가 있으면 자동으로 호출된다.
+## 호출 기준
 
-상세한 단계별 절차는 `/memento:checkpoint` 커맨드 본문을 따른다.
+작업 단위 = 의식적으로 시작하고 완료를 선언할 수 있는 독립적 목표가 있는 작업.
 
-## 트리거 조건
+작업 단위가 아닌 것(Jira 필드 변경, 이슈 링크 등 단순 조작)은 다음 checkpoint outcome에 자연스럽게 포함.
 
-- `/memento:checkpoint` 명시 호출
-- "체크포인트", "정리", "잠깐 저장", "지금까지 저장", "checkpoint", "save progress" 키워드 발화
-- 한 주제의 대화 흐름이 얼추 끝난 것으로 보일 때 (자주 호출해 세션 가볍게 유지)
-- 주제 전환 직전 ("이제 다른 거 하자", "다음 주제로 넘어가자" 등)
-- 점심/회의/퇴근 직전 안전 저장
+## Raw 로그 포맷
 
-## 종료 vs 임시 저장
+```markdown
+## [done: {주제 요지}]
+- outcome: {무엇이 바뀌었는가}
+- references: {관련 파일 경로}
+```
 
-- **임시 저장**: raw 로그 + Daily Note Log만 기록. WORKING.md/커밋 제안 건너뜀. 세션 계속 진행.
-- **세션 종료**: raw 로그 + Daily Note Log + WORKING.md 핸드오프 갱신 + 커밋/푸시 제안 + 다음 세션 재개 안내.
+## 핵심 동작
 
-**판정 규칙**:
-- 명시적 키워드로 자동 결정: "잠깐 저장"/"체크포인트만" = 임시, "세션 종료"/"마무리"/"커밋할게"/"퇴근" = 종료
-- 키워드가 불명확하면 `AskUserQuestion` 1회로 확인 (가정 금지)
+1. 완료 항목 감지 + Issue Box/Daily Note Tasks 완료 처리
+2. raw 로그 append (`## [done: ...]`, 2 field)
+3. Daily Note Log append (프로젝트별 서브섹션)
+4. 캘린더 동기화 (오늘 일정 중 미반영 항목)
+5. WORKING.md 정리 (완료 건 제거, 추가는 안 함)
+6. 커밋/푸시/PR 제안
 
-## Do / Don't
+상세 절차는 `commands/checkpoint.md` 참조.
 
-| Do | Don't |
-|----|-------|
-| 항상 raw 로그 append + Daily Note Log append | 임시/종료에 따라 raw 로그 건너뛰기 |
-| 종료 판정은 명시적 키워드 또는 1회 인터뷰 | 모호한 상황에서 가정으로 결정 |
-| 세션 맥락 근거 2개 이상일 때만 자동 완료 처리 | 단일 근거로 자동 완료 |
-| 모호한 완료 항목은 한 건씩 순차 인터뷰 | 일괄 질문 |
-| 임시 저장 모드는 간결한 한 줄 보고 | 임시 저장에서도 장황한 출력 |
-| 자주 호출해 세션 가볍게 유지 | 세션 끝에만 한 번 호출 |
-| 하루 마감 의례가 필요하면 `/memento:review-day`로 유도 | checkpoint 안에서 내일 준비까지 수행 |
+## Rules
+
+- 교훈 추출은 checkpoint에서 하지 않음 (review-day의 역할)
+- "임시 저장 vs 세션 종료" 모드 질문 없음
+- WORKING.md에 새 항목 추가 안 함 (그건 handoff)
+- 캘린더 동기화는 매 호출 수행
