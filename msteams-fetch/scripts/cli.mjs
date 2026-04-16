@@ -2,7 +2,7 @@
 import { Command } from "commander";
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { loadConfig, loadAliases, saveAlias, findSimilarAlias } from "./config.mjs";
+import { loadConfig, loadAliases, saveAlias, findSimilarAlias, filterAliasesForAll } from "./config.mjs";
 import { parseSinceKst, toUtcForGraph, nowKst } from "./tz.mjs";
 import { login, getAccessToken } from "./auth.mjs";
 import {
@@ -18,7 +18,7 @@ const program = new Command();
 program
   .name("msteams-fetch")
   .description("MS Teams 채팅/채널 메시지를 별칭으로 가져와 markdown으로 저장")
-  .version("0.3.1");
+  .version("0.3.3");
 
 program
   .command("login")
@@ -168,6 +168,81 @@ program
     process.stdout.write(`${result.outPath}\n`);
   });
 
+
+program
+  .command("fetch-all")
+  .description("등록된 모든 별칭을 순회하며 메시지 가져오기 (exclude_from_all 제외)")
+  .option("--since <spec>", "시간 범위 (예: 2h, 1d, 7d, 2026-04-13)", undefined)
+  .option("--limit <n>", "별칭당 최대 메시지 개수", undefined)
+  .option("--exclude <names>", "추가 제외할 별칭 (쉼표 구분)", "")
+  .action(async (opts) => {
+    const cfg = loadConfig();
+    const aliases = loadAliases();
+    const extraExcludes = opts.exclude ? opts.exclude.split(",").map((s) => s.trim()).filter(Boolean) : [];
+    const targets = filterAliasesForAll(aliases, extraExcludes);
+    const names = Object.keys(targets);
+
+    if (names.length === 0) {
+      process.stderr.write("(fetch 대상 별칭이 없습니다)\n");
+      return;
+    }
+
+    const sinceSpec = opts.since || cfg.defaults.since;
+    const sinceKst = sinceSpec ? parseSinceKst(sinceSpec) : null;
+    const sinceUtc = sinceKst ? toUtcForGraph(sinceKst) : null;
+    const limit = Number(opts.limit || cfg.defaults.limit);
+    const token = await getAccessToken(cfg);
+
+    const results = [];
+    for (const alias of names) {
+      const entry = targets[alias];
+      try {
+        let messages;
+        const metaBase = { alias, label: entry.label || alias, type: entry.type };
+
+        if (entry.type === "chat") {
+          messages = await fetchChatMessages({ token, chatId: entry.id, sinceIso: sinceUtc, limit });
+          metaBase.chat_id = entry.id;
+        } else if (entry.type === "channel") {
+          messages = await fetchChannelMessagesWithReplies({
+            token, teamId: entry.team_id, channelId: entry.channel_id, sinceIso: sinceUtc, limit,
+          });
+          metaBase.team_id = entry.team_id;
+          metaBase.channel_id = entry.channel_id;
+        } else if (entry.type === "thread") {
+          messages = await fetchThreadReplies({
+            token, teamId: entry.team_id, channelId: entry.channel_id, messageId: entry.message_id,
+          });
+          metaBase.team_id = entry.team_id;
+          metaBase.channel_id = entry.channel_id;
+          metaBase.message_id = entry.message_id;
+        } else {
+          process.stderr.write(`[fetch-all] ${alias}: 지원하지 않는 type '${entry.type}', 건너뜀\n`);
+          continue;
+        }
+
+        const nowStr = nowKst();
+        const meta = { ...metaBase, fetched_at: nowStr, range: sinceKst ? `${sinceKst} ~ ${nowStr}` : "all" };
+        const markdown = renderMessages({ meta, messages });
+        const outPath = defaultOutPath(cfg, alias, new Date());
+        ensureParentDir(outPath);
+        writeFileSync(outPath, markdown, "utf8");
+
+        results.push({ alias, count: messages.length, outPath });
+        process.stderr.write(`  ✓ ${alias}: ${messages.length}건 → ${outPath}\n`);
+      } catch (err) {
+        process.stderr.write(`  ✗ ${alias}: ${err.message.slice(0, 120)}\n`);
+        results.push({ alias, count: 0, outPath: null, error: err.message });
+      }
+    }
+
+    const total = results.reduce((s, r) => s + r.count, 0);
+    const ok = results.filter((r) => !r.error).length;
+    process.stderr.write(`\n✓ fetch-all 완료: ${ok}/${names.length} 별칭, 총 ${total}건\n`);
+    for (const r of results) {
+      if (r.outPath) process.stdout.write(`${r.outPath}\n`);
+    }
+  });
 
 function defaultOutPath(cfg, alias, now) {
   const dir = cfg.output.dir;

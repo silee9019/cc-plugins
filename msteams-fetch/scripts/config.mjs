@@ -74,6 +74,17 @@ export function ensureDir(filePath) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 }
 
+export function filterAliasesForAll(aliases, extraExcludes = []) {
+  const excludeSet = new Set(extraExcludes);
+  const result = {};
+  for (const [name, entry] of Object.entries(aliases)) {
+    if (entry.exclude_from_all === true) continue;
+    if (excludeSet.has(name)) continue;
+    result[name] = entry;
+  }
+  return result;
+}
+
 export function findSimilarAlias(name, aliases) {
   const keys = Object.keys(aliases);
   if (keys.length === 0) return null;

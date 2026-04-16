@@ -1,6 +1,6 @@
 {
   "name": "@silee9019/cc-plugin-msteams-fetch",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "description": "cc-plugins msteams-fetch plugin runtime",
   "private": true,
   "type": "module",
