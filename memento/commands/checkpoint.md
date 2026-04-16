@@ -60,6 +60,8 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Skill
 
 2 field만. 간결하게.
 
+**요약 기준**: `[done]`의 주제는 사용자가 의도한 작업 목표(설계, 구현, 버그 수정 등)로 잡는다. git 작업(rebase, 버전 재정렬, ff 머지, force push, 브랜치 정리 등)은 독립 `[done]` 항목으로 만들지 않고, 해당 작업의 outcome 끝에 한 줄로 축약한다.
+
 ## Step 4.5: 결정 후보 감지
 
 이 세션에서 내린 결정 후보를 스캔한다. checkpoint의 raw 로그 훑기 pass에 결정 감지를 얹는 방식.
