@@ -159,7 +159,7 @@ git status --short
 PR이 적절한 경우 (feature branch, 리뷰 필요한 변경):
 > "PR을 생성할까요?"
 
-**gitignore 원칙**: `_memento/` 하위는 vault git 커밋 대상이 아님. `git status --short` 결과 그대로 추적 파일만 취급.
+**gitignore 원칙**: `{memento_root}/` 하위는 vault git 커밋 대상이 아님. `git status --short` 결과 그대로 추적 파일만 취급.
 
 ## Step 9: 최종 보고
 

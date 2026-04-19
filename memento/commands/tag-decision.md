@@ -95,7 +95,7 @@ AskUserQuestion으로 프로젝트 스코프를 선택받는다:
 |------|------|
 | 1 | `projects: ["*"]` |
 | 2 | `projects: ["{project_id}"]` |
-| 3 | `_memento/projects/*/` 디렉토리 스캔 → 목록 표시 → 멀티선택 |
+| 3 | `{memento_root}/projects/*/` 디렉토리 스캔 → 목록 표시 → 멀티선택 |
 | 4 | 자유 입력값을 배열로 파싱 |
 
 ## Step 7: 기간 선택

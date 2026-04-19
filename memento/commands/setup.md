@@ -160,7 +160,7 @@ VAULT_PATH=$(cd "$selected_vault_path" && pwd -P)
 
 AskUserQuestion으로 vault 내 memento 루트 서브디렉토리를 묻는다.
 
-- 기본값: `_memento` (언더스코어 prefix로 Obsidian 사이드바 상단 고정 + 일반 노트와 시각적 분리)
+- 기본값: `97 Memento` (숫자 접두어 체계로 vault 최하단 고정 + 일반 노트와 시각적 분리)
 - 기존 config가 있으면 `PREV_MEMENTO_ROOT`를 기본값으로
 - 슬래시 포함 가능 (`Knowledge/Memento` 등)
 
@@ -329,17 +329,17 @@ atlassian_cloud_id: "<ATLASSIAN_CLOUD>"
 
 1. `PREV_*` (기존 memento config v2 이상)
 2. 기본값:
-   - `daily_notes_path`: `"01 Daily Notes"`
-   - `daily_note_format`: `"{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md"`
-   - `daily_archive_path`: `""` (빈 값 — 이중 경로 비활성. 오늘 Daily만 `daily_notes_path`에서 찾음)
-   - `daily_archive_format`: `""` (빈 값)
-   - `weekly_notes_path`: `"02 Weekly Notes"`
-   - `weekly_note_format`: `"{YYYY}/{YYYY} Week-{WW}.md"`
-   - `monthly_notes_path`: `"02 Weekly Notes"`
-   - `inbox_folder_path`: `"00 Issue Box/00-inbox"`
-   - `in_progress_folder_path`: `"00 Issue Box/01-in-progress"`
-   - `resolved_folder_path`: `"00 Issue Box/02-done"`
-   - `dismissed_folder_path`: `"00 Issue Box/03-dismissed"`
+   - `daily_notes_path`: `"01 Working"` (오늘 Daily 루트)
+   - `daily_note_format`: `"{YYYY}-{MM}-{DD}.md"` (flat)
+   - `daily_archive_path`: `"99 Archives/Daily"` (지난 Daily 아카이브; 빈 값으로 두면 이중 경로 비활성)
+   - `daily_archive_format`: `"{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md"`
+   - `weekly_notes_path`: `"10 Reflection/01 Weekly"`
+   - `weekly_note_format`: `"{YYYY}/{YYYY}-W{WW}.md"` (ISO week)
+   - `monthly_notes_path`: `"10 Reflection/02 Monthly"`
+   - `inbox_folder_path`: `"00 Inbox"`
+   - `in_progress_folder_path`: `"01 Working"`
+   - `resolved_folder_path`: `""` (완료 이슈는 도메인 폴더로 승격 — 단일 저장소 없음)
+   - `dismissed_folder_path`: `""` (폐기는 99 Archives 하위로 이동)
    - `file_title_format`: `"{date} {category} {title}"`
    - 기타(`repos_base_path`/`atlassian_*`): 빈 문자열
 

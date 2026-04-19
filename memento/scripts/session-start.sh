@@ -78,7 +78,7 @@ if [ -z "$PROJECT_ID" ]; then
     PROJECT_ID=$(to_lower "$(printf '%s' "$GIT_ROOT" | tr '/' '-')")
   else
     # VAULT_PATH가 설정된 상태에서 cwd가 vault 하위면 .obsidian 폴백을 건너뛴다
-    # (자기참조 경로 방지: <vault>/_memento/projects/<vault-name>/ 같은 경로가 생기는 것을 막는다)
+    # (자기참조 경로 방지: <vault>/<memento_root>/projects/<vault-name>/ 같은 경로가 생기는 것을 막는다)
     SKIP_OBSIDIAN_FALLBACK=0
     if [ -n "$VAULT_PATH" ]; then
       case "$(pwd)" in

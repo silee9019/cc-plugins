@@ -213,7 +213,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 
 **연체/리마인드 플래그**:
 
-- KR1 체크포인트 연체 감지 시 (Step 1 스캔 중 `{vault_path}/10 Projects/2026 Imagoworks/26 OKR/kr1-tracking.md`의 "다음 업데이트" 날짜가 과거면): Plan 상단에 `> ⚠ KR1 체크포인트 업데이트가 {N}일 연체되었습니다. /memento:review-objectives 실행 권장.` 경고
+- KR1 체크포인트 연체 감지 시 (Step 1 스캔 중 `{vault_path}/30 Imagoworks/10 Objectives/kr1-tracking.md`의 "다음 업데이트" 날짜가 과거면): Plan 상단에 `> ⚠ KR1 체크포인트 업데이트가 {N}일 연체되었습니다. /memento:review-objectives 실행 권장.` 경고
 - Active Reminders와 충돌/일치하는 항목에는 `(리마인드: {슬로건})` 마크
 
 ### Step 6: 완료 출력

@@ -35,12 +35,12 @@ memento 스킬이 만들어낸 산출물(Daily Notes, raw 로그, WORKING.md, RO
 
 1. config.md 로드
 2. 최근 7일간 수집:
-   - Daily Notes (`01 Daily Notes/YYYY/MM/YYYY-MM-DD.md`)
-   - raw 로그 (`_memento/projects/{id}/memory/YYYY-MM-DD.md`)
+   - Daily Notes (`{daily_notes_path}/{today}.md`, 지난 Daily는 `{daily_archive_path}/...`)
+   - raw 로그 (`{memento_root}/projects/{id}/memory/YYYY-MM-DD.md`)
    - WORKING.md (현재)
    - ROOT.md (프로젝트 + user)
    - Issue Box (00-inbox, 01-in-progress 파일 목록)
-3. 이전 평가 결과 확인 (`_memento/projects/{id}/audit/` 최신 파일)
+3. 이전 평가 결과 확인 (`{memento_root}/projects/{id}/audit/` 최신 파일)
 
 ### Step 2: 페르소나별 평가
 
@@ -68,11 +68,11 @@ Top 5 개선 항목 도출. 각 항목:
 
 **교훈 필터링 기준** (Retrospective Analyst 평가 시 적용):
 - Review "배운 것"에 넣을 것: 재사용 가능한 판단 원칙, 프로세스 개선, 사고 프레임 전환
-- 넣지 말 것: API 레퍼런스 메모, 도구 사용법, 일회성 기술 디테일 (-> 코드 주석 또는 30 Resources/)
+- 넣지 말 것: API 레퍼런스 메모, 도구 사용법, 일회성 기술 디테일 (-> 코드 주석 또는 Knowledge 폴더)
 
 ### Step 5: 결과 저장 + 캡처
 
-1. 결과를 `_memento/projects/{id}/audit/YYYY-MM-DD.md`에 저장
+1. 결과를 `{memento_root}/projects/{id}/audit/YYYY-MM-DD.md`에 저장
 2. Top 5 개선 항목 중 실행 가능한 것을 Issue Box inbox에 캡처 (`/memento:capture-task`)
 
 ## 출력 포맷

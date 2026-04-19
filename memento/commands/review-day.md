@@ -97,7 +97,7 @@ Daily Note의 Tasks 섹션에서 항목을 분류한다:
 
 ### Step 6: Daily Notes 비일일노트 정리
 
-오늘 날짜로 resolve된 `daily_notes_path` 폴더(예: `01 Daily Notes/2026/04/`)에서 비일일노트를 찾아 PARA 규칙에 따라 분류한다.
+오늘 날짜로 resolve된 `daily_notes_path` 폴더(예: `01 Working/`)에서 비일일노트를 찾아 vault 분류 규칙에 따라 분류한다.
 
 #### 비일일노트 탐색
 
@@ -110,18 +110,18 @@ Daily Note의 Tasks 섹션에서 항목을 분류한다:
 #### 분류 제안
 
 각 비일일노트의 frontmatter(tags, category, project 등)를 읽고,
-vault 루트 `CLAUDE.md`의 PARA 분류 규칙을 참조하여 이동 대상 폴더를 제안한다.
-vault 루트에 `CLAUDE.md`가 없거나 PARA 규칙이 정의되지 않은 경우, 아래 테이블을 기본 규칙으로 사용하되 AskUserQuestion으로 분류를 확인한다.
+vault 루트 `CLAUDE.md`의 분류 규칙을 참조하여 이동 대상 폴더를 제안한다.
+vault 루트에 `CLAUDE.md`가 없거나 규칙이 정의되지 않은 경우, 아래 테이블을 기본 규칙으로 사용하되 AskUserQuestion으로 분류를 확인한다.
 
 | frontmatter 힌트 | 분류 | 이동 대상 |
 |-------------------|------|----------|
-| tags: meeting OR project: {name} | 업무 운영 이슈 | `20 Areas/Imagoworks/{제품명}/` |
-| category: report OR tags: report | 실행 미결정 제안 | `00 Issue Box/00-inbox/` |
-| tags: research, tooling | 범용 리서치 | `30 Resources/` (활발히 참조) 또는 `80 Archives/` (완결/참조 빈도 낮음) |
-| source_project 있음 | 프로젝트 산출물 | `10 Projects/` 하위 |
+| tags: meeting OR project: {name} | 업무 운영 이슈 | 업무 도메인 폴더 (예: `30 Imagoworks/{제품}/`) |
+| category: report OR tags: report | 실행 미결정 제안 | `{inbox_folder_path}` (예: `00 Inbox/`) |
+| tags: research, tooling | 범용 리서치 | Knowledge 폴더 (예: `11 Knowledge/02 Engineering/`) 또는 `99 Archives/` (완결/참조 빈도 낮음) |
+| source_project 있음 | 프로젝트 산출물 | 해당 도메인 폴더 (예: `50 Dev Life/{name}/` 또는 `30 Imagoworks/{제품}/`) |
 | 판단 불가 | 사용자에게 질문 | AskUserQuestion |
 
-Imagoworks 하위 여부: 업무 관련 → `Imagoworks/` 중간 폴더 사용. 개인/사이드 프로젝트 → 직접 배치.
+업무/개인 구분: 업무 관련 → 업무 도메인(예: `30 Imagoworks/`) 하위. 개인/사이드 프로젝트 → 개인 도메인(예: `50 Dev Life/`) 직접 배치.
 
 #### 확인
 
@@ -131,9 +131,9 @@ AskUserQuestion으로 분류 제안을 한 번에 보여준다:
 Daily Notes에 정리할 파일이 N개 있습니다:
 
 1. `2026-04-09-hub-404-미팅.md`
-   → 20 Areas/Imagoworks/dentbird-console/
+   → 30 Imagoworks/33 Dentbird Console/
 2. `2026-04-09-report-pricing-개선.md`
-   → 00 Issue Box/00-inbox/
+   → 00 Inbox/
 
 이대로 이동할까요?
 ```
@@ -155,7 +155,7 @@ Daily Notes에 정리할 파일이 N개 있습니다:
 - **미완료 항목**: 무엇이 남았는지 + 왜 못했는지/다음 단계가 뭔지 한 줄 맥락 추가
 - **배운 것/발견**: 세션 대화에서 추출한 교훈/발견/인사이트. 없으면 빈칸으로 두되 억지로 채우지 않음
   - **넣을 것**: 재사용 가능한 판단 원칙, 프로세스 개선, 사고 프레임 전환
-  - **넣지 않을 것**: API 레퍼런스 메모, 도구 사용법, 일회성 기술 디테일 (-> 코드 주석 또는 `30 Resources/`)
+  - **넣지 않을 것**: API 레퍼런스 메모, 도구 사용법, 일회성 기술 디테일 (-> 코드 주석 또는 Knowledge 폴더)
   - 한 세션당 1-3개. 간결하게 한 줄씩
 - **로그 품질 검토**: 오늘 Daily Note Log와 raw 로그를 훑어보고, 너무 사소한 기록은 없었는지 검토. 기록 기준을 지속적으로 개량하기 위한 메타 피드백
 - **Reminder 체크포인트**: Step 1.5에서 Active Reminders가 주입되었다면, Review 말미에 "Reminders 점검" 한 줄 추가. 각 reminder가 오늘 작동했는지/놓쳤는지 한 줄로 기록 (억지 X, 근거 있을 때만)

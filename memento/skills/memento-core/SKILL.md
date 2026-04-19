@@ -89,23 +89,23 @@ The project ID is determined by the SessionStart hook (git remote → org-repo, 
 |-----|--------|------|
 | `setup_version` | plugin.json 버전 | 업그레이드 판별 |
 | `vault_path` | (인터뷰) | Obsidian vault 절대경로 |
-| `memento_root` | `_memento` | vault 내 memento 서브디렉토리 |
+| `memento_root` | `97 Memento` | vault 내 memento 서브디렉토리 (숫자 접두어로 Obsidian 사이드바 하단 고정) |
 
 ### Mentor 레이어
 
 | key | 기본값 | 용도 |
 |-----|--------|------|
-| `daily_notes_path` | `01 Daily Notes` | 오늘 Daily 루트 (현재 진행 중인 날짜) |
-| `daily_note_format` | `{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md` | 오늘 Daily 파일명 포맷 |
-| `daily_archive_path` | 빈 값 | 지난 Daily 아카이브 루트 (옵션, 빈 값 = 이중 경로 비활성) |
-| `daily_archive_format` | 빈 값 | 지난 Daily 파일명 포맷 (옵션) |
-| `weekly_notes_path` | `02 Weekly Notes` | 주간 노트 루트 |
-| `weekly_note_format` | `{YYYY}/{YYYY} Week-{WW}.md` | 파일명 포맷 |
-| `monthly_notes_path` | `02 Weekly Notes` | 월간 노트 루트 |
-| `inbox_folder_path` | `00 Issue Box/00-inbox` | Issue Box inbox |
-| `in_progress_folder_path` | `00 Issue Box/01-in-progress` | 진행 중 |
-| `resolved_folder_path` | `00 Issue Box/02-done` | 완료 |
-| `dismissed_folder_path` | `00 Issue Box/03-dismissed` | 폐기 |
+| `daily_notes_path` | `01 Working` | 오늘 Daily 루트 (현재 진행 중인 날짜) |
+| `daily_note_format` | `{YYYY}-{MM}-{DD}.md` | 오늘 Daily 파일명 포맷 (flat) |
+| `daily_archive_path` | `99 Archives/Daily` | 지난 Daily 아카이브 루트 (빈 값이면 이중 경로 비활성) |
+| `daily_archive_format` | `{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md` | 지난 Daily 파일명 포맷 |
+| `weekly_notes_path` | `10 Reflection/01 Weekly` | 주간 노트 루트 |
+| `weekly_note_format` | `{YYYY}/{YYYY}-W{WW}.md` | 파일명 포맷 (ISO week) |
+| `monthly_notes_path` | `10 Reflection/02 Monthly` | 월간 노트 루트 |
+| `inbox_folder_path` | `00 Inbox` | 미결 이슈/아이디어 버퍼 |
+| `in_progress_folder_path` | `01 Working` | 진행 중 |
+| `resolved_folder_path` | 빈 값 | 완료 이슈는 도메인 폴더로 이동(단일 저장소 없음) |
+| `dismissed_folder_path` | 빈 값 | 폐기 이슈는 99 Archives 하위로 이동 |
 | `file_title_format` | `{date} {category} {title}` | 이슈 파일명 포맷 |
 
 ### 사용자 식별
