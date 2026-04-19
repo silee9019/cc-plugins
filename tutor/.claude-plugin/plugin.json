@@ -1,7 +1,7 @@
 {
   "name": "tutor",
   "description": "학습 자료(PDF, MD, URL, 코드)를 Obsidian 노트로 변환하고, 4지선다 퀴즈로 학습 효과를 측정하는 개인 튜터. silee vault 연동.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": { "name": "silee9019" },
   "keywords": ["tutor", "study", "quiz", "obsidian", "learning", "notes"],
   "commands": ["./commands"],

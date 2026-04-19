@@ -123,9 +123,9 @@ AskUserQuestion으로 학습 노트 경로를 묻는다.
 
 | 설정 | 설명 | 기본값 |
 |------|------|--------|
-| `study_base_path` | 학습 노트 루트 폴더 | `30 Resources/study` |
-| `quiz_results_path` | 퀴즈 결과 저장 폴더 | `30 Resources/study/_quiz-results` |
-| `dashboard_path` | 학습 대시보드 노트 경로 | `30 Resources/study/_dashboard.md` |
+| `study_base_path` | 학습 노트 루트 폴더 | `_study` |
+| `quiz_results_path` | 퀴즈 결과 저장 폴더 | `_study/_quiz-results` |
+| `dashboard_path` | 학습 대시보드 노트 경로 | `_study/_dashboard.md` |
 
 - 기존 설정이 있으면 해당 값을 기본값으로 제안
 - 사용자가 기본값을 수락하면 해당 값 사용
