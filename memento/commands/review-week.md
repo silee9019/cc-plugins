@@ -119,11 +119,13 @@ mktemp -d
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/collect_daily_notes.py" \
-  "$VAULT_PATH" "$DAILY_NOTES_PATH" "$DAILY_NOTE_FORMAT" "$START" "$END" \
+  "$VAULT_PATH" "$DAILY_NOTES_PATH" "$DAILY_NOTE_FORMAT" \
+  "$DAILY_ARCHIVE_PATH" "$DAILY_ARCHIVE_FORMAT" \
+  "$START" "$END" \
   > "$TMPDIR/daily.json" 2>"$TMPDIR/daily.err" &
 
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/collect_memento_logs.py" \
-  "$HOME/.claude/memento/projects" "$START" "$END" \
+  "$MEMENTO_HOME/projects" "$START" "$END" \
   > "$TMPDIR/memento.json" 2>"$TMPDIR/memento.err" &
 
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/collect_commits.py" \

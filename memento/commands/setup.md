@@ -331,8 +331,8 @@ atlassian_cloud_id: "<ATLASSIAN_CLOUD>"
 2. 기본값:
    - `daily_notes_path`: `"01 Working"` (오늘 Daily 루트)
    - `daily_note_format`: `"{YYYY}-{MM}-{DD}.md"` (flat)
-   - `daily_archive_path`: `"99 Archives/Daily"` (지난 Daily 아카이브; 빈 값으로 두면 이중 경로 비활성)
-   - `daily_archive_format`: `"{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md"`
+   - `daily_archive_path`: 신규 사용자 `"99 Archives/Daily"`, 업그레이드 사용자(`PREV_VERSION` < 2.6.0 + `PREV_DAILY_ARCHIVE_PATH` 빈 값) `""` (조용한 동작 변경 방지 — 사용자가 의식적으로 활성화)
+   - `daily_archive_format`: 신규 `"{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md"`, 업그레이드 빈 값 (위와 동일 원칙)
    - `weekly_notes_path`: `"10 Reflection/01 Weekly"`
    - `weekly_note_format`: `"{YYYY}/{YYYY}-W{WW}.md"` (ISO week)
    - `monthly_notes_path`: `"10 Reflection/02 Monthly"`

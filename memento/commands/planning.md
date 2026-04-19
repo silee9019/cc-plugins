@@ -96,7 +96,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 1. **Issue Box in-progress** (`in_progress_folder_path`): 지금 착수되어 있는 이슈들. 각 파일의 제목·카테고리·우선순위·started_at 수집
 2. **대상(TARGET_DATE) Daily Note Tasks**의 미완료 체크박스(`- [ ]`): 파일이 이미 있으면 섹션별(Projects/Areas/Inbox) 수집. 없으면 이 소스는 비움.
 3. **Issue Box inbox** (`inbox_folder_path`): 백로그. open + blocked 구분하여 수집. 우선순위·카테고리·생성일 메타 포함
-4. **이전(PREV_DATE) Daily Note 미완료**: 해당 날짜 경로를 생성해 읽기. 단, **TARGET_DATE Daily Note에 이미 Tasks 섹션 내용이 있으면(소스 2번에서 미완료 항목이 수집되었거나, 완료 항목이라도 존재하면) 이 소스를 건너뛴다** — 이전 계획 세션에서 이월 결정이 완료된 것으로 간주. `tomorrow` 모드에서는 이 스킵 조건을 적용하지 않는다(항상 수집).
+4. **이전(PREV_DATE) Daily Note 미완료**: 해당 날짜 경로를 생성해 읽기. `daily_notes_path` + `daily_note_format`로 1차 시도, 파일이 없으면 `daily_archive_path` + `daily_archive_format`가 설정된 경우 아카이브에서 2차 시도(이중 경로: 오늘은 Working, 지난은 Archives 구조). 단, **TARGET_DATE Daily Note에 이미 Tasks 섹션 내용이 있으면(소스 2번에서 미완료 항목이 수집되었거나, 완료 항목이라도 존재하면) 이 소스를 건너뛴다** — 이전 계획 세션에서 이월 결정이 완료된 것으로 간주. `tomorrow` 모드에서는 이 스킵 조건을 적용하지 않는다(항상 수집).
 5. **예정된 미팅/마감**: 사용자가 명시적으로 언급한 게 있는지 세션 맥락 확인. 불확실하면 Step 1 끝에 **한 번만** "{TARGET_DATE}에 고정 일정이 있나요? (없으면 건너뛰기)" 질문. `--orchestrated` 모드에서는 이 질문을 생략하고 캘린더 스크립트 출력만 참고.
 
 수집 결과를 그룹별 요약 표로 정리해둔다 (아직 출력하지 않음).
