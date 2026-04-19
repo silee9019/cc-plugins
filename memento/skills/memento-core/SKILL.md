@@ -95,8 +95,10 @@ The project ID is determined by the SessionStart hook (git remote → org-repo, 
 
 | key | 기본값 | 용도 |
 |-----|--------|------|
-| `daily_notes_path` | `01 Daily Notes` | 일일 노트 루트 |
-| `daily_note_format` | `{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md` | 파일명 포맷 |
+| `daily_notes_path` | `01 Daily Notes` | 오늘 Daily 루트 (현재 진행 중인 날짜) |
+| `daily_note_format` | `{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md` | 오늘 Daily 파일명 포맷 |
+| `daily_archive_path` | 빈 값 | 지난 Daily 아카이브 루트 (옵션, 빈 값 = 이중 경로 비활성) |
+| `daily_archive_format` | 빈 값 | 지난 Daily 파일명 포맷 (옵션) |
 | `weekly_notes_path` | `02 Weekly Notes` | 주간 노트 루트 |
 | `weekly_note_format` | `{YYYY}/{YYYY} Week-{WW}.md` | 파일명 포맷 |
 | `monthly_notes_path` | `02 Weekly Notes` | 월간 노트 루트 |

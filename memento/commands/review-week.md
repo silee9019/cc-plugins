@@ -33,7 +33,7 @@ argument-hint: <기간>
 
 | 케이스 | 처리 |
 |--------|------|
-| 파일 존재 | `vault`, `daily_notes_path`, `daily_note_format`, `weekly_notes_path`, `weekly_note_format`, `inbox_folder_path`, `in_progress_folder_path`, `resolved_folder_path`, `dismissed_folder_path`, `repos_base_path`, `atlassian_site_url`, `atlassian_cloud_id`, `display_name_ko`, `display_name_en`, `initials`, `user_id`, `nickname`, `email`, `aliases`, `atlassian_account_id` 로드 |
+| 파일 존재 | `vault`, `daily_notes_path`, `daily_note_format`, `daily_archive_path`, `daily_archive_format`, `weekly_notes_path`, `weekly_note_format`, `inbox_folder_path`, `in_progress_folder_path`, `resolved_folder_path`, `dismissed_folder_path`, `repos_base_path`, `atlassian_site_url`, `atlassian_cloud_id`, `display_name_ko`, `display_name_en`, `initials`, `user_id`, `nickname`, `email`, `aliases`, `atlassian_account_id` 로드 |
 | 파일 없음 | "설정이 없습니다. `/memento:setup`을 먼저 실행해주세요." 안내 후 중단 |
 
 **기간 파싱**:

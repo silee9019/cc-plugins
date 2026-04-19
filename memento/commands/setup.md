@@ -91,6 +91,8 @@ PREV_MEMENTO_ROOT=$(sed -n 's/^memento_root: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | h
 # Mentor 키 (통합 이후)
 PREV_DAILY_PATH=$(sed -n 's/^daily_notes_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_DAILY_FORMAT=$(sed -n 's/^daily_note_format: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
+PREV_DAILY_ARCHIVE_PATH=$(sed -n 's/^daily_archive_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
+PREV_DAILY_ARCHIVE_FORMAT=$(sed -n 's/^daily_archive_format: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_WEEKLY_PATH=$(sed -n 's/^weekly_notes_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_WEEKLY_FORMAT=$(sed -n 's/^weekly_note_format: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_MONTHLY_PATH=$(sed -n 's/^monthly_notes_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
@@ -295,6 +297,8 @@ memento_root: "<MEMENTO_ROOT>"
 # Mentor 레이어
 daily_notes_path: "<DAILY_PATH>"
 daily_note_format: "<DAILY_FORMAT>"
+daily_archive_path: "<DAILY_ARCHIVE_PATH>"
+daily_archive_format: "<DAILY_ARCHIVE_FORMAT>"
 weekly_notes_path: "<WEEKLY_PATH>"
 weekly_note_format: "<WEEKLY_FORMAT>"
 monthly_notes_path: "<MONTHLY_PATH>"
@@ -327,6 +331,8 @@ atlassian_cloud_id: "<ATLASSIAN_CLOUD>"
 2. 기본값:
    - `daily_notes_path`: `"01 Daily Notes"`
    - `daily_note_format`: `"{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md"`
+   - `daily_archive_path`: `""` (빈 값 — 이중 경로 비활성. 오늘 Daily만 `daily_notes_path`에서 찾음)
+   - `daily_archive_format`: `""` (빈 값)
    - `weekly_notes_path`: `"02 Weekly Notes"`
    - `weekly_note_format`: `"{YYYY}/{YYYY} Week-{WW}.md"`
    - `monthly_notes_path`: `"02 Weekly Notes"`

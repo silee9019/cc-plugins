@@ -23,7 +23,7 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Skill
 
 | 케이스 | 처리 |
 |--------|------|
-| 파일 존재 | `vault_path`, `memento_root`, `daily_notes_path`, `daily_note_format`, `in_progress_folder_path`, `resolved_folder_path`, `dismissed_folder_path` 등 로드 |
+| 파일 존재 | `vault_path`, `memento_root`, `daily_notes_path`, `daily_note_format`, `daily_archive_path`, `daily_archive_format`, `in_progress_folder_path`, `resolved_folder_path`, `dismissed_folder_path` 등 로드 |
 | 파일 없음 | "설정이 없습니다. `/memento:setup`을 먼저 실행해주세요." 안내 후 중단 |
 
 **사용자 식별 컨텍스트 주입**: 식별 필드 중 비어있지 않은 값이 있으면 내부 컨텍스트에 고정 (기존 checkpoint Step 1과 동일).

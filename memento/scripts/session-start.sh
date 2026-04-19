@@ -259,18 +259,28 @@ if [ -f "$ACTIVE_REMINDERS_FILE" ]; then
 fi
 
 # 오늘 Daily Note 존재 힌트 (config의 daily_notes_path가 있을 때만)
+# daily_archive_path가 설정되어 있으면 fallback으로 archive도 탐색한다 (이중 경로 지원).
 DAILY_HINT=""
 if [ -n "$VAULT_PATH" ]; then
   DAILY_NOTES_PATH=$(sed -n 's/^daily_notes_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
   DAILY_NOTE_FORMAT=$(sed -n 's/^daily_note_format: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
+  DAILY_ARCHIVE_PATH=$(sed -n 's/^daily_archive_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
+  DAILY_ARCHIVE_FORMAT=$(sed -n 's/^daily_archive_format: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
   if [ -n "$DAILY_NOTES_PATH" ] && [ -n "$DAILY_NOTE_FORMAT" ]; then
     TODAY_Y=$(date "+%Y")
     TODAY_M=$(date "+%m")
     TODAY_D=$(date "+%d")
     TODAY_PATH=$(printf '%s' "$DAILY_NOTE_FORMAT" | sed -e "s/{YYYY}/$TODAY_Y/g" -e "s/{MM}/$TODAY_M/g" -e "s/{DD}/$TODAY_D/g")
     FULL_DAILY="$VAULT_PATH/$DAILY_NOTES_PATH/$TODAY_PATH"
+    FULL_DAILY_ARCHIVE=""
+    if [ -n "$DAILY_ARCHIVE_PATH" ] && [ -n "$DAILY_ARCHIVE_FORMAT" ]; then
+      ARCHIVE_PATH=$(printf '%s' "$DAILY_ARCHIVE_FORMAT" | sed -e "s/{YYYY}/$TODAY_Y/g" -e "s/{MM}/$TODAY_M/g" -e "s/{DD}/$TODAY_D/g")
+      FULL_DAILY_ARCHIVE="$VAULT_PATH/$DAILY_ARCHIVE_PATH/$ARCHIVE_PATH"
+    fi
     if [ -f "$FULL_DAILY" ]; then
       DAILY_HINT="오늘 Daily Note 존재: $FULL_DAILY"
+    elif [ -n "$FULL_DAILY_ARCHIVE" ] && [ -f "$FULL_DAILY_ARCHIVE" ]; then
+      DAILY_HINT="오늘 Daily Note 아카이브 존재: $FULL_DAILY_ARCHIVE (복원 권장)"
     else
       DAILY_HINT="오늘 Daily Note 없음 — /memento:planning 권장"
     fi
