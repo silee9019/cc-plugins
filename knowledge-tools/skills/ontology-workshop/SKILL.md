@@ -191,7 +191,7 @@ AskUserQuestion으로 최종 결과 제시:
 **Obsidian vault 저장**:
 - memento config (`~/.claude/plugins/data/memento-cc-plugins/config.md`)에서 vault 경로 읽기
 - `templates/decision-record.md` 템플릿 사용
-- 저장 위치: `{vault}/Resources/decisions/YYYY-MM-DD-{slug}.md`
+- 저장 위치: `{vault}/12 Records/decisions/YYYY-MM-DD-{slug}.md`
 
 **auto memory 저장**:
 - 결정 사항을 auto memory `project` 타입으로 저장
