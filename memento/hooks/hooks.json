@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/inject-timestamp.sh\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/tick.sh\"",
             "timeout": 2000
           }
         ]
@@ -51,18 +51,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/inject-timestamp.sh\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/tick.sh\"",
             "timeout": 2000
           },
           {
             "type": "command",
             "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-compaction.sh\"",
             "timeout": 30000
-          },
-          {
-            "type": "command",
-            "command": "afplay /System/Library/Sounds/Funk.aiff &",
-            "timeout": 3000
           }
         ]
       }

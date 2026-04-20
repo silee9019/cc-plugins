@@ -31,9 +31,9 @@ memento 플러그인이 반응하는 이벤트와 그 결과. "지금 무엇이 
 |---|---|---|
 | `SessionStart` | `scripts/session-start.sh` | 프로젝트/user 디렉토리 멱등 setup. 동적 컨텍스트 주입(KST, 캘린더, Layer 1 경로, active-reminders, daily hint). Layer 1 파일 읽기 지시. |
 | `PreCompact` | `scripts/run-compaction.sh` → `compact.mjs` | 기계적 컴팩션(raw→daily→weekly→monthly→ROOT). 3시간 쿨다운 게이트. |
-| `UserPromptSubmit` | `scripts/inject-timestamp.sh` | 다음 턴을 위한 KST 시각 갱신. |
+| `UserPromptSubmit` | `scripts/tick.sh` | 다음 턴을 위한 KST 시각 갱신. |
 | `PostToolUse` (Skill) | `scripts/skill-tracker.sh` | Skill 호출을 메트릭 DB에 기록. |
-| `Stop` | `scripts/inject-timestamp.sh` + `scripts/run-compaction.sh` + `afplay` | assistant 응답 완료 직후 KST 시각 주입 + 컴팩션(3시간 쿨다운 게이트) + 종료 사운드 큐. |
+| `Stop` | `scripts/tick.sh` + `scripts/run-compaction.sh` | assistant 응답 완료 직후 KST 시각 주입 + 완료 효과음(tick.sh 내부, 파일 존재 시) + 컴팩션(3시간 쿨다운 게이트). |
 
 **자동 vs 명시 구분**:
 - **자동(hooks)**: 세션 setup, 시각 갱신, 컴팩션 쿨다운 게이트 — 사용자 개입 없이 작동
