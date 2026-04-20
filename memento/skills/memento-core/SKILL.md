@@ -33,7 +33,7 @@ memento 플러그인이 반응하는 이벤트와 그 결과. "지금 무엇이 
 | `PreCompact` | `scripts/run-compaction.sh` → `compact.mjs` | 기계적 컴팩션(raw→daily→weekly→monthly→ROOT). 3시간 쿨다운 게이트. |
 | `UserPromptSubmit` | `scripts/inject-timestamp.sh` | 다음 턴을 위한 KST 시각 갱신. |
 | `PostToolUse` (Skill) | `scripts/skill-tracker.sh` | Skill 호출을 메트릭 DB에 기록. |
-| `Stop` | `scripts/inject-timestamp.sh` + `afplay` | assistant 응답 완료 직후 KST 시각 주입 + 종료 사운드 큐. |
+| `Stop` | `scripts/inject-timestamp.sh` + `scripts/run-compaction.sh` + `afplay` | assistant 응답 완료 직후 KST 시각 주입 + 컴팩션(3시간 쿨다운 게이트) + 종료 사운드 큐. |
 
 **자동 vs 명시 구분**:
 - **자동(hooks)**: 세션 setup, 시각 갱신, 컴팩션 쿨다운 게이트 — 사용자 개입 없이 작동
@@ -209,6 +209,7 @@ This protects against context compression — if the platform compresses your co
 컴팩션 자동 실행:
 - **SessionStart**: session-start.sh에서 compact.mjs 실행
 - **PreCompact**: context window 압축 직전 hook으로 compact.mjs 실행
+- **Stop**: assistant 응답 완료 직후 hook으로 compact.mjs 실행 (3시간 쿨다운 게이트)
 
 ## File Size Targets
 

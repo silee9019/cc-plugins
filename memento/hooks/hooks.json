@@ -56,6 +56,11 @@
           },
           {
             "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-compaction.sh\"",
+            "timeout": 30000
+          },
+          {
+            "type": "command",
             "command": "afplay /System/Library/Sounds/Funk.aiff &",
             "timeout": 3000
           }
