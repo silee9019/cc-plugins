@@ -31,9 +31,9 @@ memento 플러그인이 반응하는 이벤트와 그 결과. "지금 무엇이 
 |---|---|---|
 | `SessionStart` | `scripts/session-start.sh` | 프로젝트/user 디렉토리 멱등 setup. 동적 컨텍스트 주입(KST, 캘린더, Layer 1 경로, active-reminders, daily hint). Layer 1 파일 읽기 지시. |
 | `PreCompact` | `scripts/run-compaction.sh` → `compact.mjs` | 기계적 컴팩션(raw→daily→weekly→monthly→ROOT). 3시간 쿨다운 게이트. |
-| `TaskCompleted` | `scripts/task-completed-timestamp.sh` + `run-compaction.sh` | 현재 KST 시각 주입 + 컴팩션(쿨다운 게이트). |
-| `UserPromptSubmit` | `scripts/task-completed-timestamp.sh` | 다음 턴을 위한 KST 시각 갱신. |
-| `Stop` | `afplay` (메모리 도메인 외, 개인 설정) | 세션 종료 사운드 큐. |
+| `UserPromptSubmit` | `scripts/inject-timestamp.sh` | 다음 턴을 위한 KST 시각 갱신. |
+| `PostToolUse` (Skill) | `scripts/skill-tracker.sh` | Skill 호출을 메트릭 DB에 기록. |
+| `Stop` | `scripts/inject-timestamp.sh` + `afplay` | assistant 응답 완료 직후 KST 시각 주입 + 종료 사운드 큐. |
 
 **자동 vs 명시 구분**:
 - **자동(hooks)**: 세션 setup, 시각 갱신, 컴팩션 쿨다운 게이트 — 사용자 개입 없이 작동
@@ -153,7 +153,7 @@ SessionStart hook (`session-start.sh`)이 매 세션 시작 시 자동으로:
 - Layer 1 파일(WORKING.md, memory/ROOT.md, user/ROOT.md)을 읽고
 - 필요 시 이 SKILL.md의 체크포인트·승격·컴팩션 규칙을 조회한다
 
-컴팩션(`compact.mjs`)은 SessionStart가 아닌 PreCompact/TaskCompleted 훅에서 실행되며, 3시간 쿨다운을 자체 관리한다. needs-summarization 노드 존재 시 서브에이전트 디스패치.
+컴팩션(`compact.mjs`)은 SessionStart가 아닌 PreCompact 훅에서 실행되며, 3시간 쿨다운을 자체 관리한다. needs-summarization 노드 존재 시 서브에이전트 디스패치.
 
 ## End-of-Task Checkpoint (MANDATORY)
 
@@ -206,10 +206,9 @@ This protects against context compression — if the platform compresses your co
 
 ## Compaction Triggers
 
-컴팩션은 3개 타이밍에서 자동 실행:
+컴팩션 자동 실행:
 - **SessionStart**: session-start.sh에서 compact.mjs 실행
 - **PreCompact**: context window 압축 직전 hook으로 compact.mjs 실행
-- **TaskCompleted**: 태스크 완료 시 hook으로 compact.mjs 실행
 
 ## File Size Targets
 

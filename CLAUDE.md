@@ -317,7 +317,7 @@ memento/
 │   ├── memento-flush/SKILL.md      ← 수동 메모리 플러시
 │   ├── memento-search/SKILL.md     ← 트리 탐색 + user knowledge 검색
 │   └── memento-handoff/SKILL.md    ← 세션 인수인계
-├── hooks/hooks.json                ← SessionStart + PreCompact + TaskCompleted
+├── hooks/hooks.json                ← SessionStart + PreCompact + UserPromptSubmit + PostToolUse + Stop
 ├── scripts/
 │   ├── session-start.sh            ← 프로젝트/user 디렉토리 생성 + 프로토콜 전문 stdout
 │   └── compact.mjs                 ← 기계적 컴팩션 + user/ROOT.md 재생성 (Bun)

@@ -23,28 +23,12 @@
         ]
       }
     ],
-    "TaskCompleted": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/task-completed-timestamp.sh\"",
-            "timeout": 2000
-          },
-          {
-            "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/run-compaction.sh\"",
-            "timeout": 30000
-          }
-        ]
-      }
-    ],
     "UserPromptSubmit": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/task-completed-timestamp.sh\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/inject-timestamp.sh\"",
             "timeout": 2000
           }
         ]
@@ -52,7 +36,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": { "tool_name": "Skill" },
+        "matcher": "Skill",
         "hooks": [
           {
             "type": "command",
@@ -65,6 +49,11 @@
     "Stop": [
       {
         "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/inject-timestamp.sh\"",
+            "timeout": 2000
+          },
           {
             "type": "command",
             "command": "afplay /System/Library/Sounds/Funk.aiff &",
