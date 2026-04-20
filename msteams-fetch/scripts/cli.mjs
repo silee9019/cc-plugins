@@ -13,12 +13,13 @@ import {
 import { renderMessages } from "./render.mjs";
 import { parseTeamsUrl } from "./urlParser.mjs";
 import { runSearch } from "./search.mjs";
+import { runInbox } from "./inbox.mjs";
 
 const program = new Command();
 program
   .name("msteams-fetch")
   .description("MS Teams 채팅/채널 메시지를 별칭으로 가져와 markdown으로 저장")
-  .version("0.3.3");
+  .version("0.3.4");
 
 program
   .command("login")
@@ -164,6 +165,40 @@ program
 
     process.stderr.write(
       `✓ ${result.totalMatches}건 매칭 (스캔: 채팅 ${result.scanned.chats} / 채널 메시지 ${result.scanned.channels}): ${result.outPath}\n`,
+    );
+    process.stdout.write(`${result.outPath}\n`);
+  });
+
+
+program
+  .command("fetch-inbox")
+  .description(
+    "구독 중인 모든 채팅(1:1/그룹) + 등록 채널을 하나의 파일로 수집. config 기반 제외 (inbox.exclude_chat_topics/ids/types, aliases exclude_from_all)",
+  )
+  .option("--since <spec>", "시간 범위 (예: 2h, 1d, 7d, 2026-04-13)", undefined)
+  .option("--limit <n>", "채팅/채널당 최대 메시지 개수", undefined)
+  .option("--exclude-alias <names>", "추가 제외할 별칭 (쉼표 구분)", "")
+  .option("--exclude-chat-id <ids>", "추가 제외할 chat id (쉼표 구분)", "")
+  .option("--out <path>", "출력 파일 경로 (기본: ~/tmp/teams-context/inbox-<stamp>.md)")
+  .action(async (opts) => {
+    const cfg = loadConfig();
+    const aliases = loadAliases();
+    const sinceSpec = opts.since || cfg.defaults.since;
+    const sinceKst = sinceSpec ? parseSinceKst(sinceSpec) : null;
+    const sinceUtc = sinceKst ? toUtcForGraph(sinceKst) : null;
+    const token = await getAccessToken(cfg);
+
+    const result = await runInbox({
+      cfg,
+      token,
+      aliases,
+      sinceIso: sinceUtc,
+      sinceKst,
+      opts,
+    });
+
+    process.stderr.write(
+      `✓ fetch-inbox 완료: 채팅 ${result.chatCount} / 채널 ${result.channelCount}, 메시지 ${result.totalMessages}건, 제외된 채팅 ${result.skippedChats.length}개 → ${result.outPath}\n`,
     );
     process.stdout.write(`${result.outPath}\n`);
   });

@@ -129,6 +129,14 @@ export async function fetchChatInfo({ token, chatId }) {
   return graphGet(`${GRAPH_BASE}/me/chats/${encodeURIComponent(chatId)}`, token);
 }
 
+export async function fetchChatMembers({ token, chatId }) {
+  const data = await graphGet(
+    `${GRAPH_BASE}/me/chats/${encodeURIComponent(chatId)}/members`,
+    token,
+  );
+  return data.value || [];
+}
+
 export async function fetchMeInfo({ token }) {
   return graphGet(`${GRAPH_BASE}/me`, token);
 }

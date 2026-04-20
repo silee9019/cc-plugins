@@ -31,6 +31,18 @@ export function loadConfig() {
   cfg.defaults.context_minutes = cfg.defaults.context_minutes ?? 0;
   cfg.auth.scopes = cfg.auth.scopes || ["Chat.Read", "User.Read"];
 
+  // 0.3.4 inbox defaults: subscribed-chat + registered-channel aggregate fetch.
+  cfg.inbox = cfg.inbox || {};
+  cfg.inbox.exclude_chat_topics = Array.isArray(cfg.inbox.exclude_chat_topics)
+    ? cfg.inbox.exclude_chat_topics
+    : [];
+  cfg.inbox.exclude_chat_ids = Array.isArray(cfg.inbox.exclude_chat_ids)
+    ? cfg.inbox.exclude_chat_ids
+    : [];
+  cfg.inbox.exclude_chat_types = Array.isArray(cfg.inbox.exclude_chat_types)
+    ? cfg.inbox.exclude_chat_types
+    : [];
+
   // 0.4.0 cache layer defaults.
   cfg.cache = cfg.cache || {};
   cfg.cache.dir = expandHome(cfg.cache.dir || "~/.cache/msteams-fetch");
@@ -83,6 +95,24 @@ export function filterAliasesForAll(aliases, extraExcludes = []) {
     result[name] = entry;
   }
   return result;
+}
+
+// Decide whether a subscribed chat should be included in inbox output.
+// Matches are case-insensitive substring matches against chat.topic, plus exact
+// chat.id and chatType matches. Returns { include: boolean, reason: string? }.
+export function shouldIncludeChatInInbox(chat, inboxCfg, extraExcludeIds = []) {
+  const topic = chat.topic || "";
+  const lowerTopic = topic.toLowerCase();
+  const excludeTopics = (inboxCfg?.exclude_chat_topics || []).map((t) => String(t).toLowerCase());
+  const excludeIds = new Set([...(inboxCfg?.exclude_chat_ids || []), ...extraExcludeIds]);
+  const excludeTypes = new Set(inboxCfg?.exclude_chat_types || []);
+
+  if (excludeIds.has(chat.id)) return { include: false, reason: "chat_id" };
+  if (excludeTypes.has(chat.chatType)) return { include: false, reason: "chat_type" };
+  for (const needle of excludeTopics) {
+    if (needle && lowerTopic.includes(needle)) return { include: false, reason: `topic~${needle}` };
+  }
+  return { include: true };
 }
 
 export function findSimilarAlias(name, aliases) {
