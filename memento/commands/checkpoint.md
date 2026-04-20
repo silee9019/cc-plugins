@@ -130,7 +130,7 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Skill
 
 1. 회사 일정 컨텍스트 스크립트 실행:
    ```bash
-   python3 {PLUGIN_ROOT}/memento/scripts/work_calendar_context.py --plugin-root {PLUGIN_ROOT}/memento
+   python3 {PLUGIN_ROOT}/scripts/calendar_context.py --plugin-root {PLUGIN_ROOT}
    ```
 2. 오늘 이벤트 중 Daily Note Log `### 미팅` 섹션에 없는 항목을 시각 순으로 삽입
 3. 스크립트 실패 시 조용히 건너뛰기
