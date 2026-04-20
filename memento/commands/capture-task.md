@@ -171,7 +171,11 @@ AskUserQuestion으로 저장할 이슈를 선택받는다:
 **저장 경로**: `{vault}/{inbox_folder_path}/{YYYY-MM-DD}/{file_title}.md`
 - `inbox_folder_path`: config.md 값
 - 일자별 하위 폴더 `{YYYY-MM-DD}` 자동 생성
-- `file_title`: config.md의 `file_title_format` 적용 (기본값: `{date} {category} {title}`)
+- `file_title`: config.md의 `file_title_format` 적용 (기본값: `{date}-{title}`)
+  - `{date}`: YYYY-MM-DD
+  - `{title}`: 사용자 제목을 slug로 변환 — 공백만 하이픈으로, 특수문자(`()`, `/`, `:`, `?`, `*`, `|`, `<`, `>`, `"`) 제거, 한글/영문/숫자/하이픈 유지, 대소문자 보존
+  - 예: "로그인 실패 bug" → `2026-04-20-로그인-실패-bug`
+- **카테고리는 파일명에 포함하지 않는다** — frontmatter `category` 필드와 `tags`에만 기록해 filter/sort용으로 활용
 
 **저장 명령**:
 

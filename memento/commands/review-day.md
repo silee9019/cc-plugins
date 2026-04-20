@@ -102,7 +102,7 @@ Daily Note의 Tasks 섹션에서 항목을 분류한다:
 #### 비일일노트 탐색
 
 오늘 날짜로 resolve된 `daily_notes_path` 폴더를 스캔하여 일일 노트가 아닌 파일을 찾는다:
-- 일일 노트 패턴: `{daily_note_format}.md` (예: `2026-04-09.md`)
+- 일일 노트 패턴: `{daily_note_format}` (config.md 기본값: `{YYYY}-{MM}-{DD}-planning.md`, 예: `2026-04-09-planning.md`)
 - 해당 폴더의 모든 `.md` 파일 중 위 패턴에 맞지 않는 파일 = 비일일노트
 
 비일일노트가 없으면 이 Step을 조용히 건너뛴다.

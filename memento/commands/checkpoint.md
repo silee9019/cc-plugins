@@ -23,7 +23,7 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Skill
 
 | 케이스 | 처리 |
 |--------|------|
-| 파일 존재 | `vault_path`, `memento_root`, `daily_notes_path`, `daily_note_format`, `daily_archive_path`, `daily_archive_format`, `in_progress_folder_path`, `resolved_folder_path`, `dismissed_folder_path` 등 로드 |
+| 파일 존재 | `vault_path`, `memento_root`, `daily_notes_path`, `daily_note_format`, `daily_archive_path`, `daily_archive_format`, `in_progress_folder_path`, `resolved_folder_path`, `dismissed_folder_path`, `decision_note_format`, `daily_log_format` 등 로드 |
 | 파일 없음 | "설정이 없습니다. `/memento:setup`을 먼저 실행해주세요." 안내 후 중단 |
 
 **사용자 식별 컨텍스트 주입**: 식별 필드 중 비어있지 않은 값이 있으면 내부 컨텍스트에 고정 (기존 checkpoint Step 1과 동일).
@@ -31,6 +31,10 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Skill
 ## Step 2: project-id 및 경로 준비
 
 기존 checkpoint Step 2와 동일. `WORKING`, `RAW_LOG`, `TODAY_DAILY` 경로 계산.
+
+- `RAW_LOG` = `{MEMENTO_HOME}/projects/{project_id}/memory/{today-log}.md` (오늘, `daily_log_format` 적용. config.md 기본값 기준: `YYYY-MM-DD-log.md`)
+- `TODAY_DAILY` = `{vault_path}/{daily_notes_path}/{today-planning}.md` (`daily_note_format` 적용)
+- `DECISIONS_DIR` = `{MEMENTO_HOME}/user/decisions/`, 결정 파일 생성 시 `decision_note_format` 적용 (기본 `YYYY-MM-DD-decision-{slug}.md`)
 
 ## Step 3: 완료 항목 감지 + 처리
 
@@ -92,7 +96,7 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Skill
 
 1. 영문 slug 생성 (결정 내용에서 3~5 영단어 kebab-case 도출)
 2. 중복 검사: `user/decisions/` 최근 7일 스캔, slug base 일치 또는 summary 토큰 겹침 60%↑ 시 경고 (차단 아님)
-3. 결정 파일 생성 (`{DECISIONS_DIR}/YYYY-MM-DD-{slug}.md`):
+3. 결정 파일 생성 (`{DECISIONS_DIR}/` + `decision_note_format` 치환, 기본 `YYYY-MM-DD-decision-{slug}.md`):
    - `projects: ["*"]` (전역)
    - `lifetime: 2w`, `expires: {오늘+14일}`
    - `source_project: {project_id}`

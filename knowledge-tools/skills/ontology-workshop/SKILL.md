@@ -191,7 +191,10 @@ AskUserQuestion으로 최종 결과 제시:
 **Obsidian vault 저장**:
 - memento config (`~/.claude/plugins/data/memento-cc-plugins/config.md`)에서 vault 경로 읽기
 - `templates/decision-record.md` 템플릿 사용
-- 저장 위치: `{vault}/12 Records/decisions/YYYY-MM-DD-{slug}.md`
+- 저장 위치: `{vault}/12 Records/decisions/YYYY-MM-DD-decision-{slug}.md`
+  - 파일명은 memento의 `decision_note_format` 통일 규칙(2.7.0+)에 따라 `decision-` prefix 포함
+  - 예: `2026-04-20-decision-qmd-fork-unnecessary.md`
+  - 동일 파일명 존재 시 slug 뒤에 `-2`, `-3` suffix 자동 부여
 
 **auto memory 저장**:
 - 결정 사항을 auto memory `project` 타입으로 저장

@@ -1,3 +1,5 @@
+<!-- AGENTS.md is a symbolic link to CLAUDE.md. -->
+
 # cc-plugins
 
 Claude Code 플러그인 모노레포.
@@ -153,6 +155,14 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | 호환 깨짐 | 인자 삭제, 동작 변경 | major (**X**.0.0) | `feat(<plugin>)!:` |
 | 비기능 변경 | 버전 범프, 문서만 | — | `chore(<plugin>):` |
 
+**개인 사용 플러그인 예외**: 이 레포의 플러그인은 개인 사용이 기본이고 외부 배포 고객이 없으므로, "호환 깨짐" 규칙의 엄격한 major bump는 다음 조건을 모두 만족할 때 minor bump + 마이그레이션 동봉으로 대체할 수 있다.
+
+1. 변경과 같은 커밋에서 일회성 마이그레이션 스크립트 또는 setup 업그레이드 분기가 기존 상태를 새 규칙으로 자동 전환한다
+2. 사용자(저자)가 모든 기존 설치본을 같은 커밋에서 함께 업데이트한다
+3. 커밋 메시지에 `## Notes` 섹션으로 호환 영향과 마이그레이션 경로를 명시한다 (`!` 느낌표는 생략)
+
+major bump가 필요한 경우 = 외부 사용자가 있거나 마이그레이션 자동화가 불가능한 경우.
+
 ### 2. 버전 동기화 (필수)
 
 두 파일을 **반드시** 같이 수정:
@@ -176,10 +186,10 @@ feat(<plugin-name>): add <plugin-name> plugin for <목적>
 | git-init | 1.4.1 | workflow | command | — | gh, curl |
 | andrej-karpathy-skills | 1.0.0 | workflow | skill | — | 없음 |
 | claude-statusline | 2.1.6 | utility | hook | POSIX sh + Bun(ccusage) | jq, ccusage |
-| memento | 2.5.0 | workflow+utility | skill+hook+command | Bun + Python 3 | qmd, obsidian CLI, git, Jira/Atlassian MCP |
+| memento | 2.7.0 | workflow+utility | skill+hook+command | Bun + Python 3 | qmd, obsidian CLI, git, Jira/Atlassian MCP |
 | agentic-workflow | 1.1.0 | workflow | skill + command | — | gh |
 | tutor | 0.2.0 | workflow | command + skill | Python 3 | obsidian CLI |
-| knowledge-tools | 0.1.1 | workflow | skill | — | pandoc |
+| knowledge-tools | 0.2.0 | workflow | skill | — | pandoc |
 | resume-coach | 0.1.1 | workflow | skill | — | 없음 |
 | review-flow | 0.1.2 | workflow | skill | — | 없음 (WebFetch는 선택적) |
 

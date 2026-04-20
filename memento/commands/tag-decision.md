@@ -25,7 +25,7 @@ argument-hint: (없음, 대화형)
 
 `MEMENTO_HOME` = `{vault_path}/{memento_root}`
 `DECISIONS_DIR` = `{MEMENTO_HOME}/user/decisions/`
-`RAW_LOG` = `{MEMENTO_HOME}/projects/{project_id}/memory/YYYY-MM-DD.md` (오늘 날짜)
+`RAW_LOG` = `{MEMENTO_HOME}/projects/{project_id}/memory/YYYY-MM-DD-log.md` (오늘 날짜, `daily_log_format` 적용)
 
 **project_id 계산**: session-start.sh와 동일 로직 (git remote → owner-repo, fallback → cwd, lowercase).
 
@@ -75,7 +75,8 @@ argument-hint: (없음, 대화형)
 
 - **규칙**: 3~5 영단어, kebab-case, 결정의 핵심 의미에서 도출
 - **예시**: "qmd fork 불필요" → `qmd-fork-unnecessary`
-- **파일명**: `YYYY-MM-DD-{slug}.md` (오늘 날짜)
+- **파일명**: `decision_note_format` 적용. config.md 기본값은 `"{YYYY}-{MM}-{DD}-decision-{slug}.md"` (오늘 날짜 + `decision-` prefix + slug)
+- **예**: `2026-04-20-decision-qmd-fork-unnecessary.md`
 - **충돌 처리**: 동일 파일명 존재 시 suffix `-2`, `-3` 자동 부여
 
 ## Step 6: 스코프 선택

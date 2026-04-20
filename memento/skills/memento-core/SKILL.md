@@ -57,12 +57,13 @@ Project Scope (per-project):
     Long-term memory and user profile are managed by Claude Code's platform auto memory.
 
   Layer 2 (On-Demand — read when needed):
-    memory/YYYY-MM-DD.md         raw daily logs (permanent, never deleted)
-    knowledge/*.md               detailed knowledge (searchable via qmd)
-    plans/*.md                   task plans
+    memory/YYYY-MM-DD-log.md                       raw daily log (permanent, append-only)
+    memory/YYYY-MM-DD-HHmm-handoff-{slug}.md       per-handoff standalone files
+    knowledge/*.md                                 detailed knowledge (searchable via qmd)
+    plans/*.md                                     task plans
 
   Layer 3 (Search — via qmd + compaction tree):
-    memory/daily/YYYY-MM-DD.md   daily compaction nodes
+    memory/daily/YYYY-MM-DD.md   daily compaction nodes (merged from -log + handoffs)
     memory/weekly/YYYY-WNN.md    weekly compaction nodes
     memory/monthly/YYYY-MM.md    monthly compaction nodes
     Tree traversal: ROOT → monthly → weekly → daily → raw
@@ -96,17 +97,21 @@ The project ID is determined by the SessionStart hook (git remote → org-repo, 
 | key | 기본값 | 용도 |
 |-----|--------|------|
 | `daily_notes_path` | `01 Working` | 오늘 Daily 루트 (현재 진행 중인 날짜) |
-| `daily_note_format` | `{YYYY}-{MM}-{DD}.md` | 오늘 Daily 파일명 포맷 (flat) |
+| `daily_note_format` | `{YYYY}-{MM}-{DD}-planning.md` | 오늘 Daily 파일명 포맷 (유형 = `planning`) |
 | `daily_archive_path` | `99 Archives/Daily` | 지난 Daily 아카이브 루트 (빈 값이면 이중 경로 비활성) |
-| `daily_archive_format` | `{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md` | 지난 Daily 파일명 포맷 |
+| `daily_archive_format` | `{YYYY}/{MM}/{YYYY}-{MM}-{DD}-planning.md` | 지난 Daily 파일명 포맷 |
 | `weekly_notes_path` | `10 Reflection/01 Weekly` | 주간 노트 루트 |
-| `weekly_note_format` | `{YYYY}/{YYYY}-W{WW}.md` | 파일명 포맷 (ISO week) |
+| `weekly_note_format` | `{YYYY}/{YYYY}-W{WW}-weekly-review.md` | 파일명 포맷 (ISO week + 유형) |
 | `monthly_notes_path` | `10 Reflection/02 Monthly` | 월간 노트 루트 |
+| `monthly_note_format` | `{YYYY}/{YYYY}-{MM}-monthly-review.md` | 월간 노트 파일명 포맷 |
 | `inbox_folder_path` | `00 Inbox` | 미결 이슈/아이디어 버퍼 |
 | `in_progress_folder_path` | `01 Working` | 진행 중 |
 | `resolved_folder_path` | 빈 값 | 완료 이슈는 도메인 폴더로 이동(단일 저장소 없음) |
 | `dismissed_folder_path` | 빈 값 | 폐기 이슈는 99 Archives 하위로 이동 |
-| `file_title_format` | `{date} {category} {title}` | 이슈 파일명 포맷 |
+| `file_title_format` | `{date}-{title}` | 이슈 파일명 포맷 (카테고리는 frontmatter에만 기록) |
+| `decision_note_format` | `{YYYY}-{MM}-{DD}-decision-{slug}.md` | user/ontology decision 공통 파일명 포맷 |
+| `daily_log_format` | `{YYYY}-{MM}-{DD}-log.md` | compact용 일일 누적 raw 로그 파일명 |
+| `handoff_note_format` | `{YYYY}-{MM}-{DD}-{HHmm}-handoff-{slug}.md` | handoff마다 별도 파일 |
 
 ### 사용자 식별
 
@@ -152,7 +157,7 @@ SessionStart hook (`session-start.sh`)이 매 세션 시작 시 자동으로:
 
 ## End-of-Task Checkpoint (MANDATORY)
 
-After completing any task, append a structured log to `<MEMENTO_HOME>/projects/<project-id>/memory/YYYY-MM-DD.md` using the Write tool (append) or Edit tool.
+After completing any task, append a structured log to `<MEMENTO_HOME>/projects/<project-id>/memory/YYYY-MM-DD-log.md` using the Write tool (append) or Edit tool.
 
 Log format:
 
@@ -216,7 +221,7 @@ This protects against context compression — if the platform compresses your co
 ## Rules
 
 - Long-term facts are managed by platform auto memory. No separate MEMORY.md file.
-- Raw daily logs (`memory/YYYY-MM-DD.md`): **permanent**. Never delete or edit after session.
+- Raw daily logs (`memory/YYYY-MM-DD-log.md`) and handoff notes (`memory/YYYY-MM-DD-HHmm-handoff-*.md`): **permanent**. Never delete or edit after session.
 - ROOT.md: managed by compaction process. Do not manually edit.
 - Checkpoint writes are direct — one Write call is minimal context impact. Use subagents only for heavy operations (compaction, search).
 - If this session ends NOW, the next session must be able to continue immediately.

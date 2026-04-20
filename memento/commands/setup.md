@@ -96,11 +96,15 @@ PREV_DAILY_ARCHIVE_FORMAT=$(sed -n 's/^daily_archive_format: *"\(.*\)"$/\1/p' "$
 PREV_WEEKLY_PATH=$(sed -n 's/^weekly_notes_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_WEEKLY_FORMAT=$(sed -n 's/^weekly_note_format: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_MONTHLY_PATH=$(sed -n 's/^monthly_notes_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
+PREV_MONTHLY_FORMAT=$(sed -n 's/^monthly_note_format: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_INBOX=$(sed -n 's/^inbox_folder_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_INPROGRESS=$(sed -n 's/^in_progress_folder_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_RESOLVED=$(sed -n 's/^resolved_folder_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_DISMISSED=$(sed -n 's/^dismissed_folder_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_FILE_TITLE=$(sed -n 's/^file_title_format: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
+PREV_DECISION_FORMAT=$(sed -n 's/^decision_note_format: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
+PREV_DAILY_LOG_FORMAT=$(sed -n 's/^daily_log_format: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
+PREV_HANDOFF_FORMAT=$(sed -n 's/^handoff_note_format: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_REPOS=$(sed -n 's/^repos_base_path: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_ATLASSIAN_URL=$(sed -n 's/^atlassian_site_url: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
 PREV_ATLASSIAN_CLOUD=$(sed -n 's/^atlassian_cloud_id: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
@@ -302,11 +306,15 @@ daily_archive_format: "<DAILY_ARCHIVE_FORMAT>"
 weekly_notes_path: "<WEEKLY_PATH>"
 weekly_note_format: "<WEEKLY_FORMAT>"
 monthly_notes_path: "<MONTHLY_PATH>"
+monthly_note_format: "<MONTHLY_FORMAT>"
 inbox_folder_path: "<INBOX>"
 in_progress_folder_path: "<INPROGRESS>"
 resolved_folder_path: "<RESOLVED>"
 dismissed_folder_path: "<DISMISSED>"
 file_title_format: "<FILE_TITLE>"
+decision_note_format: "<DECISION_FORMAT>"
+daily_log_format: "<DAILY_LOG_FORMAT>"
+handoff_note_format: "<HANDOFF_FORMAT>"
 # 사용자 식별
 display_name_ko: "<DISPLAY_KO>"
 display_name_en: "<DISPLAY_EN>"
@@ -327,20 +335,28 @@ atlassian_cloud_id: "<ATLASSIAN_CLOUD>"
 
 **값 선택 우선순위** (각 Mentor 키별):
 
-1. `PREV_*` (기존 memento config v2 이상)
+1. `PREV_*` (기존 memento config v2 이상) — **단, 2.7.0 파일명 규칙 통일 예외**:
+   - `PREV_VERSION` < `2.7.0`이고 `PREV_DAILY_FORMAT`이 구 포맷(유형 토큰 없음, 예: `"{YYYY}-{MM}-{DD}.md"`)이면 **새 기본값으로 강제 교체** 후 안내:
+     "[memento] 2.7.0 파일명 규칙 통일: daily_note_format / weekly_note_format / file_title_format 등을 새 기본값으로 교체합니다. 기존 파일은 `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/migrate_file_naming.py --dry-run`으로 대상 확인 후 `--apply`로 리네임하세요."
+   - `file_title_format`이 `"{date} {category} {title}"` 또는 `"{date} ({category}) {title}"`이면 `"{date}-{title}"`로 교체
+   - 그 외 사용자 커스텀 포맷은 유지
 2. 기본값:
    - `daily_notes_path`: `"01 Working"` (오늘 Daily 루트)
-   - `daily_note_format`: `"{YYYY}-{MM}-{DD}.md"` (flat)
+   - `daily_note_format`: `"{YYYY}-{MM}-{DD}-planning.md"` (유형 = `planning`)
    - `daily_archive_path`: 신규 사용자 `"99 Archives/Daily"`, 업그레이드 사용자(`PREV_VERSION` < 2.6.0 + `PREV_DAILY_ARCHIVE_PATH` 빈 값) `""` (조용한 동작 변경 방지 — 사용자가 의식적으로 활성화)
-   - `daily_archive_format`: 신규 `"{YYYY}/{MM}/{YYYY}-{MM}-{DD}.md"`, 업그레이드 빈 값 (위와 동일 원칙)
+   - `daily_archive_format`: 신규 `"{YYYY}/{MM}/{YYYY}-{MM}-{DD}-planning.md"`, 업그레이드 빈 값 (위와 동일 원칙)
    - `weekly_notes_path`: `"10 Reflection/01 Weekly"`
-   - `weekly_note_format`: `"{YYYY}/{YYYY}-W{WW}.md"` (ISO week)
+   - `weekly_note_format`: `"{YYYY}/{YYYY}-W{WW}-weekly-review.md"` (ISO week + 유형)
    - `monthly_notes_path`: `"10 Reflection/02 Monthly"`
+   - `monthly_note_format`: `"{YYYY}/{YYYY}-{MM}-monthly-review.md"`
    - `inbox_folder_path`: `"00 Inbox"`
    - `in_progress_folder_path`: `"01 Working"`
    - `resolved_folder_path`: `""` (완료 이슈는 도메인 폴더로 승격 — 단일 저장소 없음)
    - `dismissed_folder_path`: `""` (폐기는 99 Archives 하위로 이동)
-   - `file_title_format`: `"{date} {category} {title}"`
+   - `file_title_format`: `"{date}-{title}"` (Inbox 태스크 — category는 frontmatter에만 기록, 파일명에서 제거)
+   - `decision_note_format`: `"{YYYY}-{MM}-{DD}-decision-{slug}.md"` (user/ontology decisions 공통)
+   - `daily_log_format`: `"{YYYY}-{MM}-{DD}-log.md"` (compact용 일일 누적 raw 로그)
+   - `handoff_note_format`: `"{YYYY}-{MM}-{DD}-{HHmm}-handoff-{slug}.md"` (매 handoff마다 별도 파일)
    - 기타(`repos_base_path`/`atlassian_*`): 빈 문자열
 
 **사용자 식별 필드** (7개 인터뷰 + 1개 자동 조회):

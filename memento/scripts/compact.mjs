@@ -130,13 +130,39 @@ const countLines = (filePath) => {
   return readFileSync(filePath, "utf8").split("\n").length;
 };
 
-const DATE_RE = /^(\d{4}-\d{2}-\d{2})\.md$/;
+// 2.7.0: 파일명 규칙 통일
+// - Raw daily log: YYYY-MM-DD-log.md (append, per-day)
+// - Handoff note:  YYYY-MM-DD-HHmm-handoff-*.md (separate file per handoff)
+// - Legacy:        YYYY-MM-DD.md (pre-2.7.0 raw log)
+// compact는 세 종류 모두를 하루치로 병합해 daily 노드 생성.
+const RAW_LOG_RE = /^(\d{4}-\d{2}-\d{2})-log\.md$/;
+const RAW_HANDOFF_RE = /^(\d{4}-\d{2}-\d{2})-(\d{4})-handoff-.+\.md$/;
+const LEGACY_RAW_RE = /^(\d{4}-\d{2}-\d{2})\.md$/;
+const DATE_RE = LEGACY_RAW_RE; // backward-compat alias for existing readers
+
 const listRawDates = () => {
   if (!existsSync(MEMORY)) return [];
-  return readdirSync(MEMORY)
-    .filter(f => DATE_RE.test(f))
-    .map(f => f.match(DATE_RE)[1])
-    .sort();
+  const dates = new Set();
+  for (const f of readdirSync(MEMORY)) {
+    let m;
+    if ((m = f.match(RAW_LOG_RE))) dates.add(m[1]);
+    else if ((m = f.match(RAW_HANDOFF_RE))) dates.add(m[1]);
+    else if ((m = f.match(LEGACY_RAW_RE))) dates.add(m[1]);
+  }
+  return [...dates].sort();
+};
+
+const listRawFilesForDate = (date) => {
+  if (!existsSync(MEMORY)) return [];
+  const files = [];
+  for (const f of readdirSync(MEMORY)) {
+    let m;
+    if ((m = f.match(RAW_LOG_RE)) && m[1] === date) files.push({ file: f, sort: -1 });
+    else if ((m = f.match(RAW_HANDOFF_RE)) && m[1] === date) files.push({ file: f, sort: parseInt(m[2], 10) });
+    else if ((m = f.match(LEGACY_RAW_RE)) && m[1] === date) files.push({ file: f, sort: -2 });
+  }
+  files.sort((a, b) => a.sort - b.sort);
+  return files;
 };
 
 const isoWeek = (dateStr) => {
@@ -163,7 +189,6 @@ const rawDates = listRawDates();
 let dailyUpdated = false;
 
 for (const date of rawDates) {
-  const rawPath = join(MEMORY, `${date}.md`);
   const dailyPath = join(dailyDir, `${date}.md`);
   const isToday = date === today;
   const status = isToday ? "tentative" : "fixed";
@@ -173,16 +198,28 @@ for (const date of rawDates) {
     if (existing.includes("status: fixed")) continue;
   }
 
-  const rawLines = countLines(rawPath);
+  const rawFiles = listRawFilesForDate(date);
+  if (rawFiles.length === 0) continue;
+
+  // 여러 raw 파일(log + handoffs + legacy)을 하루치로 병합
+  let rawContent = "";
+  let rawLines = 0;
+  for (const entry of rawFiles) {
+    const content = readFileSync(join(MEMORY, entry.file), "utf8");
+    if (rawContent) rawContent += "\n\n";
+    rawContent += content;
+    rawLines += content.split("\n").length;
+  }
   if (rawLines === 0) continue;
 
+  const sourceList = rawFiles.map(e => `memory/${e.file}`).join(", ");
+
   if (rawLines <= DAILY_THRESHOLD) {
-    const rawContent = readFileSync(rawPath, "utf8");
-    const frontmatter = `---\ntype: daily\nstatus: ${status}\nperiod: ${date}\nsource-files: [memory/${date}.md]\ntopics: []\n---\n\n`;
+    const frontmatter = `---\ntype: daily\nstatus: ${status}\nperiod: ${date}\nsource-files: [${sourceList}]\ntopics: []\n---\n\n`;
     writeFileSync(dailyPath, frontmatter + rawContent);
     dailyUpdated = true;
   } else if (!existsSync(dailyPath) || isToday) {
-    const placeholder = `---\ntype: daily\nstatus: needs-summarization\nperiod: ${date}\nsource-files: [memory/${date}.md]\nlines: ${rawLines}\n---\n\nThis daily node exceeds ${DAILY_THRESHOLD} lines and needs LLM summarization.\nRun rebuild-memory-tree skill to generate the summary.\n`;
+    const placeholder = `---\ntype: daily\nstatus: needs-summarization\nperiod: ${date}\nsource-files: [${sourceList}]\nlines: ${rawLines}\n---\n\nThis daily node exceeds ${DAILY_THRESHOLD} lines and needs LLM summarization.\nRun rebuild-memory-tree skill to generate the summary.\n`;
     writeFileSync(dailyPath, placeholder);
     dailyUpdated = true;
   }
@@ -431,7 +468,7 @@ if (existsSync(projectsDir)) {
     const dir = join(projectsDir, name);
     const memDir = join(dir, "memory");
     const rawLogs = existsSync(memDir)
-      ? readdirSync(memDir).filter(f => DATE_RE.test(f))
+      ? readdirSync(memDir).filter(f => RAW_LOG_RE.test(f) || RAW_HANDOFF_RE.test(f) || LEGACY_RAW_RE.test(f))
       : [];
     const workingLines = countLines(join(dir, "WORKING.md"));
     const knowledgeFiles = existsSync(join(dir, "knowledge"))
