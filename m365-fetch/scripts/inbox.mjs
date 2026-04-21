@@ -19,19 +19,28 @@ async function resolveChatLabel({ token, chat, meId, memberCache }) {
   if (chat.topic) return chat.topic;
   if (chat.chatType === "oneOnOne") {
     if (memberCache.has(chat.id)) return memberCache.get(chat.id);
+    let label = null;
     try {
       const members = await fetchChatMembers({ token, chatId: chat.id });
       const other = members.find((m) => m.userId && m.userId !== meId);
-      const label = other?.displayName
-        ? `1:1 with ${other.displayName}`
-        : `1:1 (${chat.id.slice(0, 18)})`;
-      memberCache.set(chat.id, label);
-      return label;
-    } catch {
-      const fallback = `1:1 (${chat.id.slice(0, 18)})`;
-      memberCache.set(chat.id, fallback);
-      return fallback;
+      if (other?.displayName) label = `1:1 with ${other.displayName}`;
+    } catch {}
+    // Bot/app counterparts (e.g. Jira Cloud) don't appear in /members; peek at
+    // the most recent message's sender identity as a fallback.
+    if (!label) {
+      try {
+        const msgs = await fetchChatMessages({ token, chatId: chat.id, limit: 1 });
+        const m = msgs[0];
+        const fromUserId = m?.from?.user?.id;
+        const userName = m?.from?.user?.displayName;
+        const appName = m?.from?.application?.displayName;
+        const other = fromUserId && fromUserId !== meId ? userName : appName || userName;
+        if (other) label = `1:1 with ${other}`;
+      } catch {}
     }
+    label = label || `1:1 (${chat.id.slice(0, 18)})`;
+    memberCache.set(chat.id, label);
+    return label;
   }
   return `${chat.chatType || "chat"} (${chat.id.slice(0, 18)})`;
 }
@@ -71,11 +80,28 @@ async function collectChatSections({ token, cfg, sinceIso, perChatLimit, extraEx
   const included = [];
   const skipped = [];
 
+  const excludeTopicsLower = (cfg.inbox?.exclude_chat_topics || []).map((t) =>
+    String(t).toLowerCase(),
+  );
+
   for (const chat of chats) {
     const decision = shouldIncludeChatInInbox(chat, cfg.inbox, extraExcludeIds);
     if (!decision.include) {
       skipped.push({ id: chat.id, topic: chat.topic, reason: decision.reason });
       continue;
+    }
+    // For 1:1 chats with empty topic, also match exclude_chat_topics against the
+    // resolved counterpart label (e.g. "1:1 with Jira Cloud") so users can filter
+    // bot/noise chats without needing their raw chat.id.
+    let preLabel = null;
+    if (!chat.topic && chat.chatType === "oneOnOne" && excludeTopicsLower.length > 0) {
+      preLabel = await resolveChatLabel({ token, chat, meId: me.id, memberCache });
+      const lower = preLabel.toLowerCase();
+      const hit = excludeTopicsLower.find((n) => n && lower.includes(n));
+      if (hit) {
+        skipped.push({ id: chat.id, topic: preLabel, reason: `label~${hit}` });
+        continue;
+      }
     }
     try {
       const messages = await fetchChatMessages({
@@ -85,7 +111,7 @@ async function collectChatSections({ token, cfg, sinceIso, perChatLimit, extraEx
         limit: perChatLimit,
       });
       if (messages.length === 0) continue;
-      const label = await resolveChatLabel({ token, chat, meId: me.id, memberCache });
+      const label = preLabel || (await resolveChatLabel({ token, chat, meId: me.id, memberCache }));
       included.push({ id: chat.id, label, chatType: chat.chatType, messages });
     } catch (err) {
       process.stderr.write(

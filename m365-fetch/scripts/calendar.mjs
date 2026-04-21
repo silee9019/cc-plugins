@@ -119,8 +119,10 @@ function fmtTimeWindow(ev) {
   const e = ev.end?.dateTime;
   if (!s) return "";
   if (ev.isAllDay) return "종일";
-  const start = formatKstTime(toKst(`${s}Z`));
-  const end = e ? formatKstTime(toKst(`${e}Z`)) : "";
+  const sIso = /[zZ]|[+-]\d{2}:?\d{2}$/.test(s) ? s : `${s}Z`;
+  const eIso = e ? (/[zZ]|[+-]\d{2}:?\d{2}$/.test(e) ? e : `${e}Z`) : null;
+  const start = formatKstTime(toKst(sIso));
+  const end = eIso ? formatKstTime(toKst(eIso)) : "";
   return end ? `${start}-${end}` : start;
 }
 
@@ -143,7 +145,8 @@ export function renderCalendarEvents({ meta, events }) {
   let currentDate = null;
   for (const ev of events) {
     const startIso = ev.start?.dateTime;
-    const date = startIso ? formatKstDate(toKst(`${startIso}Z`)) : "(날짜 미상)";
+    const startZ = startIso ? (/[zZ]|[+-]\d{2}:?\d{2}$/.test(startIso) ? startIso : `${startIso}Z`) : null;
+    const date = startZ ? formatKstDate(toKst(startZ)) : "(날짜 미상)";
     if (date !== currentDate) {
       lines.push(`## ${date}`, "");
       currentDate = date;

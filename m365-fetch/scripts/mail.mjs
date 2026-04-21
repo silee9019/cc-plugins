@@ -139,8 +139,9 @@ export function renderMailInbox({ meta, messages }) {
   let currentDate = null;
   for (const m of messages) {
     const recv = m.receivedDateTime;
-    const date = recv ? formatKstDate(toKst(`${recv}Z`)) : "(날짜 미상)";
-    const time = recv ? formatKstTime(toKst(`${recv}Z`)) : "";
+    const recvIso = recv ? (/[zZ]|[+-]\d{2}:?\d{2}$/.test(recv) ? recv : `${recv}Z`) : null;
+    const date = recvIso ? formatKstDate(toKst(recvIso)) : "(날짜 미상)";
+    const time = recvIso ? formatKstTime(toKst(recvIso)) : "";
     if (date !== currentDate) {
       lines.push(`## ${date}`, "");
       currentDate = date;
@@ -172,7 +173,8 @@ export function renderMailMessage({ meta, message }) {
   }).trim();
 
   const recv = m.receivedDateTime;
-  const when = recv ? `${formatKstDate(toKst(`${recv}Z`))} ${formatKstTime(toKst(`${recv}Z`))}` : "(시각 미상)";
+  const recvIso = recv ? (/[zZ]|[+-]\d{2}:?\d{2}$/.test(recv) ? recv : `${recv}Z`) : null;
+  const when = recvIso ? `${formatKstDate(toKst(recvIso))} ${formatKstTime(toKst(recvIso))}` : "(시각 미상)";
   const subject = m.subject || "(제목 없음)";
 
   const lines = [
