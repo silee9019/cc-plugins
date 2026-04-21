@@ -1,9 +1,9 @@
 {
   "name": "agentic-workflow",
   "description": "GitHub 저장소에 에이전틱 워크플로우를 설치. 저장소 분석 → 계획서 생성 → 승인 → 파일 생성.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": { "name": "silee9019" },
   "keywords": ["agentic", "workflow", "github-actions", "automation", "scaffold"],
-  "commands": ["./commands"],
-  "skills": ["./skills/agentic-workflow"]
+  "commands": "./commands/",
+  "skills": "./skills/"
 }

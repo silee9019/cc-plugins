@@ -13,7 +13,7 @@
       "name": "andrej-karpathy-skills",
       "source": "./andrej-karpathy-skills",
       "description": "Behavioral guidelines to reduce common LLM coding mistakes: Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "forrestchang"
       },
@@ -25,7 +25,7 @@
       "name": "git-init",
       "source": "./git-init",
       "description": "GitHub repository initialization workflow (directory, gh repo create, .gitignore, initial commit)",
-      "version": "1.4.1",
+      "version": "1.4.2",
       "author": {
         "name": "silee9019"
       },
@@ -47,7 +47,7 @@
       "name": "memento",
       "source": "./memento",
       "description": "나의 기억이자 멘토. 세션 간 컨텍스트 보존(Memory: 세션 로그, 5-level 컴팩션 트리, 검색)과 하루 계획·캡처·회고(Mentor: planning, capture, checkpoint, review-day)를 하나의 네임스페이스에서 제공.",
-      "version": "2.11.2",
+      "version": "2.11.3",
       "author": {
         "name": "silee9019"
       },
@@ -59,7 +59,7 @@
       "name": "agentic-workflow",
       "source": "./agentic-workflow",
       "description": "GitHub 저장소에 에이전틱 워크플로우를 설치. 저장소 분석 → 계획서 생성 → 승인 → 파일 생성.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "author": {
         "name": "silee9019"
       },
@@ -70,7 +70,7 @@
       "name": "resume-coach",
       "source": "./resume-coach",
       "description": "이력서 작성, 모의 면접, 커리어 멘토링을 위한 코칭 플러그인",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "author": {
         "name": "silee9019"
       },
@@ -81,7 +81,7 @@
       "name": "tutor",
       "source": "./tutor",
       "description": "학습 자료(PDF, MD, URL, 코드)를 Obsidian 노트로 변환하고, 4지선다 퀴즈로 학습 효과를 측정하는 개인 튜터. silee vault 연동.",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "author": {
         "name": "silee9019"
       },
@@ -92,7 +92,7 @@
       "name": "knowledge-tools",
       "source": "./knowledge-tools",
       "description": "지식 도구 모음: 설계 회의(design-meeting — 페르소나 기반 다자 토론으로 정의·결정 확립)와 문서 공유(마크다운→HTML 변환)",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "author": {
         "name": "silee9019"
       },
@@ -114,7 +114,7 @@
       "name": "m365-fetch",
       "source": "./m365-fetch",
       "description": "Microsoft 365 컨텍스트를 Claude Code 세션으로 불러오는 도구. Teams 채팅/채널(delegated Graph), Outlook 캘린더/메일(delegated Graph), Power Automate flow CRUD + runs(delegated Flow Service)를 하나의 CLI로 통합.",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "author": {
         "name": "silee9019"
       },

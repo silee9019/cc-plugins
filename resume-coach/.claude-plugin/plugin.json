@@ -1,8 +1,8 @@
 {
   "name": "resume-coach",
   "description": "이력서 작성, 모의 면접, 커리어 멘토링을 위한 코칭 플러그인",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": { "name": "silee9019" },
   "keywords": ["resume", "interview", "coaching", "career", "mentor"],
-  "skills": ["./skills/setup", "./skills/coach"]
+  "skills": "./skills/"
 }
