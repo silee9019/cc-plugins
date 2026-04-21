@@ -1,6 +1,7 @@
 ---
-description: tutor 설정 (Obsidian vault, 학습 노트 경로)
-allowed-tools: Bash, Read, Write, AskUserQuestion
+name: setup
+description: tutor 설정 (Obsidian vault, 학습 노트 경로). 사용자가 "tutor 설정", "tutor setup", "학습 경로 설정", "vault 지정(tutor)"를 언급할 때 트리거.
+user_invocable: true
 ---
 
 # tutor 설정
@@ -10,8 +11,6 @@ Obsidian vault와 학습 노트 저장 경로를 설정하여 `~/.claude/plugins
 ## Workflow
 
 ### Step 0: 플러그인 버전 읽기
-
-현재 설치된 플러그인 버전을 읽어 이후 단계에서 비교/기록에 사용한다.
 
 ```sh
 PLUGIN_VERSION=$(grep '"version"' "${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json" \
@@ -37,57 +36,21 @@ Obsidian CLI가 설치되어 있지 않습니다.
 
 ### Step 2: 기존 설정 확인 및 버전 비교
 
-기존 설정 파일을 찾는다:
-
-`~/.claude/plugins/data/tutor-cc-plugins/config.md`
+기존 설정 파일을 찾는다: `~/.claude/plugins/data/tutor-cc-plugins/config.md`
 
 | 케이스 | 처리 |
 |--------|------|
 | 파일 존재 | 기존 값을 기본값으로 사용. 아래 **버전 비교** 분기 적용 후 Step 3으로 진행 |
 | 파일 없음 | Step 3으로 진행 (신규 설정) |
 
-**`setup_version` 파싱** (파일이 존재할 때):
+**`setup_version` 파싱**:
 
 ```sh
 CONFIG_PATH="$HOME/.claude/plugins/data/tutor-cc-plugins/config.md"
 PREV_VERSION=$(sed -n 's/^setup_version: *"\(.*\)"$/\1/p' "$CONFIG_PATH" | head -1)
 ```
 
-**`sort -V` 호환성 탐지**:
-
-```sh
-if printf '1\n2\n' | sort -V >/dev/null 2>&1; then
-  SORT_V_OK=1
-else
-  SORT_V_OK=0
-fi
-```
-
-**버전 비교 함수**:
-
-```sh
-compare_semver() {
-  a="$1"; b="$2"
-  if [ "$a" = "$b" ]; then echo equal; return; fi
-  if [ "$SORT_V_OK" = "1" ]; then
-    if [ "$(printf '%s\n%s\n' "$a" "$b" | sort -V | head -1)" = "$a" ]; then
-      echo upgrade
-    else
-      echo downgrade
-    fi
-  else
-    echo "$a $b" | awk '{
-      n=split($1,A,"."); split($2,B,".")
-      for (i=1; i<=n || i<=length(B); i++) {
-        av=(A[i]==""?0:A[i]+0); bv=(B[i]==""?0:B[i]+0)
-        if (av<bv) { print "upgrade"; exit }
-        if (av>bv) { print "downgrade"; exit }
-      }
-      print "equal"
-    }'
-  fi
-}
-```
+**`sort -V` 호환성 탐지 + 버전 비교 함수**: memento setup의 동일 블록 참조.
 
 **분기 처리**:
 
@@ -97,13 +60,6 @@ compare_semver() {
 | `PREV_VERSION` == `PLUGIN_VERSION` | "이미 최신 버전입니다 (`<PLUGIN_VERSION>`)" 안내, AskUserQuestion으로 **계속/취소** |
 | `PREV_VERSION` < `PLUGIN_VERSION` | 업그레이드 알림 출력 + 기존 값을 기본값으로 유지 |
 | `PREV_VERSION` > `PLUGIN_VERSION` | "설정 파일이 플러그인보다 높은 버전입니다" 경고 + 사용자 확인 후 진행 |
-
-**업그레이드 알림 블록**:
-
-```
-⬆ 플러그인 업그레이드 감지: <PREV_VERSION> → <PLUGIN_VERSION>
-이전 설정을 기본값으로 유지하며 재설정을 진행합니다.
-```
 
 ### Step 3: Vault 선택
 
@@ -135,7 +91,7 @@ AskUserQuestion으로 학습 노트 경로를 묻는다.
 `~/.claude/plugins/data/tutor-cc-plugins/config.md` 경로에 설정 파일을 생성한다.
 디렉토리가 없으면 먼저 생성.
 
-**config.md 형식** (frontmatter 최상단에 `setup_version` 추가):
+**config.md 형식**:
 
 ```yaml
 ---
@@ -148,8 +104,6 @@ dashboard_path: "<대시보드 노트 경로>"
 ```
 
 ### Step 6: 설정 요약 출력
-
-설정 완료 후 아래 형식으로 요약 출력:
 
 ```
 tutor 설정 완료:
