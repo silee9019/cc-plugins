@@ -1,5 +1,6 @@
 ---
 name: plan-review
+display_name: plan-review
 description: |
   설계/계획 단계의 품질 검토. codex 병렬 리뷰와 교차 비교로 설계 결함을 조기 발견.
   트리거: "설계 리뷰", "plan review", "계획 검토", "구현 전 리뷰", "이 설계 괜찮아?",

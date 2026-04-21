@@ -1,5 +1,6 @@
 ---
 name: git-init
+display_name: git-init
 description: GitHub 저장소 초기화 (디렉토리 생성, gh repo create, .gitignore, README.md, CLAUDE.md, 초기 커밋, Homebrew Tap 옵션). 사용자가 "repo 만들어", "GitHub 저장소 만들어", "git init", "새 레포 초기화", "프로젝트 scaffold"를 언급할 때 트리거. 레포명 인자 필수.
 user_invocable: true
 ---

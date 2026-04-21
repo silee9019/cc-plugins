@@ -1,5 +1,6 @@
 ---
 name: skill-review
+display_name: skill-review
 description: |
   스킬(SKILL.md)과 슬래시 커맨드(commands/*.md)를 AI 에이전트 실행 관점에서 검토.
   공식 Claude Code 가이드를 라이브 페치하여 최신 기준을 단일 진실 소스로 사용한다.

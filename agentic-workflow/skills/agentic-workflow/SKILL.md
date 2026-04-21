@@ -1,5 +1,6 @@
 ---
 name: agentic-workflow
+display_name: agentic-workflow
 description: |
   GitHub 저장소에 에이전틱 워크플로우(CI/CD 자동화, 셀프 크리틱, 이슈 자동 구현)를 설치하는 scaffold 도구.
   Phase별 GitHub Actions, 프롬프트, 스크립트를 생성.

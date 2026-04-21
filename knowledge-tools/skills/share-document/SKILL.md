@@ -1,5 +1,6 @@
 ---
 name: share-document
+display_name: share-document
 description: |
   마크다운 문서를 공유용 HTML로 변환. pandoc + 내장 CSS 사용.
   트리거: "문서 공유", "HTML 변환", "공유용 HTML", "share document", "pandoc 변환"

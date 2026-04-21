@@ -1,5 +1,6 @@
 ---
 name: teams-fetch
+display_name: teams-fetch
 description: MS Teams 인박스(구독 채팅 전체 + 등록 채널)를 한 파일로 수집해 세션 컨텍스트에 로드. 단일 별칭만 원하면 별칭 지정. 사용자가 "teams", "팀즈 가져와", "teams 인박스", "<별칭> 채팅", "teams fetch"를 언급할 때 트리거.
 ---
 

@@ -1,10 +1,11 @@
 {
   "name": "git-init",
+  "displayName": "git-init",
   "description": "GitHub 저장소 초기화 워크플로우 (디렉토리 생성, gh repo create, .gitignore, README.md, CLAUDE.md, 초기 커밋)",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "author": {
     "name": "silee9019"
   },
   "keywords": ["git", "github", "init", "scaffold"],
-  "commands": "./commands/"
+  "skills": "./skills/"
 }

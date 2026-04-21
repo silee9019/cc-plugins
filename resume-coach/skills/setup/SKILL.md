@@ -1,5 +1,6 @@
 ---
 name: setup
+display_name: setup
 description: "이력서 프로젝트 폴더 구조, SOUL 페르소나, CLAUDE.md 워크플로우를 생성하는 초기 설정. 멱등성 보장 — 기존 파일을 훼손하지 않고 누락분만 생성하며, 기존 파일은 검토하여 개선점 제안."
 allowed-tools: Bash, Read, Write, AskUserQuestion, Glob, Grep
 ---

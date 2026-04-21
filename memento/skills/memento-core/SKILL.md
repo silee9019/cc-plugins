@@ -1,5 +1,6 @@
 ---
 name: memento-core
+display_name: memento-core
 description: "나의 기억이자 멘토. 세션 간 컨텍스트 보존(Memory) + 하루 계획·캡처·회고·인계(Mentor). 세션 시작 프로토콜, 태스크 종료 체크포인트, 지식 승격, 컴팩션 규칙. 매 세션 반드시 준수."
 ---
 

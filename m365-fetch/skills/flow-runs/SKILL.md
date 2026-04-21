@@ -1,5 +1,6 @@
 ---
 name: flow-runs
+display_name: flow-runs
 description: 특정 Power Automate flow의 runs 이력을 날짜 범위로 조회. 3일 윈도우 슬라이스. 사용자가 "flow 실행 이력", "flow runs", "XXX flow 실패 확인", "Power Automate 로그"를 언급할 때 트리거.
 ---
 

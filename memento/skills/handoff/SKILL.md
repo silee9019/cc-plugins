@@ -1,5 +1,6 @@
 ---
 name: handoff
+display_name: handoff
 description: "세션 인계 메모. 현재 작업 상태를 메모리에 저장하고 재개 프롬프트를 구성. 수시 호출 가능. 커밋/정리 없음."
 user_invocable: true
 ---

@@ -1,5 +1,6 @@
 ---
 name: capture-task
+display_name: capture-task
 description: 할 일 캡처. 인자 있으면 빠른 입력(오늘/나중에 분기), 없으면 세션 대화에서 이슈를 자동 추출하여 백로그에 보관. 사용자가 "캡처", "담아둬", "기억해둬", "백로그", "이거 이슈", "todo", "capture"를 언급할 때 트리거.
 user_invocable: true
 ---

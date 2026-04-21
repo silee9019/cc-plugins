@@ -1,5 +1,6 @@
 ---
 name: flow-list
+display_name: flow-list
 description: Power Automate environment의 flow 목록을 표 형태로 조회. 사용자가 "flow 목록", "Power Automate 목록", "내 flow 보여줘", "flow list"를 언급할 때 트리거.
 ---
 

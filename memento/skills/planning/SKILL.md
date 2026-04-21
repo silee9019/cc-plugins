@@ -1,5 +1,6 @@
 ---
 name: planning
+display_name: planning
 description: 업무 파악/정리/분류/발굴/선택. 수시 호출 가능. plan-today + pick-task의 역할을 흡수한 적극적 계획 행위. 사용자가 "계획", "planning", "오늘 뭐 할지", "업무 파악", "내일 준비"(+tomorrow), "뭐부터 할까"를 언급할 때 또는 review-day가 orchestrated 모드로 호출할 때 트리거.
 user_invocable: true
 ---

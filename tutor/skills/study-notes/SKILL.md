@@ -1,5 +1,6 @@
 ---
 name: study-notes
+display_name: study-notes
 description: |
   학습 자료(URL, PDF, MD, 코드)를 Obsidian 노트로 변환하여 vault에 저장.
   핵심 요약, 주요 개념, 퀴즈 문항을 포함한 구조화된 학습 노트를 생성.

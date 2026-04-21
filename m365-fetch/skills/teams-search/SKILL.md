@@ -1,5 +1,6 @@
 ---
 name: teams-search
+display_name: teams-search
 description: MS Teams에서 내가 멘션된 곳 + 이름이 등장한 곳을 날짜 범위로 검색. 가입 채팅 + 등록된 채널 alias 전부 스캔. 사용자가 "teams 검색", "멘션 찾아줘", "내 이름 언급된 곳", "teams search"를 언급할 때 트리거.
 ---
 

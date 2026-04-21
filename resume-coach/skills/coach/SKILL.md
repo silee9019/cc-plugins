@@ -1,5 +1,6 @@
 ---
 name: coach
+display_name: coach
 description: "이력서 작성 코치. 이력서 리뷰, 채용공고 맞춤 터치, 모의 면접 결과 종합 피드백을 수행하는 오케스트레이터. 사용자가 '이력서 리뷰', '이력서 작성', '면접 코칭', '피드백 정리', '채용공고 분석' 언급 시 트리거."
 allowed-tools: Read, Write, Edit, Glob, Grep, Agent, AskUserQuestion
 ---

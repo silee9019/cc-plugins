@@ -1,5 +1,6 @@
 ---
 name: code-review
+display_name: code-review
 description: |
   코드 변경의 품질 검토. 기존 리뷰 도구 위임 + 자체 리뷰 + codex 병렬 리뷰로 교차 비교.
   트리거: "코드 리뷰", "code review", "커밋 전 리뷰", "셀프 리뷰", "이 코드 검토해줘",

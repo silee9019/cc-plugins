@@ -1,5 +1,6 @@
 ---
 name: checkpoint
+display_name: checkpoint
 description: "작업 완료 + 정리. 완료 기록, 메모리 정리, WORKING.md 완료 항목 제거, 커밋/푸시, PR 제안. 작업 단위가 끝났을 때 호출."
 user_invocable: true
 ---

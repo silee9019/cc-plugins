@@ -1,5 +1,6 @@
 ---
 name: review-day
+display_name: review-day
 description: 하루 마감 의례. 오늘 Daily Note 회고 + 교훈 추출 + 로그 품질 검토 + 내일 업무 준비를 한 번에 수행. 사용자가 "하루 마감", "오늘 회고", "마무리", "오늘 끝내자", "wrap up", "퇴근", "day-end", "review today"를 언급할 때 트리거. 저녁/퇴근 시점 하루 레벨 의례(작업 완료 정리는 checkpoint, 진행 중 상태 저장은 handoff).
 user_invocable: true
 ---

@@ -1,5 +1,6 @@
 ---
 name: setup
+display_name: setup
 description: 에이전틱 워크플로우 설정 (저장소 환경 탐지 + config 생성). 사용자가 "에이전틱 워크플로우 설정", "agentic-workflow setup", "agentic-workflow 초기화", "워크플로우 설치 준비"를 언급할 때 트리거. 메인 agentic-workflow skill 실행 전에 1회 실행.
 user_invocable: true
 ---

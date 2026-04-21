@@ -1,7 +1,8 @@
 {
   "name": "claude-statusline",
+  "displayName": "claude-statusline",
   "description": "2줄 HUD statusline: 환경 모니터링 + 비용 표시",
-  "version": "2.1.6",
+  "version": "2.1.7",
   "author": {
     "name": "silee9019"
   },

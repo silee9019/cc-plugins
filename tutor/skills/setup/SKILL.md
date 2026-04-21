@@ -1,5 +1,6 @@
 ---
 name: setup
+display_name: setup
 description: tutor 설정 (Obsidian vault, 학습 노트 경로). 사용자가 "tutor 설정", "tutor setup", "학습 경로 설정", "vault 지정(tutor)"를 언급할 때 트리거.
 user_invocable: true
 ---

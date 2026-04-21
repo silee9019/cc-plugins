@@ -1,5 +1,6 @@
 ---
 name: calendar-events
+display_name: calendar-events
 description: Outlook 캘린더 이벤트를 날짜 범위로 조회해 세션에 로드. 3일 윈도우로 자동 슬라이스. 사용자가 "캘린더", "일정", "calendar events", "이번 주 미팅", "오늘 일정", "outlook calendar"를 언급하며 조회를 원할 때 트리거.
 ---
 

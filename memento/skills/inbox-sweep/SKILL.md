@@ -1,5 +1,6 @@
 ---
 name: inbox-sweep
+display_name: inbox-sweep
 description: Inbox `status:open` 항목을 git log / checkpoint raw log / WORKING.md와 교차 확인하여 이미 다른 경로로 해결된 후보를 찾아 정리. 사용자가 "inbox sweep", "inbox 정리", "inbox 역동기화", "완료된 inbox", "dead inbox"를 언급할 때 또는 review-day가 orchestrated 모드로 호출할 때 트리거.
 user_invocable: true
 ---

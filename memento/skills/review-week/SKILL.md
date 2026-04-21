@@ -1,5 +1,6 @@
 ---
 name: review-week
+display_name: review-week
 description: 주간 회고. Daily Notes, Memento 세션, Jira/Confluence, 커밋을 포함한 한 주의 총체적 흐름을 순간·질문·배움 중심으로 회고. 사용자가 "주간 회고", "week review", "이번 주 회고", "지난 주 회고", "weekly review", "이번 주 뭐 했지", "weekly report"를 언급할 때 트리거. 기간 인자 필수.
 user_invocable: true
 ---

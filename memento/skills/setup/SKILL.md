@@ -1,5 +1,6 @@
 ---
 name: setup
+display_name: setup
 description: Memento 메모리+멘토 시스템 초기 설정 (통합 config 생성 + vault 이전 + qmd 등록 + capture 룰 설치). 사용자가 "memento 설정", "memento setup", "memento 초기화", "memento 경로 바꿔줘", "vault 연결"을 언급할 때 트리거.
 user_invocable: true
 ---

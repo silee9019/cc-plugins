@@ -1,5 +1,6 @@
 ---
 name: mail-inbox
+display_name: mail-inbox
 description: Outlook 메일함(기본 inbox)을 날짜 범위로 조회해 세션에 로드. HTML→markdown 본문 변환. 사용자가 "메일", "inbox", "outlook mail", "보낸 메일", "최근 메일"을 언급하며 조회를 원할 때 트리거.
 ---
 

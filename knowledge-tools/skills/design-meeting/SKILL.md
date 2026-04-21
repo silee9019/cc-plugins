@@ -1,5 +1,6 @@
 ---
 name: design-meeting
+display_name: design-meeting
 description: |
   설계 회의: 페르소나 에이전트들의 라운드 기반 상호작용 + facilitator 주재로 5단계 절차를 거쳐
   정의와 결정을 확립. 개념 정의/네이밍부터 아키텍처·API·데이터 모델·메타-설계까지 범용.

@@ -1,5 +1,6 @@
 ---
 name: refresh-decisions
+display_name: refresh-decisions
 description: 활성 결정(Active Decisions)을 Format A(전문)로 다시 로드. SessionStart는 Format B(요약)만 주입하지만 이 skill은 전문 출력. 사용자가 "결정 다시 불러와", "refresh decisions", "결정 전문", "모든 결정 보기", "Active Decisions 전체"를 언급할 때 트리거.
 user_invocable: true
 ---
