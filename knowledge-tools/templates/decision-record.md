@@ -3,7 +3,7 @@ created: {{date}}
 category: ontology
 type: {{type}}
 status: decided
-tags: [ontology-workshop, {{domain_tags}}]
+tags: [design-meeting, {{domain_tags}}]
 ---
 
 # {{title}}

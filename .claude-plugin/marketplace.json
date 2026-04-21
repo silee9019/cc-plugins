@@ -91,12 +91,12 @@
     {
       "name": "knowledge-tools",
       "source": "./knowledge-tools",
-      "description": "지식 도구 모음: 온톨로지 워크숍(개념 정의/의사결정)과 문서 공유(마크다운→HTML 변환)",
-      "version": "0.2.1",
+      "description": "지식 도구 모음: 설계 회의(design-meeting — 페르소나 기반 다자 토론으로 정의·결정 확립)와 문서 공유(마크다운→HTML 변환)",
+      "version": "0.3.0",
       "author": {
         "name": "silee9019"
       },
-      "keywords": ["ontology", "decision", "naming", "definition", "workshop", "markdown", "html", "pandoc", "share", "document"],
+      "keywords": ["design-meeting", "ontology", "decision", "naming", "definition", "multi-agent", "deliberation", "markdown", "html", "pandoc", "share", "document"],
       "category": "workflow"
     },
     {
