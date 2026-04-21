@@ -129,3 +129,40 @@ export function kstIsoLt(a, b) {
 export function kstIsoMax(a, b) {
   return a >= b ? a : b;
 }
+
+// Public: split a [sinceIso, untilIso] range into KST ISO windows of at most
+// `maxDays` each. Windows are half-open [start, end) except the last one, which
+// ends at the range boundary. Returns [] when since === until; throws when the
+// range is inverted or maxDays < 1.
+//
+// Designed for callers that need to chunk Graph $filter queries (receivedDateTime,
+// startTime, calendarView range) to avoid long windows that throttle or time out.
+export function sliceIsoRange(sinceIso, untilIso, maxDays = 3) {
+  if (typeof sinceIso !== "string" || typeof untilIso !== "string") {
+    throw new TypeError("sliceIsoRange: since/until must be ISO strings");
+  }
+  if (!Number.isInteger(maxDays) || maxDays < 1) {
+    throw new Error(`sliceIsoRange: maxDays must be integer >= 1, got ${maxDays}`);
+  }
+  const sinceKst = toKst(sinceIso);
+  const untilKst = toKst(untilIso);
+  if (sinceKst > untilKst) {
+    throw new Error(`sliceIsoRange: since (${sinceKst}) > until (${untilKst})`);
+  }
+  if (sinceKst === untilKst) return [];
+
+  const stepMs = maxDays * 86_400_000;
+  const sinceMs = new Date(sinceKst).getTime();
+  const untilMs = new Date(untilKst).getTime();
+  const slices = [];
+  let startMs = sinceMs;
+  while (startMs < untilMs) {
+    const endMs = Math.min(startMs + stepMs, untilMs);
+    slices.push({
+      sinceIso: formatKstIso(new Date(startMs)),
+      untilIso: formatKstIso(new Date(endMs)),
+    });
+    startMs = endMs;
+  }
+  return slices;
+}

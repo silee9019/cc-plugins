@@ -1,6 +1,6 @@
 const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
 
-async function graphGet(url, token) {
+export async function graphGet(url, token) {
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -97,7 +97,7 @@ export async function fetchChannelMessagesWithReplies({
   const roots = await fetchChannelMessages({ token, teamId, channelId, sinceIso, limit });
   const replyLists = await mapWithLimit(roots, concurrency, (root) =>
     fetchChannelReplies({ token, teamId, channelId, rootId: root.id }).catch((err) => {
-      process.stderr.write(`[msteams-fetch] /replies ${root.id.slice(-8)} 실패: ${err.message.slice(0, 100)}\n`);
+      process.stderr.write(`[m365-fetch] /replies ${root.id.slice(-8)} 실패: ${err.message.slice(0, 100)}\n`);
       return [];
     }),
   );
@@ -179,7 +179,7 @@ export async function fetchAllChatMessages({ token, sinceIso, limit = 2000, perC
       }
     } catch (err) {
       // 개별 채팅 접근 실패는 무시하고 다음 채팅으로
-      process.stderr.write(`[msteams-fetch] chat ${c.id.slice(0, 16)}... 스킵: ${err.message.slice(0, 80)}\n`);
+      process.stderr.write(`[m365-fetch] chat ${c.id.slice(0, 16)}... 스킵: ${err.message.slice(0, 80)}\n`);
     }
   }
   return out;

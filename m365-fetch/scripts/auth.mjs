@@ -35,16 +35,22 @@ function buildPca(cfg) {
   });
 }
 
-function graphScopes(cfg) {
-  return cfg.auth.scopes.map((s) =>
+// Resolve MSAL scopes for a given resource. Graph scopes are bare names
+// (e.g. "Chat.Read") and get the `https://graph.microsoft.com/` prefix;
+// Flow scopes are already fully-qualified URLs so we pass them through.
+function scopesFor(cfg, resource) {
+  if (resource === "flow") {
+    return cfg.auth.flow_scopes;
+  }
+  return cfg.auth.graph_scopes.map((s) =>
     s.startsWith("https://") ? s : `https://graph.microsoft.com/${s}`,
   );
 }
 
-export async function login(cfg) {
+export async function login(cfg, resource = "graph") {
   const pca = buildPca(cfg);
   const result = await pca.acquireTokenByDeviceCode({
-    scopes: graphScopes(cfg),
+    scopes: scopesFor(cfg, resource),
     deviceCodeCallback: (info) => {
       process.stderr.write(`\n${info.message}\n\n`);
     },
@@ -53,24 +59,27 @@ export async function login(cfg) {
   return result;
 }
 
-export async function getAccessToken(cfg) {
+export async function getAccessToken(cfg, resource = "graph") {
   const pca = buildPca(cfg);
   const cache = pca.getTokenCache();
   const accounts = await cache.getAllAccounts();
+  const scopes = scopesFor(cfg, resource);
 
   if (accounts.length > 0) {
     try {
       const silent = await pca.acquireTokenSilent({
         account: accounts[0],
-        scopes: graphScopes(cfg),
+        scopes,
       });
       if (silent?.accessToken) return silent.accessToken;
     } catch (err) {
-      process.stderr.write(`[msteams-fetch] silent 갱신 실패, 재로그인 시도: ${err.message}\n`);
+      process.stderr.write(
+        `[m365-fetch] silent 갱신 실패 (${resource}), 재로그인 시도: ${err.message}\n`,
+      );
     }
   }
 
-  const fresh = await login(cfg);
+  const fresh = await login(cfg, resource);
   return fresh.accessToken;
 }
 

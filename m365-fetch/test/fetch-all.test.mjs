@@ -4,17 +4,17 @@ import { filterAliasesForAll } from "../scripts/config.mjs";
 
 describe("filterAliasesForAll", () => {
   const aliases = {
-    "connect-chat": {
+    "team-chat": {
       type: "chat",
       id: "19:abc@thread.v2",
-      label: "connect-chat",
+      label: "team-chat",
       exclude_from_all: true,
     },
-    "connect-channel": {
+    "team-channel": {
       type: "channel",
       team_id: "t1",
       channel_id: "c1",
-      label: "Connect",
+      label: "Team",
     },
     "hub-dev": {
       type: "channel",
@@ -27,12 +27,12 @@ describe("filterAliasesForAll", () => {
 
   it("exclude_from_all: true인 alias를 제외한다", () => {
     const result = filterAliasesForAll(aliases);
-    assert.ok(!("connect-chat" in result));
+    assert.ok(!("team-chat" in result));
   });
 
   it("exclude_from_all이 없거나 false인 alias는 포함한다", () => {
     const result = filterAliasesForAll(aliases);
-    assert.ok("connect-channel" in result);
+    assert.ok("team-channel" in result);
     assert.ok("hub-dev" in result);
   });
 
@@ -53,7 +53,7 @@ describe("filterAliasesForAll", () => {
   it("--exclude 인자로 추가 제외할 수 있다", () => {
     const result = filterAliasesForAll(aliases, ["hub-dev"]);
     assert.equal(Object.keys(result).length, 1);
-    assert.ok("connect-channel" in result);
+    assert.ok("team-channel" in result);
   });
 
   it("빈 aliases 객체는 빈 객체를 반환한다", () => {

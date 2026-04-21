@@ -9,8 +9,8 @@ test("empty config includes everything", () => {
 });
 
 test("excludes chat by case-insensitive topic substring", () => {
-  const chat = { id: "19:abc", topic: "😈 Connect PR방", chatType: "group" };
-  const r = shouldIncludeChatInInbox(chat, { exclude_chat_topics: ["Connect PR방"] });
+  const chat = { id: "19:abc", topic: "😈 Team PR Chat", chatType: "group" };
+  const r = shouldIncludeChatInInbox(chat, { exclude_chat_topics: ["Team PR Chat"] });
   assert.equal(r.include, false);
   assert.match(r.reason, /topic/);
 });
@@ -42,7 +42,7 @@ test("null topic is safe against topic exclusions", () => {
 });
 
 test("partial topic match still excludes", () => {
-  const chat = { id: "19:abc", topic: "PR방 for Connect monorepo", chatType: "group" };
-  const r = shouldIncludeChatInInbox(chat, { exclude_chat_topics: ["pr방"] });
+  const chat = { id: "19:abc", topic: "PR Chat for Team monorepo", chatType: "group" };
+  const r = shouldIncludeChatInInbox(chat, { exclude_chat_topics: ["pr chat"] });
   assert.equal(r.include, false);
 });

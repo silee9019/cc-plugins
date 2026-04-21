@@ -1,0 +1,9 @@
+{
+  "name": "m365-fetch",
+  "description": "Microsoft 365 컨텍스트를 Claude Code 세션으로 불러오는 도구. Teams 채팅/채널(delegated Graph), Outlook 캘린더/메일(delegated Graph), Power Automate flow CRUD(delegated Flow Service)를 하나의 CLI로 통합.",
+  "version": "0.4.0",
+  "author": { "name": "silee9019" },
+  "license": "MIT",
+  "keywords": ["m365", "teams", "outlook", "calendar", "mail", "power-automate", "flow", "msgraph", "context"],
+  "commands": ["./commands"]
+}

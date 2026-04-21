@@ -1,4 +1,4 @@
-// Local cache layer — SSOT for msteams-fetch 0.4.0.
+// Local cache layer — SSOT for m365-fetch 0.4.x.
 // Append-only jsonl partitioned by KST created-date: `data/{safeAlias}/{YYYY-MM-DD}.jsonl`.
 // Read-time latest-wins merge reconciles edits and tombstones without compaction on the hot path.
 //
@@ -434,5 +434,5 @@ function isSymlink(p) {
 
 function isSafeOutputDir(p) {
   // Belt-and-suspenders: never GC something that isn't clearly ours.
-  return p.includes("teams-context") || p.includes("msteams-fetch");
+  return p.includes("teams-context") || p.includes("msteams-fetch") || p.includes("m365-fetch");
 }

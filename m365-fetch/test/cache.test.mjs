@@ -49,7 +49,7 @@ function fixture(id, createdKst, extra = {}) {
     type: "channel",
     created: createdKst,
     modified: extra.modified || createdKst,
-    from: { id: "u1", displayName: "Silee" },
+    from: { id: "u1", displayName: "Me" },
     body_html: extra.body || `msg ${id}`,
     ...extra,
   };
@@ -72,7 +72,7 @@ test("saveIndex / loadIndex round-trip", () => {
 });
 
 test("appendRecords: single partition round-trip via readRange", async () => {
-  const alias = "connect-hub-dev";
+  const alias = "alias-1";
   const records = [
     fixture("m1", "2026-04-13T09:00:00.000+09:00"),
     fixture("m2", "2026-04-13T10:30:00.000+09:00"),
@@ -302,6 +302,6 @@ test("appendRecords: missing id throws", () => {
 });
 
 test("safeAlias: preserves hangul, replaces other chars", () => {
-  assert.equal(safeAlias("connect-hub-dev"), "connect-hub-dev");
+  assert.equal(safeAlias("sample-alias"), "sample-alias");
   assert.equal(safeAlias("팀 채널/테스트"), "팀_채널_테스트");
 });

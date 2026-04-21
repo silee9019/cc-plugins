@@ -423,4 +423,4 @@ export function renderMessages({ meta, messages }) {
   return sections.join("\n");
 }
 
-export { formatKstDate, formatKstTime, renderOneMessage };
+export { formatKstDate, formatKstTime, renderOneMessage, htmlToMarkdown };

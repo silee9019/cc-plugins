@@ -1,19 +1,19 @@
 ---
 description: MS Teams에서 내가 멘션된 곳 + 이름이 등장한 곳을 날짜 범위로 검색. 가입 채팅 + 등록된 채널 alias 전부 스캔.
 allowed-tools: Bash, Read
-argument-hint: [--name me] [--since 7d] [--mentions-only|--body-only]
+argument-hint: [--name me] [--since auto|7d] [--mentions-only|--body-only]
 ---
 
-# msteams-search
+# teams-search
 
-가입한 모든 1:1/그룹 채팅(`/me/chats/getAllMessages`)과 등록된 channel-type alias를 훑어, 내가 멘션됐거나 이름이 등장한 메시지를 추려 markdown으로 저장한다.
+가입한 모든 1:1/그룹 채팅과 등록된 channel-type alias를 훑어, 내가 멘션됐거나 이름이 등장한 메시지를 추려 markdown으로 저장한다.
 
 ## 사용 절차
 
 1. **Bash로 다음 명령을 실행한다**:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/cli.mjs" search $ARGUMENTS
+node "${CLAUDE_PLUGIN_ROOT}/scripts/cli.mjs" teams search $ARGUMENTS
 ```
 
 2. stdout의 마지막 줄이 생성된 파일의 절대 경로다. 그 경로를 **Read 도구로 열어** 내용을 세션에 포함시킨다.
@@ -23,7 +23,8 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/cli.mjs" search $ARGUMENTS
 
 - `--name me` (기본) → `/me`로 본인 id/displayName 조회 후 매칭
 - `--name "홍길동"` → 자유 문자열 substring 매칭
-- `--since 7d` → 시간 범위 (`2h`, `1d`, `7d`, `2026-04-13`)
+- `--since auto` (기본) → 마지막 검색 시각 이후. `2h`, `1d`, `7d`, `2026-04-13`도 가능
+- `--until <spec>` → 종료 시각 (기본: now)
 - `--mentions-only` → @mention 매칭만
 - `--body-only` → 본문 substring만
 - `--limit 500` → 결과 상한

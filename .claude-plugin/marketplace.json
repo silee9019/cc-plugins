@@ -111,15 +111,15 @@
       "category": "workflow"
     },
     {
-      "name": "msteams-fetch",
-      "source": "./msteams-fetch",
-      "description": "MS Teams 채팅/채널 메시지를 별칭으로 지정해 Claude Code 세션으로 불러오는 도구. Microsoft Graph API delegated 권한(내 계정)으로 읽고 markdown으로 저장.",
-      "version": "0.3.1",
+      "name": "m365-fetch",
+      "source": "./m365-fetch",
+      "description": "Microsoft 365 컨텍스트를 Claude Code 세션으로 불러오는 도구. Teams 채팅/채널(delegated Graph), Outlook 캘린더/메일(delegated Graph), Power Automate flow CRUD + runs(delegated Flow Service)를 하나의 CLI로 통합.",
+      "version": "0.4.0",
       "author": {
         "name": "silee9019"
       },
       "license": "MIT",
-      "keywords": ["teams", "msteams", "msgraph", "context", "chat", "channel", "search"],
+      "keywords": ["m365", "teams", "outlook", "calendar", "mail", "power-automate", "flow", "msgraph", "context"],
       "category": "utility"
     }
   ]

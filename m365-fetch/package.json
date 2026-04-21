@@ -1,16 +1,16 @@
 {
-  "name": "@silee9019/cc-plugin-msteams-fetch",
-  "version": "0.3.4",
-  "description": "cc-plugins msteams-fetch plugin runtime",
+  "name": "@silee9019/cc-plugin-m365-fetch",
+  "version": "0.4.0",
+  "description": "cc-plugins m365-fetch plugin runtime (Teams + Outlook + Power Automate)",
   "private": true,
   "type": "module",
   "engines": { "node": ">=20" },
   "packageManager": "pnpm@9.12.0",
   "bin": {
-    "msteams-fetch": "./scripts/cli.mjs"
+    "m365-fetch": "./scripts/cli.mjs"
   },
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
     "@azure/msal-node": "^2.16.0",

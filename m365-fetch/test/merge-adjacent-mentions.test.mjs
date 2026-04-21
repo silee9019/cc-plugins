@@ -12,24 +12,24 @@ function mkMention(id, userId, displayName, mentionText) {
 }
 
 test("rule 1: same user id — merges to displayName", () => {
-  const html = 'hi <at id="0">Sangin</at> <at id="1">Lee</at> there';
+  const html = 'hi <at id="0">Alice</at> <at id="1">Kim</at> there';
   const mentions = [
-    mkMention(0, "u-1", "Sangin Lee", "Sangin"),
-    mkMention(1, "u-1", "Sangin Lee", "Lee"),
+    mkMention(0, "u-1", "Alice Kim", "Alice"),
+    mkMention(1, "u-1", "Alice Kim", "Kim"),
   ];
   const { html: out } = mergeAdjacentMentions(html, mentions);
-  assert.match(out, /<at id="0">Sangin Lee<\/at>/);
+  assert.match(out, /<at id="0">Alice Kim<\/at>/);
   assert.doesNotMatch(out, /<at id="1"/);
 });
 
 test("rule 2: different ids but displayName tokens match — merges", () => {
-  const html = '<at id="0">상인</at><at id="1">이</at>';
+  const html = '<at id="0">홍</at><at id="1">길동</at>';
   const mentions = [
-    mkMention(0, "u-1", "상인 이", "상인"),
-    mkMention(1, "u-2", "홍길동", "이"),
+    mkMention(0, "u-1", "홍 길동", "홍"),
+    mkMention(1, "u-2", "박영희", "길동"),
   ];
   const { html: out } = mergeAdjacentMentions(html, mentions);
-  assert.match(out, /<at id="0">상인 이<\/at>/);
+  assert.match(out, /<at id="0">홍 길동<\/at>/);
 });
 
 test("rule 3: mismatched tokens — leave untouched", () => {
