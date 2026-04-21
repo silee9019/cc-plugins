@@ -255,6 +255,27 @@ Step 5에서 결정된 처리(내일 이어서 / 백로그 / 완료 / 삭제)를
 - active-reminders 파일은 대상 아님 (별도 관리)
 - `archived` 필드가 이미 있는 파일은 이중 제안 금지 (스캔 단계에서 배제)
 
+### Step 8.6: Inbox 완료 역동기화 (v2.11.0)
+
+Inbox에 `status: open`으로 남아 있는 항목 중 **이미 다른 경로로 해결된 것**을 탐지한다. feature 통합·rename·스코프 흡수로 해결됐으나 원본 Inbox가 닫히지 않은 "ghost open" 방지.
+
+1. `Skill memento:inbox-sweep --orchestrated` 호출
+2. 반환 블록(`[inbox-sweep/orchestrated]`)에서 `candidates` 수 파싱
+3. 처리:
+   - `candidates=0`: 조용히 Step 9로 진행
+   - `candidates ≥ 1`: AskUserQuestion 한 줄
+     ```
+     Inbox 완료 후보 N건 발견 (상위: <파일명>, ...). 지금 확인할까요?
+     ```
+     선택지: `지금 확인` / `나중에 (다음 sweep에서 재후보)` / `주간 회고에서 일괄`
+4. `지금 확인` 선택 시 `Skill memento:inbox-sweep` 대화형 모드로 재호출
+5. 결과를 내부 컨텍스트에 보관 → Step 10 최종 요약에 포함 ("Inbox 완료 처리: N건" 라인)
+
+**원칙**:
+- orchestrated 단계는 상호작용 없음 (데이터만 수집)
+- 사용자 확인은 한 번 (Step 8.6의 질문) → 대화형 재호출 → 각 후보별 per-item 질문
+- 자동 resolve 금지
+
 ### Step 9: 내일 업무 준비
 
 오늘 Review가 확정되면 내일을 준비한다. 직접 로직을 갖지 않고 `planning`을 내일 모드로 위임한다.
@@ -291,6 +312,7 @@ Step 5에서 결정된 처리(내일 이어서 / 백로그 / 완료 / 삭제)를
     - 백로그 보관: N건
     - 비일일노트 이동: N건
     - Decision archive 배치: N건 (해당 시)
+    - Inbox 완료 처리: N건 (해당 시)
     - Review 섹션: 갱신됨
   [3/3] 내일 준비: N건 후보 선정, 내일 Daily Note Plan 초안 작성됨
 
