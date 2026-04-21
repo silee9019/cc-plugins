@@ -128,6 +128,28 @@ The project ID is determined by the SessionStart hook (git remote → org-repo, 
 
 `atlassian_account_id`는 사용자에게 묻지 않는다. 나머지는 인터뷰로 수집하며 빈 값 허용.
 
+### Daily Note Tasks 포맷 (v2.8.0+)
+
+Tasks 섹션은 **todo 하나 = 파일 하나** 원칙을 따른다. Daily Note는 인덱스, 상세는 개별 파일.
+
+- **todo 파일 경로**: `<daily_notes_path>/{YYYY-MM-DD}/{slug}.md`
+- **Daily Note Tasks 체크박스**: `- [ ] [[<daily_notes_path>/{YYYY-MM-DD}/{slug}|{표시 이름}]]` wikilink 형태. 트랙별 `## [track:{id}] P: {제목}` 헤더 하위에 나열.
+- **todo 파일 frontmatter**: `slug` / `track` / `category` / `priority` / `status` (open/in-progress/resolved/blocked/dismissed) / `created` / `started_at` / `resolved_at` / `source` (이동 전 Inbox 경로) / `jira` (선택) / `plan` (선택) / `repo` (선택)
+- **todo 파일 본문**: `# 제목` + 배경 / 실행 체크리스트(`- [ ]`) / 진행 로그(`- HH:MM ...`)
+
+라이프사이클 전이:
+
+| 전이 | 이동 | frontmatter |
+|------|------|-------------|
+| 착수 | `git mv <inbox_folder_path>/…/{file.md} <daily_notes_path>/{TODAY}/{slug}.md` | `status: in-progress`, `started_at: {TODAY}`, `source: <원본경로>` |
+| 완료 (review-day) | `git mv <daily_notes_path>/{TODAY}/{slug}.md <daily_archive_path>/{YYYY}/{MM}/{TODAY}/{slug}.md` | `status: resolved`, `resolved_at: {TODAY}` |
+| 이월 (review-day or planning) | `git mv <daily_notes_path>/{PREV}/{slug}.md <inbox_folder_path>/{TARGET}/{slug}.md` | `status: open` (started_at 유지) |
+| 철회 | `git mv <daily_notes_path>/{TODAY}/{slug}.md 99 Archives/dismissed/{TODAY}/{slug}.md` | `status: dismissed` |
+
+**체크포인트 (checkpoint)**는 frontmatter 상태만 갱신한다(resolved 기록). 파일 이동은 **review-day**가 하루 마감에 일괄 수행.
+
+**legacy 포맷** (wikilink 없는 평문 체크박스): 2026-04-20 이전 Daily Notes에 남아있음. 파일 없는 legacy 항목은 체크박스 상태만 관리.
+
 ### 외부 연동 (옵션)
 
 | key | 기본값 | 용도 |

@@ -73,17 +73,34 @@ AskUserQuestion으로 묻는다:
 
 사용자가 인자에서 명시한 경우 (예: "나중에 XXX 해야 함") 자동 판별하여 확인만 받는다.
 
-### Step A-3: Daily Note에 추가
+### Step A-3: Daily Note + todo 파일 생성 (v2.8.0부터)
 
-1. 오늘 Daily Note 경로를 생성하고 파일을 읽는다.
-2. 적절한 섹션(Projects/Areas/Inbox)에 체크박스 항목을 추가한다:
-   ```
-   - [ ] {할 일 내용}
-   ```
-3. 해당 섹션이 없으면 Inbox에 추가한다.
-4. Daily Note가 없으면 "오늘 Daily Note가 없습니다. `/memento:planning`를 먼저 실행해주세요." 안내.
+Tasks 포맷은 v2.8.0부터 **todo 하나 = 파일 하나** 규칙을 따른다. 체크박스에 내용을 문장으로 넣지 않고 wikilink로 연결.
 
-추가 완료 후 "Daily Note에 추가: {할 일 내용}" 출력.
+1. 오늘 Daily Note 경로를 생성하고 파일을 읽는다. 없으면 "오늘 Daily Note가 없습니다. `/memento:planning`를 먼저 실행해주세요." 안내 후 중단.
+2. slug 결정: 할 일 제목을 kebab-case로 정규화 (공백 `-`, 특수문자 제거, 한글 유지).
+3. todo 파일 생성: `<daily_notes_path>/{YYYY-MM-DD}/{slug}.md`
+   - 디렉토리 없으면 `mkdir -p` 선행
+   - frontmatter:
+     ```yaml
+     ---
+     slug: {slug}
+     track: {추정 track 또는 ad-hoc}
+     category: {category}
+     priority: {priority}
+     status: in-progress
+     created: {YYYY-MM-DD}
+     started_at: {YYYY-MM-DD}
+     source: (direct capture)
+     ---
+     ```
+   - 본문: `# {제목}` + 1-2문장 요약 + (선택) 제안 조치
+4. Daily Note Tasks 섹션의 적절한 track 헤더(`## [track:{id}] P: {제목}`) 아래 wikilink 체크박스 append. 헤더 없으면 새로 생성:
+   ```
+   - [ ] [[<daily_notes_path>/{YYYY-MM-DD}/{slug}|{표시 이름}]]
+   ```
+
+추가 완료 후 "Daily Note Tasks에 추가 + todo 파일 생성: {경로}" 출력.
 
 ### Step A-4: 백로그에 보관 (간소화)
 

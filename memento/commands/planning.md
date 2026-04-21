@@ -1,6 +1,6 @@
 ---
 description: 업무 파악/정리/분류/발굴/선택. 수시 호출 가능. plan-today + pick-task의 역할을 흡수한 적극적 계획 행위.
-allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
+allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Skill
 argument-hint: "[tomorrow] [--orchestrated]"
 ---
 
@@ -11,6 +11,18 @@ argument-hint: "[tomorrow] [--orchestrated]"
 "오늘 계획 수립" 의례가 아니라 **지금과 다음 업무를 파악/정리/분류/발굴/선택**하는 활동. 하루 중 언제든 호출 가능하다. 단순 재배치(regroup)가 아니라 **새 일을 발굴**하는 적극적 계획 행위까지 포함한다.
 
 아침 호출은 자연스럽게 "하루 시작 계획"처럼 동작하고, 오후 호출은 "진행 점검 + 재조정 + 새로 떠오른 것 발굴"이 된다. Daily Note Plan 섹션은 비어 있을 수도 있고 갱신될 수도 있다 — 강제하지 않는다.
+
+## Tasks 포맷 (v2.8.0부터)
+
+**todo 하나 = 파일 하나** 규칙. Daily Note Tasks는 인덱스, 상세는 개별 파일.
+
+- todo 파일 경로: `<daily_notes_path>/{YYYY-MM-DD}/{slug}.md` (`01 Working/2026-04-21/cnd-1175-feature-split.md` 등)
+- Daily Note Tasks 체크박스: `- [ ] [[<경로>/{slug}|표시 이름]]` wikilink 형태. 트랙별 `## [track:{id}] P: {제목}` 헤더 하위에 나열.
+- todo 파일 frontmatter: `slug`, `track`, `category`, `priority`, `status`(open/in-progress/resolved/blocked/dismissed), `created`, `started_at`, `resolved_at`, `source`(이동 전 Inbox 경로), `jira`(선택), `plan`(선택).
+- todo 파일 본문: 배경 / 실행 체크리스트(`- [ ]`) / 진행 로그(`- HH:MM ...`).
+- 착수: `git mv <inbox>/{file.md} <daily_notes>/{YYYY-MM-DD}/{slug}.md` + `status: in-progress` + `started_at: {YYYY-MM-DD}`.
+- 완료: `git mv <daily_notes>/{YYYY-MM-DD}/{slug}.md <daily_archive_path>/{YYYY}/{MM}/{YYYY-MM-DD}/{slug}.md` + `status: resolved` + `resolved_at: {YYYY-MM-DD}`.
+- 이월: 미완료는 `git mv <daily_notes>/{YYYY-MM-DD}/{slug}.md <inbox_folder_path>/{TARGET_DATE}/{slug}.md` + `status: open` (started_at 로그 유지). 즉 이월 당일 Inbox 폴더에 떨어뜨린다 (Inbox는 기존 일별 폴더 관행 유지).
 
 ## 인자
 
@@ -93,11 +105,23 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 
 현재 진행 중·대기 중·예정된 일을 한 번에 수집한다. 아래 소스를 병렬로 읽는다.
 
-1. **Issue Box in-progress** (`in_progress_folder_path`): 지금 착수되어 있는 이슈들. 각 파일의 제목·카테고리·우선순위·started_at 수집
-2. **대상(TARGET_DATE) Daily Note Tasks**의 미완료 체크박스(`- [ ]`): 파일이 이미 있으면 섹션별(Projects/Areas/Inbox) 수집. 없으면 이 소스는 비움.
-3. **Issue Box inbox** (`inbox_folder_path`): 백로그. open + blocked 구분하여 수집. 우선순위·카테고리·생성일 메타 포함
-4. **이전(PREV_DATE) Daily Note 미완료**: 해당 날짜 경로를 생성해 읽기. `daily_notes_path` + `daily_note_format`로 1차 시도, 파일이 없으면 `daily_archive_path` + `daily_archive_format`가 설정된 경우 아카이브에서 2차 시도(이중 경로: 오늘은 Working, 지난은 Archives 구조). 단, **TARGET_DATE Daily Note에 이미 Tasks 섹션 내용이 있으면(소스 2번에서 미완료 항목이 수집되었거나, 완료 항목이라도 존재하면) 이 소스를 건너뛴다** — 이전 계획 세션에서 이월 결정이 완료된 것으로 간주. `tomorrow` 모드에서는 이 스킵 조건을 적용하지 않는다(항상 수집).
-5. **예정된 미팅/마감**: 사용자가 명시적으로 언급한 게 있는지 세션 맥락 확인. 불확실하면 Step 1 끝에 **한 번만** "{TARGET_DATE}에 고정 일정이 있나요? (없으면 건너뛰기)" 질문. `--orchestrated` 모드에서는 이 질문을 생략하고 캘린더 스크립트 출력만 참고.
+1. **오늘 진행 중 todo 파일** (`<daily_notes_path>/{TARGET_DATE}/*.md`): 지금 착수되어 있는 todo들. frontmatter(`slug`/`track`/`priority`/`status`/`started_at`/`source`) 수집. `status: in-progress`만 대상 (resolved가 있다면 Step 2에서 Archives로 이동 후보 표시).
+2. **대상(TARGET_DATE) Daily Note Tasks**의 wikilink 체크박스: 파일이 이미 있으면 track 섹션별로 수집. wikilink 링크 + 체크 상태(`- [ ]` / `- [x]`) 파싱. 링크가 가리키는 todo 파일의 frontmatter와 교차 확인.
+3. **Issue Box inbox** (`inbox_folder_path/{YYYY-MM-DD}/` 또는 legacy 월/날짜 폴더): 백로그. open + blocked 구분하여 수집. 우선순위·카테고리·생성일 메타 포함.
+4. **이전(PREV_DATE) Daily Note 미완료**: 해당 날짜 경로를 생성해 읽기. `daily_notes_path` + `daily_note_format`로 1차 시도, 파일이 없으면 `daily_archive_path` + `daily_archive_format`가 설정된 경우 아카이브에서 2차 시도. Tasks 섹션의 wikilink 중 체크 안 된 것(`- [ ]`) 추출하여 대상 todo 파일 frontmatter의 `status`가 여전히 `in-progress`/`open`인 것만 이월 후보로. 단, **TARGET_DATE Daily Note에 이미 Tasks 섹션 내용이 있으면(소스 2번에서 수집 항목이 존재하면) 이 소스를 건너뛴다** — 이전 계획 세션에서 이월 결정이 완료된 것으로 간주. `tomorrow` 모드에서는 이 스킵 조건을 적용하지 않는다(항상 수집).
+5. **예정된 미팅/마감**: 세션 시작 브리핑의 "향후 일정" 섹션 또는 사용자가 명시적으로 언급한 게 있는지 확인. 불확실하면 Step 1 끝에 **한 번만** "{TARGET_DATE}에 고정 일정이 있나요? (없으면 건너뛰기)" 질문. `--orchestrated` 모드에서는 이 질문을 생략하고 캘린더 스크립트 출력만 참고.
+6. **MS Teams 인박스** (매 호출 자동): `/msteams-fetch:msteams-fetch` Skill을 호출하여 구독 채팅 + 등록 채널 신규 메시지를 세션 컨텍스트에 로드. 결과 파일에서 아래 항목을 추출:
+   - 나에게 **@멘션**된 미응답 메시지
+   - 1:1 DM의 미읽음 / 답변 대기
+   - 내가 앞서 남긴 메시지에 대한 **답글 대기**(타인이 답변을 요구한 케이스)
+
+   **제외 필터**:
+   - `connect-chat` PR 봇 채널 (피드백 `feedback_skip-connect-chat.md`)
+   - 본인이 이모지 반응을 남긴 메시지 — 묵시적 close 시그널 (피드백 `feedback_emoji-reaction-as-close.md`)
+   - 이미 close 정렬된 것으로 표시된 과거 이슈 (피드백 `feedback_no-seohee-reminder.md`)
+   - 단순 채널 알림/자동 발송 메시지
+
+   `--orchestrated` 모드: 이 소스 스킵 (상위 review-day가 이미 수행).
 
 수집 결과를 그룹별 요약 표로 정리해둔다 (아직 출력하지 않음).
 
@@ -105,10 +129,11 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 
 수집된 항목들을 1차 필터링한다.
 
-- **중복 제거**: in-progress와 오늘 Tasks, 어제 미완료 사이의 동일 항목 병합. 어제 미완료가 스킵된 경우(Step 1-4번 조건) 이 단계도 해당 소스 없이 진행.
-- **완료/취소 항목 솎기**: Tasks에서 이미 체크된 것, inbox에서 status가 resolved/dismissed인 것 제거
-- **상태 동기화**: in-progress 파일인데 Daily Note Tasks에 없으면 노트 측 갱신 후보로 표시 (실제 갱신은 Step 4에서)
-- **blocked 이슈 리뷰**: blocked 상태 이슈 목록 별도 제시. 한 건씩 "해제 가능한가요?" 질문 대신, 한 번에 목록만 보여주고 Step 3 분류 때 같이 처리
+- **중복 제거**: 오늘 진행 중 todo와 Daily Note Tasks wikilink는 같은 파일을 가리키므로 파일 경로 기준 병합. 이전 Daily 미완료 후보도 동일 slug면 병합.
+- **완료/취소 항목 솎기**: frontmatter `status`가 `resolved`/`dismissed`인 todo/inbox 제거. Tasks의 `- [x]` 체크이지만 파일 status가 아직 `in-progress`면 상태 불일치로 표시 (체크포인트 누락 후보).
+- **상태 동기화 후보**: 오늘 폴더에 todo 파일은 있는데 Daily Note Tasks에 wikilink가 없으면 노트 측 갱신 후보로 표시 (실제 갱신은 Step 5에서).
+- **blocked 이슈 리뷰**: `status: blocked`인 todo/inbox 목록을 별도 묶음으로. 사용자에게 개별 해제 질문 대신 목록만 제시, Step 3 분류에 같이 녹인다.
+- **Teams 필터링 확정**: Step 1-6에서 추출한 멘션/DM/답글 대기 중 제외 필터 적용 결과만 남긴다.
 
 ### Step 3: 분류 (classify)
 
@@ -122,24 +147,29 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 
 ```
 ## 지금 진행 중 (N건)
-- [in-progress] {제목} — {카테고리}, started {YYYY-MM-DD}
+- {제목} — track:{id}, started {YYYY-MM-DD}, [[<path>/{slug}]]
 
 ## 오늘 Tasks (미완료 N건)
 #### Projects
-- [ ] ...
+- [ ] [[...]] ...
 #### Areas
-- [ ] ...
+- [ ] [[...]] ...
 #### Inbox
-- [ ] ...
+- [ ] [[...]] ...
 
 ## 어제 이월 후보 (N건)
 (Step 1에서 스킵된 경우 이 섹션 생략)
-- [ ] ...
+- [ ] [[...]] ...
 
 ## 백로그 (open N건, blocked M건)
 상위 우선순위만 10건 표시
 1. {제목} (category, priority, created)
-...
+
+## Teams 미확인 (N건)
+(Step 1-6 결과. --orchestrated 모드는 생략)
+- @멘션 {chat/channel} — {발신자}, {한 줄 요약}
+- DM {발신자} — {한 줄 요약}
+- 답글 대기 {chat/channel} — {원 메시지 요약}
 ```
 
 ### Step 4: 발굴 (discover)
@@ -149,11 +179,11 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 자극 소스:
 
 - **세션 맥락**: 현재 대화 흐름에서 "이것도 해야 하지 않을까" 싶은 미해결 항목
-- **외부 입력**: 사용자가 이미 언급한 슬랙/이메일/회의록 내용
+- **Teams 미확인 그룹**: Step 3 마지막 블록에서 나온 멘션/DM/답글 대기 중 todo로 승격할 만한 건 (즉답 1분 이내로 끝나는 건 발굴 후보 아님)
 - **사용자 목표와 현 활동의 빈틈**: Active Reminders나 `review-objectives` 결과가 시사하는 공백
-- **의존성 체인**: in-progress 이슈가 성공하려면 선행되어야 할 전제 작업
+- **의존성 체인**: in-progress todo가 성공하려면 선행되어야 할 전제 작업
 
-발굴된 후보를 2-5개 정도로 제시한다. 억지로 채우지 말 것 — 없으면 "발굴 없음"도 정상이다.
+발굴된 후보를 2-5개 정도로 제시한다. 억지로 채우지 않는다 — 없으면 "발굴 없음"도 정상이다.
 
 ```
 ## 발굴된 후보
@@ -171,29 +201,51 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 
 | 상황 | 기본 동작 |
 |------|---------|
-| `tomorrow` 인자 | "내일 준비" 고정 모드. TARGET_DATE Daily Note를 생성하거나 Plan 섹션을 채운다. 선택(in-progress 이동)은 수행하지 않음 — 내일 아침 재호출 시 실행 |
-| 아침 첫 호출 + 오늘 Daily Note 없음/비어 있음 | 제안 후 Daily Note Plan + Tasks 생성 (기존 plan-today 역할) |
-| 오후/저녁 재호출 + 오늘 Daily Note 있음 + 기존 계획 존재 | 선택은 선택사항. Plan 섹션도 갱신 가능 (아침과 동일). Tasks에 새 항목 append |
-| in-progress가 이미 있는데 추가 선택 요청 | 현재 진행 중인 것을 먼저 상기시킨 후 확인 |
+| `tomorrow` 인자 | "내일 준비" 고정 모드. TARGET_DATE Daily Note를 생성하거나 Plan/Tasks를 채운다. 선택(착수 이동)은 수행하지 않음 — 내일 아침 재호출 시 실행 |
+| 아침 첫 호출 + 오늘 Daily Note 없음/비어 있음 | 제안 후 Daily Note Plan + Tasks 생성 |
+| 오후/저녁 재호출 + 오늘 Daily Note 있음 + 기존 계획 존재 | 선택은 선택사항. Plan 섹션도 갱신 가능. Tasks에 새 wikilink append |
+| 진행 중 todo 파일이 이미 있는데 추가 선택 요청 | 현재 진행 중인 것을 먼저 상기시킨 후 확인 |
 
-**후보가 2개 이상 비등할 때** (런타임 인터뷰): "지금 어느 것에 먼저 집중하시겠어요?" 한 질문 → 답 → in-progress 이동.
+**후보가 2개 이상 비등할 때** (런타임 인터뷰): "지금 어느 것에 먼저 집중하시겠어요?" 한 질문 → 답 → 착수 이동.
 
-**in-progress 이동 처리** (pick-task에서 흡수):
+**착수 이동 처리** (v2.8.0, todo 파일 단위):
 
-1. 선택된 이슈 파일의 status를 in-progress로 변경, started_at 기록
-2. 파일을 `in_progress_folder_path/{YYYY-MM-DD}/`로 이동 (설정 없으면 status만)
-3. 작업 요약 출력 (제목/카테고리/우선순위/요약/제안 조치/관련 파일/컨텍스트)
-4. 현재 작업 디렉토리와 source_project 비교 후 안내
+1. 선택된 Inbox 이슈 파일 경로 확인 (예: `00 Inbox/2026-04-18/2026-04-18-task-foo-bar.md`)
+2. slug 결정: 파일명에서 날짜/카테고리 접두어 제거 + kebab-case 정규화 (예: `foo-bar`)
+3. `git mv "<원본경로>" "<daily_notes_path>/{TARGET_DATE}/{slug}.md"` 실행. 디렉토리 없으면 `mkdir -p` 선행.
+4. 이동된 파일 frontmatter 갱신:
+   - `status: in-progress`
+   - `started_at: {TARGET_DATE}`
+   - `source: <원본경로>` (참조용 보존)
+   - 없으면 `slug` / `track` 추가
+5. Daily Note Tasks에 wikilink 체크박스 append. 트랙 헤더(`## [track:{id}] P: {제목}`)가 없으면 새로 생성. 체크박스 형식:
+   ```
+   - [ ] [[<daily_notes_path>/{TARGET_DATE}/{slug}|{표시 이름}]]
+   ```
+6. 작업 요약 출력: 제목 / 트랙 / 카테고리 / 우선순위 / 관련 파일 / 이동 경로.
+7. 현재 작업 디렉토리와 frontmatter `repo` 또는 `source_project` 비교 후 안내.
+
+**Inbox 외 신규 발굴 건을 바로 착수**하는 경우:
+- 먼저 `/memento:capture-task`로 Inbox에 파일을 생성한 뒤 위 절차로 이동, 또는
+- 사용자 확인 후 `<daily_notes_path>/{TARGET_DATE}/{slug}.md`에 곧바로 신규 파일 작성 (frontmatter `source: (direct)`).
 
 **Daily Note 갱신** (아침 모드일 때):
 
-- Plan 섹션: 선택된 1-3개를 상단에
-- Tasks 섹션: Projects/Areas/Inbox 분류대로 체크리스트
+- Plan 섹션: 선택된 1-3개를 상단에 (wikilink 아니어도 무방 — 문장 톤)
+- Tasks 섹션: 착수된 todo 파일의 wikilink를 트랙 헤더 아래 체크박스로
 - 파일 없으면 `/memento:setup`의 템플릿 구조로 새 Daily Note 생성
 - 파일 있고 Tasks 비어 있으면 Tasks만 채우기
-- 파일 있고 Tasks 내용 있으면: "이미 계획이 있습니다. 병합할까요, 덮어쓸까요?" 한 질문
+- 파일 있고 Tasks 내용 있으면: "이미 계획이 있습니다. 병합할까요, 덮어쓸까요?" 한 질문 (`--orchestrated`는 자동 병합)
 
 **오후 모드일 때**: 아침 모드와 동일하게 Plan + Tasks 갱신 가능. 기존 Plan이 있으면 병합 우선. 필요시 Log 섹션에 "오후 재조정: ..." 한 줄 메모.
+
+**이월 처리** (`tomorrow` 모드 또는 오늘 모드에서 PREV_DATE 미완료를 포함하는 경우):
+
+- Step 1-4에서 수집한 미완료 wikilink 목록을 사용자에게 제시 (`--orchestrated`는 자동 전부 이월)
+- 이월 결정된 todo 파일: `git mv <daily_notes_path>/{PREV_DATE}/{slug}.md <inbox_folder_path>/{TARGET_DATE}/{slug}.md`
+- frontmatter 갱신: `status: open`, `started_at`은 유지 (재개 시점 구분용), `resolved_at`은 설정하지 않음
+- TARGET_DATE Daily Note Tasks에 wikilink 다시 추가 (새 Inbox 경로로)
+- 이전 Daily의 해당 wikilink는 그대로 둠 (깨진 링크가 되지만 히스토리 상 참조 가능)
 
 **`tomorrow` 모드일 때** (review-day에서 호출되는 주 경로):
 
@@ -201,7 +253,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 - 파일 없으면 `/memento:setup`의 템플릿 구조로 새로 생성
 - Plan 섹션이 비어 있으면 Step 3 분류 결과에서 high priority 1-3건 + 오늘 미완료 이월 후보를 상단에 채운다
 - Plan 섹션이 이미 충분히 채워져 있으면(3건 이상) **덮어쓰지 않고 건너뛰기** + Tasks에만 부족분 append
-- in-progress 이동은 수행하지 않음 (내일 아침 재호출 시 사용자가 직접 pick)
+- 착수 이동은 수행하지 않음 (내일 아침 재호출 시 사용자가 직접 pick). 단, **PREV_DATE 미완료 이월**은 수행 (Inbox로 되돌리기 + 내일 Daily Tasks wikilink)
 - Log 섹션은 건드리지 않는다 (내일 타임라인이므로 비어 있어야 정상)
 
 **`--orchestrated` 모드일 때**:
@@ -210,6 +262,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 - "병합 vs 덮어쓰기" 질문은 자동 "병합"으로 처리 (안전 기본값)
 - blocked 이슈 리뷰에서 한 건씩 확인하는 질문 생략
 - 발굴(Step 4) 후보는 Plan에 추가하지 않고 보고에만 포함
+- Step 1-6 Teams 소스 스킵
 
 **연체/리마인드 플래그**:
 
@@ -218,27 +271,28 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 
 ### Step 6: 완료 출력
 
-생성/갱신된 Daily Note 경로와 지금 선택된 작업(있다면), 그리고 발굴된 후보 중 미처리로 남긴 것의 요약을 출력한다.
+생성/갱신된 Daily Note 경로, 생성/이동된 todo 파일 경로, 지금 선택된 작업(있다면), 그리고 발굴된 후보 중 미처리로 남긴 것의 요약을 출력한다.
 
 **`--orchestrated` 모드에서의 반환 포맷** (review-day 등 상위가 집계 가능하도록 축약):
 
 ```
 [planning/orchestrated target={TARGET_DATE}]
   plan_section=<filled|skipped|merged>
-  tasks_added=N carryover=M discoveries=K
+  tasks_added=N carryover=M discoveries=K teams_items=T
   daily_note=<경로>
+  todo_files=[<경로1>, <경로2>, ...]
 ```
 
 일반 사용자 출력(장문)은 생략하고 위 블록만 반환한다.
 
-## Do / Don't
+## 원칙
 
-| Do | Don't |
-|----|-------|
-| 다섯 단계를 순서대로, 단 각 단계는 짧게 | 파악만 하고 정리·분류 생략 |
-| 발굴 단계에서 억지로 채우지 않기 | "발굴 없음"이 부끄럽다고 억지 후보 만들기 |
-| 선택 없이 종료하는 호출도 허용 | 항상 무언가를 in-progress로 이동시켜야 한다는 강박 |
-| 오후 모드에서 기존 Plan 있으면 병합 우선 | 재호출마다 Plan을 새로 작성 |
-| 후보가 비등할 때만 한 질문으로 선택 묻기 | 매 호출마다 여러 질문으로 흐름 끊기 |
-| blocked 이슈는 분류 단계에서 별도 표시 | blocked를 open과 섞어 혼동 |
-| KR1 연체 감지 시 1줄 경고만 | 연체 안내로 본 단계 장황화 |
+- 다섯 단계를 순서대로 실행한다. 각 단계는 짧게.
+- 발굴 단계에서 후보가 없으면 "발굴 없음"으로 정상 종료
+- 선택 없이 종료하는 호출도 허용 — 파악·정리·분류만 필요할 때
+- 오후 재호출은 기존 Plan 병합 우선
+- 후보가 비등할 때만 한 질문으로 선택
+- blocked 이슈는 분류 단계에서 별도 표시
+- KR1 연체 감지 시 1줄 경고
+- todo 파일은 파일 하나 = 일 하나 (Daily Note Tasks는 인덱스만)
+- Teams 미확인은 제외 필터 통과한 것만 Step 3에 노출

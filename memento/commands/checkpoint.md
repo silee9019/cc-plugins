@@ -36,7 +36,7 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Skill
 - `TODAY_DAILY` = `{vault_path}/{daily_notes_path}/{today-planning}.md` (`daily_note_format` 적용)
 - `DECISIONS_DIR` = `{MEMENTO_HOME}/user/decisions/`, 결정 파일 생성 시 `decision_note_format` 적용 (기본 `YYYY-MM-DD-decision-{slug}.md`)
 
-## Step 3: 완료 항목 감지 + 처리
+## Step 3: 완료 항목 감지 + 처리 (v2.8.0)
 
 세션 맥락에서 완료 항목을 감지한다.
 
@@ -45,12 +45,17 @@ allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Skill
 - 관련 파일이 저장되고 검증됨
 - 결과물이 실제로 존재 (파일/커밋/PR)
 
-**처리**:
-- Issue Box: in-progress -> resolved (status 변경 + 파일 이동)
-- Daily Note Tasks: `- [ ]` -> `- [x]` + 간단 주석
-- 모호 항목: AskUserQuestion으로 한 건씩 확인
+**처리** (Tasks 포맷 v2.8.0: todo 파일 = 파일 하나, Daily Note Tasks는 wikilink 인덱스):
 
-**WORKING.md 미완료 항목 교차 확인**: 세션 맥락에서 감지되지 않았지만 WORKING.md "미완료 작업"에 남아있는 항목이 있으면, 목록을 보여주고 AskUserQuestion으로 "이 중 완료된 항목이 있나요?" 한 번에 확인. 사용자 응답에 따라 완료 처리.
+1. todo 파일 frontmatter 갱신: `status: resolved` + `resolved_at: {TODAY}`.
+   - 경로 추정: Daily Note Tasks의 wikilink(`[[<daily_notes_path>/{TODAY}/{slug}|...]]`)를 파싱하거나, `<daily_notes_path>/{TODAY}/*.md` 중 제목/slug 일치하는 파일
+   - 파일 이동(`99 Archives/Daily/`로 `git mv`)은 **checkpoint에서 수행하지 않음** — 하루 마감 의례 `review-day`가 일괄 수행
+2. Daily Note Tasks 체크박스 갱신: `- [ ]` → `- [x]`. wikilink 구조는 유지
+3. 모호 항목: AskUserQuestion으로 한 건씩 확인
+
+**legacy 평문 체크박스**: 파일 없는 경우 체크박스만 `- [x]`로 갱신.
+
+**WORKING.md 미완료 항목 교차 확인**: 세션 맥락에서 감지되지 않았지만 WORKING.md "미완료 작업"에 남아있는 항목이 있으면, 목록을 보여주고 AskUserQuestion으로 "이 중 완료된 항목이 있나요?" 한 번에 확인. 사용자 응답에 따라 완료 처리 (위와 동일 절차).
 
 ## Step 4: raw 로그 append
 
