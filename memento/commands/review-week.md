@@ -429,9 +429,9 @@ expires_at: {END + 7일}
    | ID | 룰 | 검출 방식 |
    |----|----|----------|
    | L1 | 필수 frontmatter 누락 | `type`, `created`, `projects`, `lifetime`, `expires`, `revoked` 중 하나라도 부재 |
-   | L2 | expired 미아카이브 | `expires` < 이번 주 END 인데 archive/로 이동되지 않음 (Step 8.5에서 놓친 건) |
-   | L3 | revoked 미아카이브 | `revoked: true` 인데 archive/로 이동되지 않음 |
-   | L4 | 중복 slug | 파일명 slug base가 겹치는 쌍 (리네임/재태깅 잔재) |
+   | L2 | archive 미반영 (expired) | `expires` < 이번 주 END 인데 archive/로 이동되지 않음 (Step 8.5에서 놓친 건) |
+   | L3 | archive 미반영 (revoked) | `revoked: true` 인데 archive/로 이동되지 않음 |
+   | L4 | 중복 slug | 파일명 slug base가 겹치는 쌍 (rename/re-tag 잔재) |
    | L5 | 빈 summary | `summary` 필드가 공백/null |
    | L6 | 파일명 규칙 위반 | `YYYY-MM-DD-decision-{slug}.md` 또는 레거시 `YYYY-MM-DD-{slug}.md` 외 형식 |
 3. **보고**: 한 건도 없으면 조용히 건너뛰기. 있으면 임시 컨텍스트에 아래 포맷으로 수집:

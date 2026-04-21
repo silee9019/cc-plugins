@@ -163,7 +163,7 @@ git status --short
 | 케이스 | 처리 |
 |--------|------|
 | 변경 없음 | 건너뛰기 |
-| 미커밋 변경 있음 | AskUserQuestion: "커밋+푸시" / "커밋만" / "건너뛰기" |
+| uncommitted 변경 있음 | AskUserQuestion: "커밋+푸시" / "커밋만" / "건너뛰기" |
 
 PR이 적절한 경우 (feature branch, 리뷰 필요한 변경):
 > "PR을 생성할까요?"
