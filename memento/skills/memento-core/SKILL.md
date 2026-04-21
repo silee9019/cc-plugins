@@ -240,6 +240,30 @@ This protects against context compression — if the platform compresses your co
 | ROOT.md | ~100 lines (~3K tokens) | Automatic recursive self-compression |
 | WORKING | ~100 lines | Overwrite with latest handoff |
 
+## WORKING.md Content Rules
+
+WORKING.md는 다음 세션이 이어갈 **작업 내용(content)**을 기록한다. **외부에서 변경될 수 있는 git 상태(externally mutable state)**는 기록하지 않는다 — 세션 종료 후 다른 세션·수동 조작·CI·동기화 도구에 의해 즉시 stale되어 다음 세션에 오해를 만든다.
+
+### 금지 (외부에서 변하는 상태)
+
+- 브랜치 push/unpushed 상태: `"N commits ahead of origin/main"`, `"미푸시"`, `"로컬 N커밋 대기"`, `"푸시 필요"`
+- working tree 상태: `"git: clean"`, `"dirty"`, `"untracked N개"`, `"modified 3개"`
+- push 여부를 재개 step으로 기재: `"다음 세션 first step: N커밋 push 여부 확인"`
+- commit hash를 push 상태 맥락과 함께 쓰기: `"1c2a761 푸시 대기"`
+
+### 허용 (immutable content)
+
+- 이번 세션 작업 내용 요약 (무엇을 바꿨는가 — 자연어 기술)
+- commit hash 인용 — 내용 식별자 용도에 한정: `"1c2a761 design-meeting 재설계"` OK
+- 브랜치 이름 단독 (상태 수식어 없이): `"브랜치: main"` OK, `"main (4 ahead)"` 금지
+- 다음 세션에 이어갈 실제 작업 (코드 변경, 설계 결정, dogfooding 항목 등)
+
+### 근거
+
+커밋/푸시는 현재 세션 외부(다른 세션, 사용자 수동 git 조작, CI, 동기화 도구)에서 처리되는 경우가 매우 많다. 기록 시점과 읽는 시점의 실제 git 상태가 불일치하므로 기록 자체가 noise다. 상태가 필요하면 `git status`, `git log origin/main..HEAD`로 실시간 조회한다 — "don't log what you can query" 원칙.
+
+이 규칙은 `/memento:handoff`, `/memento:checkpoint`, `session-start.sh` 이후의 모든 WORKING.md 쓰기에 적용된다.
+
 ## Rules
 
 - Long-term facts are managed by platform auto memory. No separate MEMORY.md file.
