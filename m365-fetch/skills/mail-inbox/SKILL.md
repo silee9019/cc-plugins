@@ -1,25 +1,34 @@
 ---
-description: Outlook 메일함(기본 inbox)을 날짜 범위로 조회해 세션에 로드. 3일 윈도우 슬라이스 + HTML→markdown 본문 변환.
-allowed-tools: Bash, Read
-argument-hint: [--since auto|1d] [--until now] [--folder inbox|sentitems] [--limit 200]
+name: mail-inbox
+description: Outlook 메일함(기본 inbox)을 날짜 범위로 조회해 세션에 로드. HTML→markdown 본문 변환. 사용자가 "메일", "inbox", "outlook mail", "보낸 메일", "최근 메일"을 언급하며 조회를 원할 때 트리거.
 ---
 
 # mail-inbox
 
 `/me/mailFolders/{folder}/messages`를 호출해 범위 내 메일을 newest-first로 수집하고 markdown으로 저장한다.
 
-## 사용 절차
+## Step 0: 발화에서 인자 해석
 
-1. **Bash로 다음 명령 실행**:
+| 발화 예시 | → 인자 |
+|---|---|
+| "오늘 받은 메일" | `--since 1d` |
+| "최근 일주일 메일" | `--since 7d` |
+| "보낸 메일함" / "sent" | `--folder sentitems` |
+| "임시보관함" / "drafts" | `--folder drafts` |
+| "100개만" | `--limit 100` |
+| (명시 없음) | `--since auto --folder inbox` |
+
+## Step 1: CLI 실행
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/cli.mjs" mail inbox $ARGUMENTS
+node "${CLAUDE_PLUGIN_ROOT}/scripts/cli.mjs" mail inbox <추출한 인자>
 ```
 
-2. stdout의 마지막 줄이 생성된 파일의 절대 경로. Read 도구로 세션에 포함.
-3. 출력은 날짜별 그룹, 각 메일에 제목 링크(Outlook web), From/To/Cc, 📎 첨부 마커, 본문(HTML→markdown 변환).
+stdout 마지막 줄이 생성된 파일의 절대 경로. Read 도구로 세션에 포함.
 
-## 인자
+출력: 날짜별 그룹, 각 메일에 제목 링크(Outlook web), From/To/Cc, 📎 첨부 마커, 본문(HTML→markdown 변환).
+
+## 지원 인자
 
 - `--since auto` (기본) → 마지막 조회 시각 이후. `2h`/`1d`/`7d`/`2026-04-13`도 가능
 - `--until now` (기본) → 종료 시각
