@@ -1,7 +1,7 @@
 ---
-description: 세션 중 즉시 결정 태깅. 대화에서 내린 결정을 user/decisions/에 기록.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
-argument-hint: (없음, 대화형)
+name: tag-decision
+description: 세션 중 즉시 결정 태깅. 대화에서 내린 결정을 user/decisions/에 기록. 사용자가 "결정 태깅", "이거 결정으로 남겨", "tag decision", "결정 기록", "리본 달기", "이 결정 남겨둬"를 언급할 때 트리거.
+user_invocable: true
 ---
 
 > **인터뷰 원칙**: 결정에 필요한 정보를 자체 도구로 최대한 수집한 후, 여전히 모호한 지점이 있으면 가정하지 말 것. `AskUserQuestion`으로 한 번에 하나의 질문만 하고, 답을 받은 직후 다음 단계로 진행한다.
@@ -10,9 +10,7 @@ argument-hint: (없음, 대화형)
 
 세션 중 내린 결정을 즉시 `user/decisions/`에 기록한다. 결정이 내려진 바로 그 순간에 호출.
 
-**접점 3층 중 1층 (즉시)**: 이 커맨드는 결정이 내려진 순간 사용자가 직접 호출. 2층(checkpoint 자동 감지)과 3층(review-day 안전망)은 별도.
-
-**트리거 키워드**: "결정 태깅", "이거 결정으로 남겨", "tag decision", "결정 기록", "리본 달기"
+**접점 3층 중 1층 (즉시)**: 이 skill은 결정이 내려진 순간 사용자가 직접 호출. 2층(checkpoint 자동 감지)과 3층(review-day 안전망)은 별도.
 
 ## Step 1: 설정 로드
 
@@ -75,7 +73,7 @@ argument-hint: (없음, 대화형)
 
 - **규칙**: 3~5 영단어, kebab-case, 결정의 핵심 의미에서 도출
 - **예시**: "qmd fork 불필요" → `qmd-fork-unnecessary`
-- **파일명**: `decision_note_format` 적용. config.md 기본값은 `"{YYYY}-{MM}-{DD}-decision-{slug}.md"` (오늘 날짜 + `decision-` prefix + slug)
+- **파일명**: `decision_note_format` 적용. config.md 기본값은 `"{YYYY}-{MM}-{DD}-decision-{slug}.md"`
 - **예**: `2026-04-20-decision-qmd-fork-unnecessary.md`
 - **충돌 처리**: 동일 파일명 존재 시 suffix `-2`, `-3` 자동 부여
 
@@ -113,7 +111,7 @@ AskUserQuestion으로 기간을 선택받는다:
 
 선택에 따라 `lifetime`과 `expires` (오늘 + 기간) 계산.
 
-**"영구" 없음** — 영구 원칙은 `user/ROOT.md` 수동 승격 경로로만 (`/memento:promote-decision`).
+**"영구" 없음** — 영구 원칙은 `user/ROOT.md` 수동 승격 경로로만.
 
 ## Step 8: 결정 파일 작성
 

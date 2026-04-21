@@ -1,18 +1,22 @@
 ---
-description: 수동 재주입 (Format A 전문). 긴 세션에서 다른 세션의 결정을 가져올 때 사용.
-allowed-tools: Bash, Read, Write, Glob, Grep, AskUserQuestion
-argument-hint: "[--verbose] [--include-revoked]"
+name: refresh-decisions
+description: 활성 결정(Active Decisions)을 Format A(전문)로 다시 로드. SessionStart는 Format B(요약)만 주입하지만 이 skill은 전문 출력. 사용자가 "결정 다시 불러와", "refresh decisions", "결정 전문", "모든 결정 보기", "Active Decisions 전체"를 언급할 때 트리거.
+user_invocable: true
 ---
 
 > **인터뷰 원칙**: 결정에 필요한 정보를 자체 도구로 최대한 수집한 후, 여전히 모호한 지점이 있으면 가정하지 말 것.
 
 # Refresh Decisions
 
-활성 결정(Active Decisions)을 **Format A (전문)** 형식으로 다시 로드한다. SessionStart에서는 Format B(요약)만 주입되지만, 이 커맨드는 전문을 출력한다.
+활성 결정(Active Decisions)을 **Format A (전문)** 형식으로 다시 로드한다. SessionStart에서는 Format B(요약)만 주입되지만, 이 skill은 전문을 출력한다.
 
-**인자**:
-- `--verbose`: 매칭 안 된 결정 파일도 사유와 함께 표시 (디버깅용)
-- `--include-revoked`: 철회된 결정도 포함
+## Step 0: 발화에서 옵션 해석
+
+| 발화 예시 | → 옵션 |
+|---|---|
+| "디버그 모드로", "매칭 안 된 것도" | `--verbose` (제외된 파일도 사유와 함께 표시) |
+| "철회된 것도 포함" | `--include-revoked` |
+| (기본) | 활성 결정만 전문 출력 |
 
 ## Step 1: 설정 로드
 
@@ -81,4 +85,4 @@ created: {created} | projects: {projects} | lifetime: {lifetime}
 
 ## Step 5: 완료
 
-출력 후 별도 저장 없이 종료. 이 커맨드는 조회 전용이다.
+출력 후 별도 저장 없이 종료. 이 skill은 조회 전용이다.

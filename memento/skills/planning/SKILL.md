@@ -1,7 +1,7 @@
 ---
-description: 업무 파악/정리/분류/발굴/선택. 수시 호출 가능. plan-today + pick-task의 역할을 흡수한 적극적 계획 행위.
-allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Skill
-argument-hint: "[tomorrow] [--orchestrated]"
+name: planning
+description: 업무 파악/정리/분류/발굴/선택. 수시 호출 가능. plan-today + pick-task의 역할을 흡수한 적극적 계획 행위. 사용자가 "계획", "planning", "오늘 뭐 할지", "업무 파악", "내일 준비"(+tomorrow), "뭐부터 할까"를 언급할 때 또는 review-day가 orchestrated 모드로 호출할 때 트리거.
+user_invocable: true
 ---
 
 > **인터뷰 원칙**: 결정에 필요한 정보를 자체 도구로 최대한 수집한 후, 여전히 모호한 지점이 있으면 가정하지 말 것. `AskUserQuestion`으로 한 번에 하나의 질문만 하고, 답을 받은 직후 다음 단계로 진행한다. 여러 결정을 일괄 처리하지 않는다.
@@ -11,6 +11,19 @@ argument-hint: "[tomorrow] [--orchestrated]"
 "오늘 계획 수립" 의례가 아니라 **지금과 다음 업무를 파악/정리/분류/발굴/선택**하는 활동. 하루 중 언제든 호출 가능하다. 단순 재배치(regroup)가 아니라 **새 일을 발굴**하는 적극적 계획 행위까지 포함한다.
 
 아침 호출은 자연스럽게 "하루 시작 계획"처럼 동작하고, 오후 호출은 "진행 점검 + 재조정 + 새로 떠오른 것 발굴"이 된다. Daily Note Plan 섹션은 비어 있을 수도 있고 갱신될 수도 있다 — 강제하지 않는다.
+
+## Step 0: 발화에서 모드 해석
+
+| 발화 예시 | → 모드 |
+|---|---|
+| "오늘 뭐 할지 계획해줘" | 기본 (TARGET_DATE=오늘) |
+| "내일 뭐 할지 정해볼까" | `tomorrow` (TARGET_DATE=내일) |
+| "업무 파악해줘" (아침) | 기본 + 아침 모드 |
+| "지금 상태 점검" (오후) | 기본 + 오후 모드 |
+| review-day 내부 호출 | `tomorrow --orchestrated` |
+| 다른 스킬이 호출 | `--orchestrated` |
+
+두 모드는 조합 가능 (`tomorrow --orchestrated`).
 
 ## Tasks 포맷 (v2.8.0부터)
 
@@ -23,14 +36,6 @@ argument-hint: "[tomorrow] [--orchestrated]"
 - 착수: `git mv <inbox>/{file.md} <daily_notes>/{YYYY-MM-DD}/{slug}.md` + `status: in-progress` + `started_at: {YYYY-MM-DD}`.
 - 완료: `git mv <daily_notes>/{YYYY-MM-DD}/{slug}.md <daily_archive_path>/{YYYY}/{MM}/{YYYY-MM-DD}/{slug}.md` + `status: resolved` + `resolved_at: {YYYY-MM-DD}`.
 - 이월: 미완료는 `git mv <daily_notes>/{YYYY-MM-DD}/{slug}.md <inbox_folder_path>/{TARGET_DATE}/{slug}.md` + `status: open` (started_at 로그 유지). 즉 이월 당일 Inbox 폴더에 떨어뜨린다 (Inbox는 기존 일별 폴더 관행 유지).
-
-## 인자
-
-- **(없음)**: 기본 모드. 기준 날짜 = 오늘. 대화형 질문 활성.
-- **`tomorrow`**: 기준 날짜 = 내일(오늘 +1일, 영업일 보정 없음). Daily Note 경로·"어제 Daily Note"·리마인더 만료 판정 등 모든 날짜 파생값이 내일 기준으로 이동. review-day가 하루 마감 의례에서 호출하는 주 경로.
-- **`--orchestrated`**: 상위 커맨드(review-day 등)가 오케스트레이션 호출 시 전달. 각 Step의 `AskUserQuestion`을 최소화하고, 모호 항목은 기본값으로 처리. 최종 출력은 내부 컨텍스트에 요약 블록만 반환.
-
-두 인자는 조합 가능 (`tomorrow --orchestrated`). 인자 순서는 상관없다.
 
 ## 다섯 단계
 
@@ -46,9 +51,9 @@ TZ=Asia/Seoul LC_TIME=ko_KR.UTF-8 date "+%Y-%m-%d %H:%M %Z (%A)"
 
 **기준 날짜(`TARGET_DATE`) 분기**:
 
-| 인자 | TARGET_DATE | "이전 일자" = PREV_DATE | 시간대 해석 |
+| 모드 | TARGET_DATE | "이전 일자" = PREV_DATE | 시간대 해석 |
 |------|-------------|------------------------|--------------|
-| (없음) | 오늘 | 어제 | 실제 현재 시각 기준 아침/오후 모드 |
+| (기본) | 오늘 | 어제 | 실제 현재 시각 기준 아침/오후 모드 |
 | `tomorrow` | 내일 (오늘 +1일) | 오늘 | "저녁에 내일 준비" 고정 모드 — 아침/오후 분기 비활성 |
 
 내일 계산 (Bash):
@@ -105,12 +110,12 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 
 현재 진행 중·대기 중·예정된 일을 한 번에 수집한다. 아래 소스를 병렬로 읽는다.
 
-1. **오늘 진행 중 todo 파일** (`<daily_notes_path>/{TARGET_DATE}/*.md`): 지금 착수되어 있는 todo들. frontmatter(`slug`/`track`/`priority`/`status`/`started_at`/`source`) 수집. `status: in-progress`만 대상 (resolved가 있다면 Step 2에서 Archives로 이동 후보 표시).
+1. **오늘 진행 중 todo 파일** (`<daily_notes_path>/{TARGET_DATE}/*.md`): 지금 착수되어 있는 todo들. frontmatter(`slug`/`track`/`priority`/`status`/`started_at`/`source`) 수집. `status: in-progress`만 대상.
 2. **대상(TARGET_DATE) Daily Note Tasks**의 wikilink 체크박스: 파일이 이미 있으면 track 섹션별로 수집. wikilink 링크 + 체크 상태(`- [ ]` / `- [x]`) 파싱. 링크가 가리키는 todo 파일의 frontmatter와 교차 확인.
 3. **Issue Box inbox** (`inbox_folder_path/{YYYY-MM-DD}/` 또는 legacy 월/날짜 폴더): 백로그. open + blocked 구분하여 수집. 우선순위·카테고리·생성일 메타 포함.
 4. **이전(PREV_DATE) Daily Note 미완료**: 해당 날짜 경로를 생성해 읽기. `daily_notes_path` + `daily_note_format`로 1차 시도, 파일이 없으면 `daily_archive_path` + `daily_archive_format`가 설정된 경우 아카이브에서 2차 시도. Tasks 섹션의 wikilink 중 체크 안 된 것(`- [ ]`) 추출하여 대상 todo 파일 frontmatter의 `status`가 여전히 `in-progress`/`open`인 것만 이월 후보로. 단, **TARGET_DATE Daily Note에 이미 Tasks 섹션 내용이 있으면(소스 2번에서 수집 항목이 존재하면) 이 소스를 건너뛴다** — 이전 계획 세션에서 이월 결정이 완료된 것으로 간주. `tomorrow` 모드에서는 이 스킵 조건을 적용하지 않는다(항상 수집).
 5. **예정된 미팅/마감**: 세션 시작 브리핑의 "향후 일정" 섹션 또는 사용자가 명시적으로 언급한 게 있는지 확인. 불확실하면 Step 1 끝에 **한 번만** "{TARGET_DATE}에 고정 일정이 있나요? (없으면 건너뛰기)" 질문. `--orchestrated` 모드에서는 이 질문을 생략하고 캘린더 스크립트 출력만 참고.
-6. **MS Teams 인박스** (매 호출 자동): `/msteams-fetch:msteams-fetch` Skill을 호출하여 구독 채팅 + 등록 채널 신규 메시지를 세션 컨텍스트에 로드. 결과 파일에서 아래 항목을 추출:
+6. **MS Teams 인박스** (매 호출 자동): `teams-fetch` Skill을 호출하여 구독 채팅 + 등록 채널 신규 메시지를 세션 컨텍스트에 로드. 결과 파일에서 아래 항목을 추출:
    - 나에게 **@멘션**된 미응답 메시지
    - 1:1 DM의 미읽음 / 답변 대기
    - 내가 앞서 남긴 메시지에 대한 **답글 대기**(타인이 답변을 요구한 케이스)
@@ -191,7 +196,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 - ...
 ```
 
-이 단계에서 사용자가 "2번은 캡처해둬" 라고 하면 즉시 `/memento:capture-task`를 호출해 inbox에 담는다 (Step 5 진입 전).
+이 단계에서 사용자가 "2번은 캡처해둬" 라고 하면 즉시 `capture-task` skill을 호출해 inbox에 담는다 (Step 5 진입 전).
 
 ### Step 5: 선택 (pick)
 
@@ -226,14 +231,14 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 7. 현재 작업 디렉토리와 frontmatter `repo` 또는 `source_project` 비교 후 안내.
 
 **Inbox 외 신규 발굴 건을 바로 착수**하는 경우:
-- 먼저 `/memento:capture-task`로 Inbox에 파일을 생성한 뒤 위 절차로 이동, 또는
+- 먼저 `capture-task`로 Inbox에 파일을 생성한 뒤 위 절차로 이동, 또는
 - 사용자 확인 후 `<daily_notes_path>/{TARGET_DATE}/{slug}.md`에 곧바로 신규 파일 작성 (frontmatter `source: (direct)`).
 
 **Daily Note 갱신** (아침 모드일 때):
 
 - Plan 섹션: 선택된 1-3개를 상단에 (wikilink 아니어도 무방 — 문장 톤)
 - Tasks 섹션: 착수된 todo 파일의 wikilink를 트랙 헤더 아래 체크박스로
-- 파일 없으면 `/memento:setup`의 템플릿 구조로 새 Daily Note 생성
+- 파일 없으면 `setup`의 템플릿 구조로 새 Daily Note 생성
 - 파일 있고 Tasks 비어 있으면 Tasks만 채우기
 - 파일 있고 Tasks 내용 있으면: "이미 계획이 있습니다. 병합할까요, 덮어쓸까요?" 한 질문 (`--orchestrated`는 자동 병합)
 
@@ -250,7 +255,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 **`tomorrow` 모드일 때** (review-day에서 호출되는 주 경로):
 
 - 대상: TARGET_DATE(내일) Daily Note
-- 파일 없으면 `/memento:setup`의 템플릿 구조로 새로 생성
+- 파일 없으면 `setup`의 템플릿 구조로 새로 생성
 - Plan 섹션이 비어 있으면 Step 3 분류 결과에서 high priority 1-3건 + 오늘 미완료 이월 후보를 상단에 채운다
 - Plan 섹션이 이미 충분히 채워져 있으면(3건 이상) **덮어쓰지 않고 건너뛰기** + Tasks에만 부족분 append
 - 착수 이동은 수행하지 않음 (내일 아침 재호출 시 사용자가 직접 pick). 단, **PREV_DATE 미완료 이월**은 수행 (Inbox로 되돌리기 + 내일 Daily Tasks wikilink)
@@ -266,7 +271,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 
 **연체/리마인드 플래그**:
 
-- KR1(Key Result 1, 프로세스 준수율) 체크포인트 연체 감지 시 (Step 1 스캔 중 `{vault_path}/30 Imagoworks/10 Objectives/kr1-tracking.md`의 "다음 업데이트" 날짜가 과거면): Plan 상단에 `> ⚠ KR1 체크포인트 업데이트가 {N}일 연체되었습니다. /memento:review-objectives 실행 권장.` 경고
+- Key Result 1(KR1, 프로세스 준수율) 체크포인트 연체 감지 시 (Step 1 스캔 중 `{vault_path}/30 Imagoworks/10 Objectives/kr1-tracking.md`의 "다음 업데이트" 날짜가 과거면): Plan 상단에 `> ⚠ KR1 체크포인트 업데이트가 {N}일 연체되었습니다. /memento:review-objectives 실행 권장.` 경고
 - Active Reminders와 충돌/일치하는 항목에는 `(리마인드: {슬로건})` 마크
 
 ### Step 6: 완료 출력
@@ -293,7 +298,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 - 오후 재호출은 기존 Plan 병합 우선
 - 후보가 비등할 때만 한 질문으로 선택
 - blocked 이슈는 분류 단계에서 별도 표시
-- KR1 연체 감지 시 1줄 경고 (첫 출현은 `KR1(Key Result 1)`로 풀어쓰기)
+- KR1 연체 감지 시 1줄 경고 (첫 출현은 `Key Result 1(KR1)`로 풀어쓰기)
 - todo 파일은 파일 하나 = 일 하나 (Daily Note Tasks는 인덱스만)
 - Teams 미확인은 제외 필터 통과한 것만 Step 3에 노출
 - **내부 Task ID 축약 단독 사용 금지**: 사용자 대면 출력(대화, Plan 본문, 보고서)에서 `T1`~`T9`, `CP1`~`CP9`, `KR1`~`KR9`, 에픽 내부 순번 같은 내부 레이블을 **한 문서(또는 한 대화 응답) 내 첫 출현 시** 단독으로 쓰지 않는다. 풀어쓰거나 괄호 병기: `Task 2(실제 docx 변환)`, `Checkpoint 1(CP1)`, `Key Result 1(KR1)`. 이후 같은 문서 내 반복은 단독 허용. Jira 티켓 번호(`CND-1173`, `PR #1482`)와 산업 표준 약어(API/HTTP/JSON/TDD/CI/CD 등)는 면제. Daily Log의 본인 축약 메모는 예외이나 같은 맥락을 사용자에게 꺼낼 땐 풀어서 말한다. 상세: 저장소 CLAUDE.md "사용자 대면 출력 규칙".

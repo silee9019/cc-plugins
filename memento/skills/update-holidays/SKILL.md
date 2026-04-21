@@ -1,5 +1,7 @@
 ---
-description: KASI 특일정보 API에서 한국 공휴일을 가져와 로컬 캐시를 갱신
+name: update-holidays
+description: KASI 특일정보 API에서 한국 공휴일을 가져와 로컬 캐시를 갱신. 사용자가 "공휴일 갱신", "휴일 업데이트", "update holidays", "공휴일 캐시"를 언급할 때 트리거.
+user_invocable: true
 ---
 
 # update-holidays
