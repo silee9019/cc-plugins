@@ -266,7 +266,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 
 **연체/리마인드 플래그**:
 
-- KR1 체크포인트 연체 감지 시 (Step 1 스캔 중 `{vault_path}/30 Imagoworks/10 Objectives/kr1-tracking.md`의 "다음 업데이트" 날짜가 과거면): Plan 상단에 `> ⚠ KR1 체크포인트 업데이트가 {N}일 연체되었습니다. /memento:review-objectives 실행 권장.` 경고
+- KR1(Key Result 1, 프로세스 준수율) 체크포인트 연체 감지 시 (Step 1 스캔 중 `{vault_path}/30 Imagoworks/10 Objectives/kr1-tracking.md`의 "다음 업데이트" 날짜가 과거면): Plan 상단에 `> ⚠ KR1 체크포인트 업데이트가 {N}일 연체되었습니다. /memento:review-objectives 실행 권장.` 경고
 - Active Reminders와 충돌/일치하는 항목에는 `(리마인드: {슬로건})` 마크
 
 ### Step 6: 완료 출력
@@ -293,7 +293,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 - 오후 재호출은 기존 Plan 병합 우선
 - 후보가 비등할 때만 한 질문으로 선택
 - blocked 이슈는 분류 단계에서 별도 표시
-- KR1 연체 감지 시 1줄 경고
+- KR1 연체 감지 시 1줄 경고 (첫 출현은 `KR1(Key Result 1)`로 풀어쓰기)
 - todo 파일은 파일 하나 = 일 하나 (Daily Note Tasks는 인덱스만)
 - Teams 미확인은 제외 필터 통과한 것만 Step 3에 노출
-- **내부 task ID 축약 단독 사용 금지**: 사용자 대면 출력(대화, Plan 본문, 보고서)에서 `T2`, `T3`, `CP1`, `CP2`, 에픽 내부 순번 같은 내부 레이블을 단독으로 쓰지 않는다. 의미를 풀어쓰거나 `T2(실제 docx 변환)`처럼 괄호 병기한다. Jira 티켓 번호(`CND-1173`, `PR #1482`)는 고유 식별자이므로 그대로 사용 OK. Daily Log의 본인 축약 메모는 예외이나 같은 맥락을 사용자에게 꺼낼 땐 풀어서 말한다.
+- **내부 Task ID 축약 단독 사용 금지**: 사용자 대면 출력(대화, Plan 본문, 보고서)에서 `T1`~`T9`, `CP1`~`CP9`, `KR1`~`KR9`, 에픽 내부 순번 같은 내부 레이블을 **한 문서(또는 한 대화 응답) 내 첫 출현 시** 단독으로 쓰지 않는다. 풀어쓰거나 괄호 병기: `Task 2(실제 docx 변환)`, `Checkpoint 1(CP1)`, `Key Result 1(KR1)`. 이후 같은 문서 내 반복은 단독 허용. Jira 티켓 번호(`CND-1173`, `PR #1482`)와 산업 표준 약어(API/HTTP/JSON/TDD/CI/CD 등)는 면제. Daily Log의 본인 축약 메모는 예외이나 같은 맥락을 사용자에게 꺼낼 땐 풀어서 말한다. 상세: 저장소 CLAUDE.md "사용자 대면 출력 규칙".

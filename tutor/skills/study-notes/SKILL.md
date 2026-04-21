@@ -188,3 +188,7 @@ obsidian vault="<vault>" create name="_dashboard" path="<study_base_path>" conte
 
 퀴즈를 시작하려면: /tutor:quiz <주제명>
 ```
+
+## 출력 규칙
+
+- **내부 Task ID 축약 단독 사용 금지**: 학습 노트·퀴즈 설명에서 `T1`~`T9`, `CP1`~`CP9`, `KR1`~`KR9` 같은 내부 축약을 한 노트 내 첫 출현 시 풀어쓰거나 괄호 병기. 이후 반복은 단독 허용. 산업 표준 약어(API/HTTP 등) 및 교육 소재 고유 약어(원전에 정의된 경우)는 면제. 상세: 저장소 CLAUDE.md "사용자 대면 출력 규칙".

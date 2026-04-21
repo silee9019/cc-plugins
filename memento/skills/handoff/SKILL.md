@@ -98,3 +98,4 @@ WORKING.md가 없으면 생성. 있으면 해당 섹션만 업데이트.
 - 3-field 본문 (state/next/references) + frontmatter 메타
 - 재개 프롬프트 출력
 - Daily Note Log 한 줄 append (handoff 파일 링크 포함)
+- **내부 Task ID 축약 단독 사용 금지**: handoff 본문(state/next)·재개 프롬프트에서 `T1`~`T9`, `CP1`~`CP9`, `KR1`~`KR9` 같은 축약을 한 문서 내 첫 출현 시 풀어쓰거나 괄호 병기. 이후 반복은 단독 허용. Jira 번호·산업 표준 약어는 면제. 상세: 저장소 CLAUDE.md.

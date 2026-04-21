@@ -189,3 +189,4 @@ checkpoint 완료:
 - 캘린더 동기화 매 호출
 - 커밋/푸시/PR 제안
 - 교훈 추출은 review-day에서
+- **내부 Task ID 축약 단독 사용 금지**: done 로그·WORKING.md 갱신·커밋 메시지·PR 본문에서 `T1`~`T9`, `CP1`~`CP9`, `KR1`~`KR9` 같은 축약을 한 문서 내 첫 출현 시 풀어쓰거나 괄호 병기(`Task 2(docx 변환)`). 이후 반복은 단독 허용. Jira 번호(`CND-xxxx`)와 산업 표준 약어는 면제. 상세: 저장소 CLAUDE.md.

@@ -22,6 +22,23 @@ cc-plugins/
 
 각 플러그인은 독립 디렉토리에 `.claude-plugin/plugin.json` + 컴포넌트(command/skill/hook)로 구성.
 
+## 사용자 대면 출력 규칙
+
+모든 스킬·커맨드가 생성하는 사용자 대면 산출물(대화 응답, Plan, 보고서, PR 본문, 커밋 메시지, Jira 티켓, Confluence, 핸드오프, 결정 기록, 학습 노트 등)은 아래 규칙을 따른다.
+
+### 내부 Task ID 축약 단독 사용 금지
+
+- **적용 대상**: `T1`~`T9`, `CP1`~`CP9`, `KR1`~`KR9`, 에픽 내부 순번, `P001`류 짧은 로컬 ID.
+- **규칙**: 한 문서(또는 한 대화 응답) 내 **첫 출현 시** 단독 사용하지 않는다. 풀어쓰거나 괄호 병기.
+  - 예: `Task 2(docx 실사용 변환)`, `Checkpoint 1(CP1, 요구사항확정+유저스토리)`, `Key Result 1(KR1, 프로세스 준수율)`
+- **이후 반복**: 같은 문서 내에서 이미 정의된 축약은 **단독 사용 허용** (예: 정의 후 `CP1 미충족`, `T2 재실행` OK).
+- **면제**:
+  - Jira 티켓 번호: `CND-1173`, PR 번호: `#1482` (고유 식별자)
+  - 산업 표준 약어: API, HTTP, JSON, TDD, CI/CD, PR, URL, HTML, CSS, MCP, CLI, SDK, LLM, CRUD, DTO, UI, UX, SQL, TUI, E2E, MD
+  - 플러그인·브랜드·프로젝트 고유명: `cc-plugins`, `memento`, `SDVR`, `QTrace`, `Dentbird`
+  - 버전·단계 레이블: `v2.8.0`, `Phase 2`, `Step 3`
+- **왜**: 내부 레이블을 맥락 없이 꺼내면 사용자가 매번 해석해야 함. 2026-04-21 planning 세션에서 "T2"라고 하면 사용자가 알아들을 수 없다는 지적.
+
 ## Coding Guide
 
 ### Shell Script: POSIX sh 호환성

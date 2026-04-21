@@ -184,3 +184,4 @@ SLUG, SCOPE, LIFETIME은 실제 값으로 치환. `$MEMENTO_HOME`과 `$PROJECT_I
 | summary에 한영 병기 권장 | 한국어만 또는 영어만 강제 |
 | slug를 결정 의미에서 자연스럽게 도출 | 한국어 transliteration이나 해시 사용 |
 | raw 로그 tail에 마커 append | raw 로그 중간에 마커 삽입 |
+| 결정 파일 제목·summary·본문에서 내부 Task ID 축약(T1~T9/CP1~CP9/KR1~KR9)은 첫 출현 시 풀어쓰거나 괄호 병기(`Checkpoint 1(CP1)`), 이후 단독 허용 | 결정 파일에서 정의 없이 축약 단독 사용 (상세: 저장소 CLAUDE.md) |

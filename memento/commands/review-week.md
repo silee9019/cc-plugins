@@ -453,6 +453,7 @@ rm -rf "$TMPDIR"
 | Jira 이슈의 summary/description을 원문 인용 재료로 | 이슈 상태 전환(In Progress→Done)을 본문 반영 |
 | Atlassian 미설정 시 조용히 스킵 | "Jira 미설정" 경고로 노이즈 |
 | 이전 인자 구문 사용 시 경고 1줄 후 기본값 진행 | 이전 구문을 그대로 해석 시도 |
+| 내부 Task ID 축약(T1~T9/CP1~CP9/KR1~KR9)은 주간 회고 첫 출현 시 풀어쓰거나 괄호 병기(`Checkpoint 1(CP1)`), 이후 단독 허용 | 본문/Active Reminders에서 정의 없이 축약 단독 사용 |
 
 ## 보고서 품질 기준
 
