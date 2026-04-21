@@ -420,6 +420,30 @@ expires_at: {END + 7일}
 - `expires_at`은 `END + 7일`로 계산: `date -j -f "%Y-%m-%d" -v+7d "$END" "+%Y-%m-%d"`
 - 파일 Write 후 "Active reminders 갱신: {파일 경로} ({N}개 항목)" 출력
 
+### Step 6.7: Decision lint (v2.9.0)
+
+`{MEMENTO_HOME}/user/decisions/` 의 결정 파일 품질을 주 1회 점검한다. Phase C 안전망. 자동 수정하지 않고 보고만 한다.
+
+1. **스캔 대상**: `{MEMENTO_HOME}/user/decisions/*.md` (archive/ 포함 여부: 제외)
+2. **체크 항목**:
+   | ID | 룰 | 검출 방식 |
+   |----|----|----------|
+   | L1 | 필수 frontmatter 누락 | `type`, `created`, `projects`, `lifetime`, `expires`, `revoked` 중 하나라도 부재 |
+   | L2 | expired 미아카이브 | `expires` < 이번 주 END 인데 archive/로 이동되지 않음 (Step 8.5에서 놓친 건) |
+   | L3 | revoked 미아카이브 | `revoked: true` 인데 archive/로 이동되지 않음 |
+   | L4 | 중복 slug | 파일명 slug base가 겹치는 쌍 (리네임/재태깅 잔재) |
+   | L5 | 빈 summary | `summary` 필드가 공백/null |
+   | L6 | 파일명 규칙 위반 | `YYYY-MM-DD-decision-{slug}.md` 또는 레거시 `YYYY-MM-DD-{slug}.md` 외 형식 |
+3. **보고**: 한 건도 없으면 조용히 건너뛰기. 있으면 임시 컨텍스트에 아래 포맷으로 수집:
+   ```
+   ## Decision lint (N issues)
+   - L1 `{filename}`: 누락 필드 {field1, field2}
+   - L2 `{filename}`: expires {expires} 지났으나 archive 미배치
+   ...
+   ```
+4. **배치**: 주간 회고 본문 `<details>` 부록에 "Decision lint" 섹션으로 포함 (Section 6 뒤, 정리 섹션 전). 본문 서사에는 반영하지 않는다 — 부록 전용.
+5. **자동 수정 금지**: lint는 보고만. 수정은 review-day Step 8.5(아카이브) 또는 수동 편집으로.
+
 ### Step 7: 임시 파일 정리
 
 ```bash

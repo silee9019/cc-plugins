@@ -224,6 +224,37 @@ Step 5에서 결정된 처리(내일 이어서 / 백로그 / 완료 / 삭제)를
 
 갱신 완료 후 내부 컨텍스트에 "today_daily_updated=<경로>", "todos_moved=[<경로 목록>]"로 보관. 최종 보고는 Step 10에서 합쳐서 출력한다.
 
+### Step 8.5: Decision 아카이브 배치 제안 (v2.9.0)
+
+`{MEMENTO_HOME}/user/decisions/` 의 결정 파일 중 오늘 기준으로 생애가 끝난 것을 감지하고 `archive/` 하위로 배치 제안한다. Phase C의 세 번째 접점(안전망).
+
+1. **스캔 대상**: `{MEMENTO_HOME}/user/decisions/*.md` (archive/ 제외). frontmatter를 파싱하여 다음 중 하나라도 충족하면 아카이브 후보:
+   - `revoked: true`
+   - `expires` 값이 오늘보다 과거
+   - `expired: true`
+2. **후보 0건**: 조용히 Step 9로 진행.
+3. **후보 1건 이상**: 표로 나열 후 AskUserQuestion:
+   ```
+   다음 결정 파일을 archive/로 이동할까요?
+   - {filename} — {사유: revoked / expired (exp {expires}) / expired-flag}
+   ...
+
+   1. 전부 이동 [Recommended]
+   2. 개별 선택
+   3. 건너뛰기
+   ```
+4. **이동 실행**:
+   - 대상 경로: `{MEMENTO_HOME}/user/decisions/archive/{filename}`
+   - 디렉토리 없으면 `mkdir -p`
+   - `git mv`로 이동 (git 관리 vault 한정). git 관리 외면 `mv`
+   - 이동된 각 파일 frontmatter에 `archived: {오늘 날짜}` 1줄 추가 (이미 있으면 덮어쓰기)
+5. **요약**: "Decision archive 배치: N건 이동 (→ archive/)" 내부 컨텍스트에 저장. Step 10 최종 요약에 포함.
+
+**원칙**:
+- 자동 이동 금지 — 반드시 사용자 확인
+- active-reminders 파일은 대상 아님 (별도 관리)
+- `archived` 필드가 이미 있는 파일은 이중 제안 금지 (스캔 단계에서 배제)
+
 ### Step 9: 내일 업무 준비
 
 오늘 Review가 확정되면 내일을 준비한다. 직접 로직을 갖지 않고 `planning`을 내일 모드로 위임한다.
@@ -259,6 +290,7 @@ Step 5에서 결정된 처리(내일 이어서 / 백로그 / 완료 / 삭제)를
     - 내일 이월: N건
     - 백로그 보관: N건
     - 비일일노트 이동: N건
+    - Decision archive 배치: N건 (해당 시)
     - Review 섹션: 갱신됨
   [3/3] 내일 준비: N건 후보 선정, 내일 Daily Note Plan 초안 작성됨
 
