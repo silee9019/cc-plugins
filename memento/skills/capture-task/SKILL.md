@@ -95,7 +95,6 @@ Tasks 포맷은 v2.8.0부터 **todo 하나 = 파일 하나** 규칙을 따른다
      ```yaml
      ---
      slug: {slug}
-     track: {추정 track 또는 ad-hoc}
      category: {category}
      priority: {priority}
      status: in-progress
@@ -105,7 +104,7 @@ Tasks 포맷은 v2.8.0부터 **todo 하나 = 파일 하나** 규칙을 따른다
      ---
      ```
    - 본문: `# {제목}` + 1-2문장 요약 + (선택) 제안 조치
-4. Daily Note Tasks 섹션의 적절한 track 헤더(`## [track:{id}] P: {제목}`) 아래 wikilink 체크박스 append. 헤더 없으면 새로 생성:
+4. Daily Note의 `## Tasks` 섹션 말미에 wikilink 체크박스 append:
    ```
    - [ ] [[<daily_notes_path>/{YYYY-MM-DD}/{slug}|{표시 이름}]]
    ```

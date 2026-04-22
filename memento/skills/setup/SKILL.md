@@ -106,6 +106,24 @@ fi
 
 마이그레이션 후 구 키 (`github_username`, `github_aliases`, `author_email`)는 Step 9에서 config.md 재작성 시 출력하지 않아 자동 소멸.
 
+**v2.14.0 Track 폐지 마이그레이션 (이중 안전망)**:
+
+`PREV_VERSION` < `2.14.0`인 경우 Track 폐지 마이그레이션을 확인한다. SessionStart hook이 이미 자동 실행했을 가능성이 높지만, config 수동 편집으로 setup_version이 구버전인 채 남은 케이스에 대비해 이중 안전망으로 둔다.
+
+```sh
+MIGRATE_SENTINEL="$HOME/.claude/plugins/data/memento-cc-plugins/.migrated-2.14.0"
+if [ ! -f "$MIGRATE_SENTINEL" ] && [ -n "$PREV_VAULT_PATH" ]; then
+  # AskUserQuestion: "Track 폐지 마이그레이션을 지금 실행할까요? (dry-run 먼저 확인 가능)"
+  # 사용자가 "지금 실행"을 선택하면:
+  python3 "${CLAUDE_PLUGIN_ROOT}/scripts/migrate_track_removal.py" --apply --yes \
+    --vault "$PREV_VAULT_PATH" --memento-root "$PREV_MEMENTO_ROOT"
+  mkdir -p "$(dirname "$MIGRATE_SENTINEL")"
+  : > "$MIGRATE_SENTINEL"
+fi
+```
+
+sentinel 파일이 있으면 이미 완료된 것으로 간주하고 스킵.
+
 ### Step 3: vault 탐지 & 선택
 
 `obsidian vaults verbose` 실행하여 vault 목록과 경로 파악.

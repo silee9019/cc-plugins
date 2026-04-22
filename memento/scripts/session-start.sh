@@ -133,6 +133,43 @@ if [ ! -f "$USER_DIR/ROOT.md" ]; then
   cp "$PLUGIN_ROOT/templates/USER-ROOT.md" "$USER_DIR/ROOT.md"
 fi
 
+# ─── Auto-migration: v2.14.0 Track removal ───
+# Run once if setup_version < 2.14.0. Writes a sentinel file to avoid re-running on every session.
+
+MIGRATE_SENTINEL="$HOME/.claude/plugins/data/memento-cc-plugins/.migrated-2.14.0"
+if [ -n "$VAULT_PATH" ] && [ ! -f "$MIGRATE_SENTINEL" ]; then
+  SETUP_VERSION=""
+  if [ -f "$CONFIG_FILE" ]; then
+    SETUP_VERSION=$(sed -n 's/^setup_version: *"\(.*\)"$/\1/p' "$CONFIG_FILE" | head -1)
+  fi
+  NEEDS_MIGRATE=0
+  if [ -z "$SETUP_VERSION" ]; then
+    NEEDS_MIGRATE=1
+  else
+    # Compare dotted versions via Python 3
+    NEEDS_MIGRATE=$(python3 -c "
+import sys
+def parse(v): return tuple(int(x) for x in v.split('.') if x.isdigit())
+try:
+    a = parse('$SETUP_VERSION'); b = parse('2.14.0')
+    print(1 if a < b else 0)
+except Exception:
+    print(1)
+" 2>/dev/null || echo 0)
+  fi
+  if [ "$NEEDS_MIGRATE" = "1" ]; then
+    echo "[memento] Track 폐지 마이그레이션 실행 중 (setup_version: ${SETUP_VERSION:-unknown} → 2.14.0)" >&2
+    if python3 "$PLUGIN_ROOT/scripts/migrate_track_removal.py" --apply --yes \
+        --vault "$VAULT_PATH" --memento-root "$MEMENTO_ROOT" >&2; then
+      mkdir -p "$(dirname "$MIGRATE_SENTINEL")"
+      : > "$MIGRATE_SENTINEL"
+      echo "[memento] 마이그레이션 완료. config.md의 setup_version을 2.14.0으로 갱신하려면 /memento:setup 을 실행하세요." >&2
+    else
+      echo "[memento] 마이그레이션 실패. 수동 확인 필요: python3 $PLUGIN_ROOT/scripts/migrate_track_removal.py --apply --vault \"$VAULT_PATH\"" >&2
+    fi
+  fi
+fi
+
 # ─── Active Decisions injection (Format B) ───
 # Scan user/decisions/*.md for active decisions (not expired, not revoked, project scope match)
 # Output: numbered list, max 10, sorted by created DESC then filename ASC
