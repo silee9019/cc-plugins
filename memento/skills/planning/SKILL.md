@@ -121,18 +121,45 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 3. **Issue Box inbox** (`inbox_folder_path/{YYYY-MM-DD}/` 또는 legacy 월/날짜 폴더): 백로그. open + blocked 구분하여 수집. 우선순위·카테고리·생성일 메타 포함.
 4. **이전(PREV_DATE) Daily Note 미완료**: 해당 날짜 경로를 생성해 읽기. `daily_notes_path` + `daily_note_format`로 1차 시도, 파일이 없으면 `daily_archive_path` + `daily_archive_format`가 설정된 경우 아카이브에서 2차 시도. Tasks 섹션의 wikilink 중 체크 안 된 것(`- [ ]`) 추출하여 대상 todo 파일 frontmatter의 `status`가 여전히 `in-progress`/`open`인 것만 이월 후보로. 단, **TARGET_DATE Daily Note에 이미 Tasks 섹션 내용이 있으면(소스 2번에서 수집 항목이 존재하면) 이 소스를 건너뛴다** — 이전 계획 세션에서 이월 결정이 완료된 것으로 간주. `tomorrow` 모드에서는 이 스킵 조건을 적용하지 않는다(항상 수집).
 5. **예정된 미팅/마감**: 세션 시작 브리핑의 "향후 일정" 섹션 또는 사용자가 명시적으로 언급한 게 있는지 확인. 불확실하면 Step 4 끝에 **한 번만** "{TARGET_DATE}에 고정 일정이 있나요? (없으면 건너뛰기)" 질문. `--orchestrated` 모드에서는 이 질문을 생략하고 캘린더 스크립트 출력만 참고.
-6. **MS Teams 인박스** (매 호출 자동): `teams-fetch` Skill을 호출하여 구독 채팅 + 등록 채널 신규 메시지를 세션 컨텍스트에 로드. 결과 파일에서 아래 항목을 추출:
+6. **외부 인박스 (Teams + Outlook mail + Jira)** — **당일 최초 실행 한정**.
+
+   **트리거 조건** (AND):
+   - `tomorrow` 모드가 아님
+   - `--orchestrated` 모드가 아님 (상위 review-day가 이미 관리)
+   - TARGET_DATE Daily Note Tasks 섹션이 비어 있음 (= 당일 최초 호출)
+
+   위 조건을 만족하지 않아도 사용자가 **명시적으로 재확인을 요청**("팀즈 다시 확인해줘", "메일 다시 봐줘", "지라 새로 가져와" 등)하면 해당 소스만 재실행한다. 반복 호출에서 자동 재실행은 하지 않는다.
+
+   세 소스를 병렬 수집:
+
+   **Teams** — `m365-fetch:teams-fetch` Skill 호출(`teams inbox --since auto`). 추출:
    - 나에게 **@멘션**된 미응답 메시지
    - 1:1 DM의 미읽음 / 답변 대기
    - 내가 앞서 남긴 메시지에 대한 **답글 대기**(타인이 답변을 요구한 케이스)
 
-   **제외 필터**:
+   제외 필터:
    - `connect-chat` PR 봇 채널 (피드백 `feedback_skip-connect-chat.md`)
    - 본인이 이모지 반응을 남긴 메시지 — 묵시적 close 시그널 (피드백 `feedback_emoji-reaction-as-close.md`)
    - 이미 close 정렬된 것으로 표시된 과거 이슈 (피드백 `feedback_no-seohee-reminder.md`)
    - 단순 채널 알림/자동 발송 메시지
 
-   `--orchestrated` 모드: 이 소스 스킵 (상위 review-day가 이미 수행).
+   **Mail** — `m365-fetch:mail-inbox` Skill 호출(`mail inbox --since 1d`). 추출: 액션 요청 / 마감 알림 / 본인 이름 멘션. 제외 필터:
+   - Jira/Confluence digest 발신자(`jira@imagoworks.atlassian.net`, `confluence@imagoworks.atlassian.net`) — digest는 Jira 직접 조회와 중복
+   - 프로모션/브로드캐스트(Stripe/Google/Stitch 등 외부 서비스 안내)
+   - 단, 제목에 "기한이 다가오는" / "due" 플래그 있는 Jira 알림은 **마감 플래그로 남김** (Tasks 상단 경고 후보)
+
+   **Jira** — MCP 툴 `mcp__plugin_atlassian_atlassian__searchJiraIssuesUsingJql` 두 번 호출:
+   - 내 미완료: `assignee = currentUser() AND statusCategory != Done ORDER BY updated DESC` (`maxResults: 30`, `responseContentFormat: "markdown"`)
+   - 최근 활동: `(reporter = currentUser() OR assignee = currentUser() OR watcher = currentUser()) AND updated >= -1d ORDER BY updated DESC` (`maxResults: 30`, `responseContentFormat: "markdown"`)
+
+   `cloudId`는 세션 캐시 또는 `mcp__plugin_atlassian_atlassian__getAccessibleAtlassianResources` 1회 호출로 확보(imagoworks Atlassian 환경은 `29dab47b-1317-4b27-9c81-9fee8dc2e724`). 응답이 토큰 한도를 초과하면 툴이 저장한 임시 파일을 `jq -r` 로 파싱해 `key/status/summary/updated/assignee` 요약 라인만 추출한다.
+
+   Jira 항목 분류:
+   - `duedate <= TARGET_DATE` & 미완료 & 내 assignee → **오늘 마감 플래그** (Tasks 상단 경고 후보)
+   - 최근 24시간 내 **나에게 할당됨** 또는 **상태 변경** → 알림
+   - 그 외 내 미완료 → "열린 이슈" 요약 (상위 5개 + "N건 추가")
+
+   수집 결과는 Step 6 "외부 인박스" 블록으로 전달. 반복 호출이거나 스킵 조건이면 이 소스 전체를 건너뛴다.
 
 수집 결과를 그룹별 요약 표로 정리해둔다 (아직 출력하지 않음).
 
@@ -144,7 +171,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 - **완료/취소 항목 솎기**: frontmatter `status`가 `resolved`/`dismissed`인 todo/inbox 제거. Tasks의 `- [x]` 체크이지만 파일 status가 아직 `in-progress`면 상태 불일치로 표시 (체크포인트 누락 후보).
 - **상태 동기화 후보**: 오늘 폴더에 todo 파일은 있는데 Daily Note Tasks에 wikilink가 없으면 노트 측 갱신 후보로 표시 (실제 갱신은 Step 8에서).
 - **blocked 이슈 리뷰**: `status: blocked`인 todo/inbox 목록을 별도 묶음으로. 사용자에게 개별 해제 질문 대신 목록만 제시, Step 6 분류에 같이 녹인다.
-- **Teams 필터링 확정**: Step 4 소스 6번(Teams)에서 추출한 멘션/DM/답글 대기 중 제외 필터 적용 결과만 남긴다.
+- **외부 인박스 필터링 확정**: Step 4 외부 인박스 소스(Teams/Mail/Jira)에서 추출한 항목에 각 소스별 제외 필터를 적용한 결과만 남긴다. 소스 자체가 스킵되었으면(반복 호출/`tomorrow`/`--orchestrated`) 이 항목은 no-op.
 
 ### Step 6: 분류 (classify)
 
@@ -176,11 +203,22 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 상위 우선순위만 10건 표시
 1. {제목} (category, priority, created)
 
-## Teams 미확인 (N건)
-(Step 4의 Teams 소스 결과. --orchestrated 모드는 생략)
+## 외부 인박스 (당일 최초 실행 한정)
+(Step 4 외부 인박스 소스 결과. 반복 호출/`tomorrow`/`--orchestrated`에서는 섹션 전체 생략)
+
+### Teams
 - @멘션 {chat/channel} — {발신자}, {한 줄 요약}
 - DM {발신자} — {한 줄 요약}
 - 답글 대기 {chat/channel} — {원 메시지 요약}
+
+### Mail
+- ⏰ {제목} — {발신자} (마감/액션 플래그)
+- {제목} — {발신자}
+
+### Jira
+- ⏰ {KEY} [{상태}] {요약} — 오늘 마감
+- {KEY} [{상태}] {요약} — 최근 24h 업데이트
+- 내 미완료 이슈 N건 (상위 5개 표시, 나머지 접음)
 ```
 
 ### Step 7: 발굴 (discover)
@@ -190,7 +228,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 자극 소스:
 
 - **세션 맥락**: 현재 대화 흐름에서 "이것도 해야 하지 않을까" 싶은 미해결 항목
-- **Teams 미확인 그룹**: Step 6 마지막 블록에서 나온 멘션/DM/답글 대기 중 todo로 승격할 만한 건 (즉답 1분 이내로 끝나는 건 발굴 후보 아님)
+- **외부 인박스(Teams/Mail/Jira)**: Step 6 "외부 인박스" 블록에서 todo로 승격할 만한 건 (즉답 1분 이내로 끝나는 건 발굴 후보 아님). 특히 Jira 오늘 마감 플래그는 무조건 Tasks 최상단 후보로 올린다.
 - **사용자 목표와 현 활동의 빈틈**: Active Reminders나 `review-objectives` 결과가 시사하는 공백
 - **의존성 체인**: in-progress todo가 성공하려면 선행되어야 할 전제 작업
 
@@ -279,7 +317,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 - "병합 vs 덮어쓰기" 질문은 자동 "병합"으로 처리 (안전 기본값)
 - blocked 이슈 리뷰에서 한 건씩 확인하는 질문 생략
 - 발굴(Step 7) 후보는 Tasks에 추가하지 않고 보고에만 포함
-- Step 4 Teams 소스 스킵
+- Step 4 외부 인박스(Teams/Mail/Jira) 소스 전체 스킵
 
 **연체/리마인드 플래그**:
 
@@ -295,7 +333,8 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 ```
 [planning/orchestrated target={TARGET_DATE}]
   tasks_section=<filled|skipped|merged>
-  tasks_added=N carryover=M discoveries=K teams_items=T
+  tasks_added=N carryover=M discoveries=K
+  external_inbox=<checked|skipped> teams_items=T mail_items=M jira_items=J
   daily_note=<경로>
   todo_files=[<경로1>, <경로2>, ...]
 ```
@@ -312,5 +351,5 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 - blocked 이슈는 분류 단계에서 별도 표시
 - KR1 연체 감지 시 1줄 경고 (첫 출현은 `Key Result 1(KR1)`로 풀어쓰기)
 - todo 파일은 파일 하나 = 일 하나 (Daily Note Tasks는 인덱스만)
-- Teams 미확인은 제외 필터 통과한 것만 Step 6에 노출
+- 외부 인박스(Teams, Mail, Jira)는 **당일 최초 실행 시에만** 자동 스캔. 반복 호출은 사용자 명시 요청 시에만 재실행. 각 소스는 제외 필터 통과분만 Step 6 "외부 인박스" 블록에 노출한다. `tomorrow`·`--orchestrated`·반복 호출에서는 블록 자체 생략
 - **내부 Task ID 축약 단독 사용 금지**: 사용자 대면 출력(대화, Tasks 본문, 보고서)에서 `T1`~`T9`, `CP1`~`CP9`, `KR1`~`KR9`, 에픽 내부 순번 같은 내부 레이블을 **한 문서(또는 한 대화 응답) 내 첫 출현 시** 단독으로 쓰지 않는다. 풀어쓰거나 괄호 병기: `Task 2(실제 docx 변환)`, `Checkpoint 1(CP1)`, `Key Result 1(KR1)`. 이후 같은 문서 내 반복은 단독 허용. Jira 티켓 번호(`CND-1173`, `PR #1482`)와 산업 표준 약어(API/HTTP/JSON/TDD/CI/CD 등)는 면제. Daily Log의 본인 축약 메모는 예외이나 같은 맥락을 사용자에게 꺼낼 땐 풀어서 말한다. 상세: 저장소 CLAUDE.md "사용자 대면 출력 규칙".
