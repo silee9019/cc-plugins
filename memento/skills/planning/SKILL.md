@@ -237,13 +237,19 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 
 **Daily Note 갱신** (아침 모드일 때):
 
-- Plan 섹션: 선택된 1-3개를 상단에 (wikilink 아니어도 무방 — 문장 톤)
+- **Plan 섹션 포맷 (v2.12.0부터)**: Tasks 섹션과 동일한 체크박스 + wikilink 포맷. 한 줄 Summary = 축약어(티켓 ID/버전 등) 병기 + 간결한 요약. 상세 맥락은 링크된 todo 파일 본문에서만 확인한다.
+  ```markdown
+  # Plan
+  - [ ] [[00 Inbox/2026-04-22/backend-pr-verification-head-vs-get|CND-1193 — HEAD vs GET 문서 추가]]
+  - [ ] [[01 Working/2026-04-22/{slug}|CND-1188 — TestimonialService.delete release 누락]]
+  ```
+- 우선순위는 리스트 순서로 표현. Plan = 오늘 집중할 최대 3건.
 - Tasks 섹션: 착수된 todo 파일의 wikilink를 트랙 헤더 아래 체크박스로
 - 파일 없으면 `setup`의 템플릿 구조로 새 Daily Note 생성
 - 파일 있고 Tasks 비어 있으면 Tasks만 채우기
 - 파일 있고 Tasks 내용 있으면: "이미 계획이 있습니다. 병합할까요, 덮어쓸까요?" 한 질문 (`--orchestrated`는 자동 병합)
 
-**오후 모드일 때**: 아침 모드와 동일하게 Plan + Tasks 갱신 가능. 기존 Plan이 있으면 병합 우선. 필요시 Log 섹션에 "오후 재조정: ..." 한 줄 메모.
+**오후 모드일 때**: 아침 모드와 동일하게 Plan + Tasks 갱신 가능. Plan 포맷은 동일(체크박스 + wikilink). 기존 Plan이 있으면 병합 우선. 필요시 Log 섹션에 "오후 재조정: ..." 한 줄 메모.
 
 **이월 처리** (`tomorrow` 모드 또는 오늘 모드에서 PREV_DATE 미완료를 포함하는 경우):
 
@@ -257,7 +263,7 @@ Daily Note Tasks/Issue Box에서 "나"/"내가"/"본인" 표현은 이 사용자
 
 - 대상: TARGET_DATE(내일) Daily Note
 - 파일 없으면 `setup`의 템플릿 구조로 새로 생성
-- Plan 섹션이 비어 있으면 Step 3 분류 결과에서 high priority 1-3건 + 오늘 미완료 이월 후보를 상단에 채운다
+- Plan 섹션이 비어 있으면 Step 3 분류 결과에서 high priority 1-3건 + 오늘 미완료 이월 후보를 체크박스 + wikilink 포맷으로 채운다 (v2.12.0)
 - Plan 섹션이 이미 충분히 채워져 있으면(3건 이상) **덮어쓰지 않고 건너뛰기** + Tasks에만 부족분 append
 - 착수 이동은 수행하지 않음 (내일 아침 재호출 시 사용자가 직접 pick). 단, **PREV_DATE 미완료 이월**은 수행 (Inbox로 되돌리기 + 내일 Daily Tasks wikilink)
 - Log 섹션은 건드리지 않는다 (내일 타임라인이므로 비어 있어야 정상)
