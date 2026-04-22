@@ -1,6 +1,5 @@
 ---
 name: rebuild-memory-tree
-display_name: rebuild-memory-tree
 description: "5-level 컴팩션 트리 빌드 (daily/weekly/monthly/root). smart threshold와 fixed/tentative 라이프사이클. 세션 시작 시 또는 외부 스케줄러에서 실행."
 ---
 

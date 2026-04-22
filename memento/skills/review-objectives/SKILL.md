@@ -1,8 +1,7 @@
 ---
 name: review-objectives
-display_name: review-objectives
 description: KR1 프로세스 준수율 체크포인트 업데이트. Jira 동기화 + 체크포인트 리뷰 + 메트릭 집계 + 트래킹 파일 갱신. 사용자가 "KR 체크포인트", "KR1 업데이트", "프로세스 준수율", "체크포인트 리뷰", "review objectives", "project checkpoint", "에픽 상태 점검"을 언급할 때 트리거.
-user_invocable: true
+user-invocable: true
 ---
 
 > **인터뷰 원칙**: 결정에 필요한 정보를 자체 도구로 최대한 수집한 후, 여전히 모호한 지점이 있으면 가정하지 말 것. `AskUserQuestion`으로 한 번에 하나의 질문만 하고, 답을 받은 직후 다음 단계로 진행한다. 여러 결정을 일괄 처리하지 않는다.

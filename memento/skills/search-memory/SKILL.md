@@ -1,6 +1,5 @@
 ---
 name: search-memory
-display_name: search-memory
 description: "메모리 검색: qmd 하이브리드 검색 + 컴팩션 트리 탐색으로 과거 세션 기억을 조회. 사용자가 '기억', '이전에', '과거', '검색', '남은 작업', 'recall', 'remember', 'search memory' 언급 시 트리거."
 ---
 

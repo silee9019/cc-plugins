@@ -1,8 +1,7 @@
 ---
 name: review-memento
-display_name: review-memento
 description: "memento 산출물 품질을 5개 페르소나로 다면 평가하고 개선점을 도출. 주 1회 또는 수시 실행."
-user_invocable: true
+user-invocable: true
 ---
 
 # Review Memento - 산출물 품질 평가

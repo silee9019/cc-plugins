@@ -1,7 +1,7 @@
 ---
 name: memento-core
-display_name: memento-core
 description: "나의 기억이자 멘토. 세션 간 컨텍스트 보존(Memory) + 하루 계획·캡처·회고·인계(Mentor). 세션 시작 프로토콜, 태스크 종료 체크포인트, 지식 승격, 컴팩션 규칙. 매 세션 반드시 준수."
+user-invocable: false
 ---
 
 # Memento — Memory × Mentor Protocol
@@ -128,6 +128,31 @@ The project ID is determined by the SessionStart hook (git remote → org-repo, 
 | `atlassian_account_id` | **setup 자동 조회** | Jira JQL assignee 필터. setup Step 6.6이 `atlassianUserInfo` MCP로 자동 채움. 실패 시 review-week 첫 실행에서 재시도 |
 
 `atlassian_account_id`는 사용자에게 묻지 않는다. 나머지는 인터뷰로 수집하며 빈 값 허용.
+
+### Daily Note 구조 (v2.13.0+)
+
+Daily Note는 `Tasks` / `Log` / `Review` 세 섹션만 사용한다. 이전 버전의 `Plan` 섹션은 폐지 — Tasks 섹션이 "오늘 실행할 것"의 단일 소스다.
+
+- **트랙 간 순서** = 오늘 우선순위
+- **트랙 내부 순서** = 해당 트랙의 착수 순서
+- "집중 top N" cap 없음 — 자연스럽게 적은 수로 유지 (계획 문서 = 지금 실행할 것만)
+
+### 착수 시 Daily Tasks 즉시 업데이트 (MANDATORY)
+
+새로운 작업에 착수하는 매 순간 Daily Note Tasks를 즉시 업데이트한다. checkpoint/review-day까지 미루지 않는다.
+
+**착수 이벤트**:
+- Inbox 이슈 파일을 `01 Working/{TODAY}/`로 git mv
+- 신규 발굴 건을 `01 Working/{TODAY}/`에 직접 생성
+- 트랙 전환 — 다른 트랙의 작업으로 이동
+
+**즉시 수행**:
+1. todo 파일 frontmatter: `status: in-progress`, `started_at: {TODAY}`, `source` (이동한 경우) 갱신
+2. 오늘 Daily Note Tasks에 트랙 헤더(`## [track:{id}] P: {제목}`)가 없으면 생성
+3. 해당 트랙 헤더 하위에 체크박스 + wikilink append
+4. 트랙 순서가 우선순위를 반영하지 않으면 재배치
+
+**근거**: 착수 시 업데이트를 지연시키면 Tasks 섹션과 실제 진행 상태가 어긋나서 planning 재호출 시 현황 파악이 불가능해진다. Daily Note Tasks는 "오늘 실제로 손이 간 것"의 실시간 인덱스여야 한다.
 
 ### Daily Note Tasks 포맷 (v2.8.0+)
 

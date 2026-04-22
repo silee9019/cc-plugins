@@ -1,8 +1,7 @@
 ---
 name: checkpoint
-display_name: checkpoint
 description: "작업 완료 + 정리. 완료 기록, 메모리 정리, WORKING.md 완료 항목 제거, 커밋/푸시, PR 제안. 작업 단위가 끝났을 때 호출."
-user_invocable: true
+user-invocable: true
 ---
 
 > **인터뷰 원칙**: 결정에 필요한 정보를 자체 도구로 최대한 수집한 후, 여전히 모호한 지점이 있으면 가정하지 말 것. `AskUserQuestion`으로 한 번에 하나의 질문만 하고, 답을 받은 직후 다음 단계로 진행한다.
@@ -75,7 +74,7 @@ user_invocable: true
 
 **요약 기준**: `[done]`의 주제는 사용자가 의도한 작업 목표(설계, 구현, 버그 수정 등)로 잡는다. git 작업(rebase, 버전 재정렬, ff 머지, force push, 브랜치 정리 등)은 독립 `[done]` 항목으로 만들지 않고, 해당 작업의 outcome 끝에 한 줄로 축약한다.
 
-## Step 4.5: 결정 후보 감지
+## Step 5: 결정 후보 감지
 
 이 세션에서 내린 결정 후보를 스캔한다. checkpoint의 raw 로그 훑기 pass에 결정 감지를 얹는 방식.
 
@@ -89,7 +88,7 @@ user_invocable: true
 3. 이 세션 이후에도 참조/적용되어야 할 것
 4. 1~2문장으로 요약 가능한 것
 
-**후보가 없으면**: 조용히 건너뛰기 (Step 5로 진행).
+**후보가 없으면**: 조용히 건너뛰기 (Step 6으로 진행).
 
 **후보가 있으면**: 번호 매긴 리스트로 출력 후 AskUserQuestion:
 
@@ -127,7 +126,7 @@ user_invocable: true
 
 **커스텀이 필요한 경우**: checkpoint에서는 스코프(`*`)/기간(`2w`) 기본값으로 빠르게 처리. 나중에 파일을 직접 편집하거나 `/memento:refresh-decisions --verbose`로 확인 가능.
 
-## Step 5: Daily Note Log append
+## Step 6: Daily Note Log append
 
 `TODAY_DAILY`의 `## Log` 섹션에 추가:
 
@@ -137,7 +136,7 @@ user_invocable: true
 
 **프로젝트별 서브섹션 정렬**: agent 프로젝트별 `### {alias}` 서브섹션 규칙을 따른다. 시각 순 삽입.
 
-## Step 6: 캘린더 동기화
+## Step 7: 캘린더 동기화
 
 일정은 언제든 추가될 수 있으므로 checkpoint마다 확인한다.
 
@@ -148,7 +147,7 @@ user_invocable: true
 2. 오늘 이벤트 중 Daily Note Log `### 미팅` 섹션에 없는 항목을 시각 순으로 삽입
 3. 스크립트 실패 시 조용히 건너뛰기
 
-## Step 7: WORKING.md 정리
+## Step 8: WORKING.md 정리
 
 WORKING.md에서 **완료된 것을 제거**한다 (추가는 handoff의 역할):
 
@@ -158,7 +157,7 @@ WORKING.md에서 **완료된 것을 제거**한다 (추가는 handoff의 역할)
 
 원칙: "이 문서에는 아직 해야 할 것만 남아있다."
 
-## Step 8: 커밋/푸시 + PR 제안
+## Step 9: 커밋/푸시 + PR 제안
 
 ```bash
 git status --short
@@ -174,7 +173,7 @@ PR이 적절한 경우 (feature branch, 리뷰 필요한 변경):
 
 **gitignore 원칙**: `{memento_root}/` 하위는 vault git 커밋 대상이 아님. `git status --short` 결과 그대로 추적 파일만 취급.
 
-## Step 9: 최종 보고
+## Step 10: 최종 보고
 
 ```
 checkpoint 완료:

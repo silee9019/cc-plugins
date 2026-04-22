@@ -1,8 +1,7 @@
 ---
 name: tag-decision
-display_name: tag-decision
 description: 세션 중 즉시 결정 태깅. 대화에서 내린 결정을 user/decisions/에 기록. 사용자가 "결정 태깅", "이거 결정으로 남겨", "tag decision", "결정 기록", "리본 달기", "이 결정 남겨둬"를 언급할 때 트리거.
-user_invocable: true
+user-invocable: true
 ---
 
 > **인터뷰 원칙**: 결정에 필요한 정보를 자체 도구로 최대한 수집한 후, 여전히 모호한 지점이 있으면 가정하지 말 것. `AskUserQuestion`으로 한 번에 하나의 질문만 하고, 답을 받은 직후 다음 단계로 진행한다.
