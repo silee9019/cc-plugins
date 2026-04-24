@@ -10,7 +10,7 @@ user-invocable: true
 
 할 일을 캡처하여 적절한 위치에 추가한다. 두 가지 모드로 동작:
 
-- **발화에 할 일 내용 포함**: 빠른 캡처. 한 문장 입력 → 오늘 Daily Note 또는 백로그에 추가.
+- **발화에 할 일 내용 포함**: 빠른 캡처. 한 문장 입력 → 오늘 Focus Today 또는 백로그에 추가.
 - **발화가 "담아둬" 수준의 지시만**: 세션 스캔. 대화 컨텍스트를 분석하여 이슈를 추출하고 백로그에 보관.
 
 ## 발화 분기 / 모드 판별
@@ -78,16 +78,16 @@ user-invocable: true
 
 AskUserQuestion으로 묻는다:
 
-- **"오늘 할 건가요?"** → Step 5 (Daily Note에 추가)
+- **"오늘 할 건가요?"** → Step 5 (Focus Today "오늘 집중"에 추가)
 - **"나중에 할 건가요?"** → Step 6 (백로그에 보관)
 
 사용자가 발화에서 명시한 경우 (예: "나중에 XXX 해야 함") 자동 판별하여 확인만 받는다.
 
-### Step 5: Daily Note + todo 파일 생성 (v2.8.0부터)
+### Step 5: Focus Today + todo 파일 생성
 
-Tasks 포맷은 v2.8.0부터 **todo 하나 = 파일 하나** 규칙을 따른다. 체크박스에 내용을 문장으로 넣지 않고 wikilink로 연결.
+**todo 하나 = 파일 하나** 규칙. 체크박스에 내용을 문장으로 넣지 않고 wikilink로 연결.
 
-1. 오늘 Daily Note 경로를 생성하고 파일을 읽는다. 없으면 "오늘 Daily Note가 없습니다. `/memento:planning`를 먼저 실행해주세요." 안내 후 중단.
+1. 오늘 Focus Today 경로를 생성하고 파일을 읽는다. 없으면 "오늘 Focus Today가 없습니다. `/memento:planning`를 먼저 실행해주세요." 안내 후 중단.
 2. slug 결정: 할 일 제목을 kebab-case로 정규화 (공백 `-`, 특수문자 제거, 한글 유지).
 3. todo 파일 생성: `<daily_notes_path>/{YYYY-MM-DD}/{slug}.md`
    - 디렉토리 없으면 `mkdir -p` 선행
@@ -104,12 +104,13 @@ Tasks 포맷은 v2.8.0부터 **todo 하나 = 파일 하나** 규칙을 따른다
      ---
      ```
    - 본문: `# {제목}` + 1-2문장 요약 + (선택) 제안 조치
-4. Daily Note의 `## Tasks` 섹션 말미에 wikilink 체크박스 append:
+4. Focus Today의 `# 오늘 집중` 섹션 말미에 wikilink 체크박스 append:
    ```
    - [ ] [[<daily_notes_path>/{YYYY-MM-DD}/{slug}|{표시 이름}]]
    ```
+   단, 마감/연체/고정일정이 결부된 긴급 항목이면 `# 오늘 꼭` 섹션에 넣는다.
 
-추가 완료 후 "Daily Note Tasks에 추가 + todo 파일 생성: {경로}" 출력.
+추가 완료 후 "Focus Today에 추가 + todo 파일 생성: {경로}" 출력.
 
 ### Step 6: 백로그에 보관 (간소화)
 
@@ -222,7 +223,7 @@ YAML frontmatter의 `---` 구분자도 content 문자열 안에 포함하여 전
 |----|-------|
 | 발화 내용으로 모드를 자동 판별 | 매번 "어떤 모드?" 질문으로 흐름 끊기 |
 | 빠른 캡처 시 카테고리/우선순위 자동 추정 후 확인만 | 매번 카테고리/우선순위를 처음부터 묻기 |
-| Daily Note 없으면 planning 안내 | Daily Note를 자동 생성 |
+| Focus Today 없으면 planning 안내 | Focus Today를 자동 생성 |
 | 세션 스캔 시 대화 내용에서 실제로 논의된 이슈만 추출 | 대화에 없는 이슈를 추측하여 생성 |
 | 이슈별로 충분한 컨텍스트와 재현 방법 포함 | 제목과 요약만으로 보고서 작성 |
 | obsidian CLI 명령 실패 시 에러 내용 출력 후 대안 제시 | CLI 에러를 무시하고 진행 |

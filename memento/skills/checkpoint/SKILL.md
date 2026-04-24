@@ -36,7 +36,7 @@ user-invocable: true
 ## Step 2: project-id 및 경로 준비
 
 - `RAW_LOG` = `{MEMENTO_HOME}/projects/{project_id}/memory/{today-log}.md` (오늘, `daily_log_format` 적용. 기본: `YYYY-MM-DD-log.md`)
-- `TODAY_DAILY` = `{vault_path}/{daily_notes_path}/{today-planning}.md` (`daily_note_format` 적용)
+- `TODAY_FOCUS` = `{vault_path}/{daily_notes_path}/{today-focus}.md` (`daily_note_format` 적용. 기본: `YYYY-MM-DD-focus.md`). Focus Today는 "오늘 꼭 / 오늘 집중" 두 섹션 구조.
 - `DECISIONS_DIR` = `{MEMENTO_HOME}/user/decisions/`, 결정 파일 생성 시 `decision_note_format` 적용 (기본 `YYYY-MM-DD-decision-{slug}.md`)
 
 ## Step 3: 완료 항목 감지 + 처리
@@ -48,12 +48,12 @@ user-invocable: true
 - 관련 파일이 저장되고 검증됨
 - 결과물이 실제로 존재 (파일/커밋/PR)
 
-**처리** (Tasks 포맷 v2.8.0: todo 파일 = 파일 하나, Daily Note Tasks는 wikilink 인덱스):
+**처리** (todo 파일 = 파일 하나, Focus Today "오늘 집중"/"오늘 꼭"은 wikilink 인덱스):
 
 1. todo 파일 frontmatter 갱신: `status: resolved` + `resolved_at: {TODAY}`.
-   - 경로 추정: Daily Note Tasks의 wikilink(`[[<daily_notes_path>/{TODAY}/{slug}|...]]`)를 파싱하거나, `<daily_notes_path>/{TODAY}/*.md` 중 제목/slug 일치하는 파일
+   - 경로 추정: Focus Today의 wikilink(`[[<daily_notes_path>/{TODAY}/{slug}|...]]`)를 파싱하거나, `<daily_notes_path>/{TODAY}/*.md` 중 제목/slug 일치하는 파일
    - 파일 이동(`99 Archives/Daily/`로 `git mv`)은 **checkpoint에서 수행하지 않음** — 하루 마감 의례 `review-day`가 일괄 수행
-2. Daily Note Tasks 체크박스 갱신: `- [ ]` → `- [x]`. wikilink 구조는 유지
+2. Focus Today 체크박스 갱신: `- [ ]` → `- [x]` ("오늘 꼭" / "오늘 집중" 둘 다 해당). wikilink 구조는 유지
 3. 모호 항목: AskUserQuestion으로 한 건씩 확인
 
 **legacy 평문 체크박스**: 파일 없는 경우 체크박스만 `- [x]`로 갱신.
@@ -126,15 +126,15 @@ user-invocable: true
 
 **커스텀이 필요한 경우**: checkpoint에서는 스코프(`*`)/기간(`2w`) 기본값으로 빠르게 처리. 나중에 파일을 직접 편집하거나 `/memento:refresh-decisions --verbose`로 확인 가능.
 
-## Step 6: Daily Note Log append
+## Step 6: raw 로그에 HH:MM done 기록
 
-`TODAY_DAILY`의 `## Log` 섹션에 추가:
+Focus Today에는 Log 섹션이 없으므로 시간순 done 기록은 **raw log에만** 남긴다. Step 4의 `## [done: ...]` 블록 외에 별도 시간순 라인이 필요하면 `RAW_LOG`에 다음을 append:
 
 ```markdown
 - {HH:MM} done: {주제 한 줄}. {핵심 결과 1줄}
 ```
 
-**프로젝트별 서브섹션 정렬**: agent 프로젝트별 `### {alias}` 서브섹션 규칙을 따른다. 시각 순 삽입.
+기본은 Step 4 블록이면 충분하다. 시간 스탬프가 중요한 경우에만 이 줄을 추가.
 
 ## Step 7: 캘린더 동기화
 
@@ -144,7 +144,7 @@ user-invocable: true
    ```bash
    python3 {PLUGIN_ROOT}/scripts/calendar_context.py --plugin-root {PLUGIN_ROOT}
    ```
-2. 오늘 이벤트 중 Daily Note Log `### 미팅` 섹션에 없는 항목을 시각 순으로 삽입
+2. 오늘 이벤트 중 `RAW_LOG`에 반영되지 않은 항목을 `## [meeting: {제목}]` 블록으로 시각 순 삽입
 3. 스크립트 실패 시 조용히 건너뛰기
 
 ## Step 8: WORKING.md 정리
@@ -179,7 +179,7 @@ PR이 적절한 경우 (feature branch, 리뷰 필요한 변경):
 checkpoint 완료:
   완료 처리: N건
   raw 로그: {경로}
-  Daily Note: {경로}
+  Focus Today: {경로}
   WORKING.md: 정리됨 (완료 N건 제거)
   커밋: {상태}
 ```

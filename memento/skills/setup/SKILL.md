@@ -301,9 +301,9 @@ atlassian_cloud_id: "<ATLASSIAN_CLOUD>"
    - 그 외 사용자 커스텀 포맷은 유지
 2. 기본값:
    - `daily_notes_path`: `"01 Working"`
-   - `daily_note_format`: `"{YYYY}-{MM}-{DD}-planning.md"`
+   - `daily_note_format`: `"{YYYY}-{MM}-{DD}-focus.md"` (v2.15.0+; 이전 기본값은 `*-planning.md`)
    - `daily_archive_path`: 신규 `"99 Archives/Daily"`, 업그레이드 빈 값
-   - `daily_archive_format`: 신규 `"{YYYY}/{MM}/{YYYY}-{MM}-{DD}-planning.md"`
+   - `daily_archive_format`: 신규 `"{YYYY}/{MM}/{YYYY}-{MM}-{DD}-focus.md"`
    - `weekly_notes_path`: `"10 Reflection/01 Weekly"`
    - `weekly_note_format`: `"{YYYY}/{YYYY}-W{WW}-weekly-review.md"`
    - `monthly_notes_path`: `"10 Reflection/02 Monthly"`

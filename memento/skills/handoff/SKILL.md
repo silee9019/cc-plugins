@@ -58,7 +58,7 @@ checkpoint.md Step 1-2와 동일한 설정 로드 + project-id 계산 로직. `h
 4. 동일 분 내 중복 파일이 존재하면 suffix `-2`, `-3`을 slug 뒤에 부여.
 5. Write 도구로 위 frontmatter + 본문을 가진 파일을 생성.
 
-**raw log에는 아무것도 append하지 않는다**. handoff 사실 자체는 Daily Note Log(Step 4)에만 반영되고, 실제 내용은 별도 파일에 남는다.
+**raw log에는 한 줄만 append한다** (Step 4). 실제 내용은 별도 handoff 파일에 남는다.
 
 ### Step 3: WORKING.md 갱신
 
@@ -71,12 +71,16 @@ WORKING.md가 없으면 생성. 있으면 해당 섹션만 업데이트.
 
 **제거는 하지 않음** — 완료 항목 제거는 checkpoint의 역할.
 
-### Step 4: Daily Note Log + 재개 프롬프트
+### Step 4: raw log + 재개 프롬프트
 
-1. Daily Note `## Log` 섹션에 한 줄 append (handoff 파일 경로를 링크로 포함):
+1. `RAW_LOG`(`memory/{YYYY-MM-DD}-log.md`)에 `## [handoff: {주제}]` 블록 append:
+   ```markdown
+   ## [handoff: {주제 한 줄}]
+   - time: {HH:MM}
+   - file: @{HANDOFF_PATH 상대 경로}
    ```
-   - {HH:MM} handoff: {주제 한 줄} → @{HANDOFF_PATH 상대 경로}
-   ```
+
+   Focus Today에는 반영하지 않는다 (Log 섹션 없음).
 
 2. 재개 프롬프트 출력:
    ```
@@ -97,5 +101,5 @@ WORKING.md가 없으면 생성. 있으면 해당 섹션만 업데이트.
 - 매 handoff = 별도 파일 (time+slug로 식별). 하루에 여러 번 호출해도 덮어쓰기 없음
 - 3-field 본문 (state/next/references) + frontmatter 메타
 - 재개 프롬프트 출력
-- Daily Note Log 한 줄 append (handoff 파일 링크 포함)
+- raw log에 handoff 블록 append (handoff 파일 링크 포함)
 - **내부 Task ID 축약 단독 사용 금지**: handoff 본문(state/next)·재개 프롬프트에서 `T1`~`T9`, `CP1`~`CP9`, `KR1`~`KR9` 같은 축약을 한 문서 내 첫 출현 시 풀어쓰거나 괄호 병기. 이후 반복은 단독 허용. Jira 번호·산업 표준 약어는 면제. 상세: 저장소 CLAUDE.md.
