@@ -306,6 +306,50 @@ function renderFileAttachments(attachments) {
   return lines.length ? `\n\n${lines.join("\n")}` : "";
 }
 
+// Extract inline <video>/<audio>/<img> hostedContents references from the raw
+// message body HTML. Teams embeds these as <video src="https://graph.microsoft.com
+// /v1.0/.../hostedContents/<id>/$value">; turndown drops <video> entirely, so we
+// surface them as downloadable lines that teams download-media can consume.
+export function extractInlineMedia(html) {
+  if (!html) return [];
+  const results = [];
+  const tagRe = /<(video|audio|img)\b[^>]*>/gi;
+  let match;
+  while ((match = tagRe.exec(html)) !== null) {
+    const tag = match[1].toLowerCase();
+    const attrs = match[0];
+    const srcMatch = attrs.match(/\bsrc="([^"]+)"/i);
+    if (!srcMatch) continue;
+    const src = srcMatch[1];
+    if (!src.includes("hostedContents")) continue;
+    const widthMatch = attrs.match(/\bwidth="(\d+)"/i);
+    const heightMatch = attrs.match(/\bheight="(\d+)"/i);
+    const durationMatch = attrs.match(/\bdata-duration="([^"]+)"/i);
+    const meta = [];
+    if (widthMatch && heightMatch) meta.push(`${widthMatch[1]}x${heightMatch[1]}`);
+    if (durationMatch) meta.push(durationMatch[1]);
+    results.push({
+      kind: tag,
+      url: src,
+      meta: meta.join(", "),
+    });
+  }
+  return results;
+}
+
+function renderInlineMedia(mediaList) {
+  if (!mediaList || mediaList.length === 0) return "";
+  const icons = { video: "🎥", audio: "🔊", img: "🖼️" };
+  const labels = { video: "video", audio: "audio", img: "image" };
+  const lines = mediaList.map((m) => {
+    const icon = icons[m.kind] || "📎";
+    const label = labels[m.kind] || m.kind;
+    const metaPart = m.meta ? ` [${m.meta}]` : "";
+    return `- ${icon} ${label}${metaPart}: ${m.url}`;
+  });
+  return `\n\n${lines.join("\n")}`;
+}
+
 function renderReactions(reactions) {
   if (!reactions || reactions.length === 0) return "";
   const counts = {};
@@ -332,6 +376,7 @@ function hasUsefulContent(m) {
     const card = extractCardText(a);
     if (card && (card.lines.length > 0 || card.actionLinks.length > 0)) return true;
   }
+  if (extractInlineMedia(bodyHtml).length > 0) return true;
   return false;
 }
 
@@ -356,10 +401,11 @@ function renderOneMessage(m, { isReply = false } = {}) {
 
   const cardBlock = renderCardBlock(m.attachments);
   const files = renderFileAttachments(m.attachments);
+  const inlineMedia = renderInlineMedia(extractInlineMedia(bodyHtmlRaw));
   const reactions = renderReactions(m.reactions);
 
   const heading = isReply ? "####" : "###";
-  const block = `${heading} ${time} - ${sender}\n\n${body}${cardBlock}${files}${reactions}`;
+  const block = `${heading} ${time} - ${sender}\n\n${body}${cardBlock}${files}${inlineMedia}${reactions}`;
   if (!isReply) return block;
   // Indent replies as blockquotes so threading is visually obvious in markdown viewers.
   return block

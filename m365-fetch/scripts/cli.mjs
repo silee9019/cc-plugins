@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { writeFileSync, readFileSync, mkdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import YAML from "yaml";
 import {
   loadConfig,
@@ -353,6 +353,38 @@ teams
     for (const r of results) {
       if (r.outPath) process.stdout.write(`${r.outPath}\n`);
     }
+  });
+
+teams
+  .command("download-media <url>")
+  .description("Teams 메시지 인라인 미디어(hostedContents) 다운로드")
+  .option("--out <path>", "출력 파일 경로 (기본: ~/tmp/m365-context/teams/media/<stamp>.<ext>)")
+  .action(async (url, opts) => {
+    const cfg = loadConfig();
+    const token = await getAccessToken(cfg, "graph");
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`Graph API ${res.status}: ${body.slice(0, 200)}`);
+    }
+    const contentType = res.headers.get("content-type") || "application/octet-stream";
+    const extByType = {
+      "video/mp4": "mp4",
+      "video/webm": "webm",
+      "audio/mpeg": "mp3",
+      "audio/mp4": "m4a",
+      "image/png": "png",
+      "image/jpeg": "jpg",
+      "image/gif": "gif",
+      "image/webp": "webp",
+    };
+    const ext = extByType[contentType.split(";")[0].trim()] || "bin";
+    const buf = Buffer.from(await res.arrayBuffer());
+    const outPath = opts.out || sectionPath(cfg, "teams/media", `${stampName()}.${ext}`);
+    ensureDir(dirname(outPath));
+    writeFileSync(outPath, buf);
+    process.stderr.write(`✓ ${buf.length} bytes (${contentType}) → ${outPath}\n`);
+    process.stdout.write(`${outPath}\n`);
   });
 
 // ─── calendar group ────────────────────────────────────────────────────────

@@ -51,6 +51,24 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/cli.mjs" teams fetch-all --since 1d
 - `--exclude team-a,team-b`: 추가 제외할 별칭
 - 각 별칭별 개별 파일로 저장
 
+## 인라인 미디어 다운로드
+
+메시지 본문의 `<video>`/`<audio>`/`<img>` 태그(hostedContents)는 수집 시 파일 첨부 블록 아래에 다운로드 URL이 노출된다.
+
+```
+- 🎥 video [1280x720, PT16S]: https://graph.microsoft.com/v1.0/chats/<chat>/messages/<msg>/hostedContents/<id>/$value
+```
+
+해당 미디어를 로컬 파일로 받으려면:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/cli.mjs" teams download-media "<url>" [--out <path>]
+```
+
+- content-type에서 확장자 자동 결정 (mp4/webm/mp3/m4a/png/jpg/gif/webp)
+- `--out` 미지정 시 `~/tmp/m365-context/teams/media/<stamp>.<ext>`에 저장
+- 다운로드 경로를 stdout 1줄로 출력 (Jira 첨부 등 후속 파이프라인에 바로 사용 가능)
+
 ## 제외 설정
 
 `~/.config/m365-fetch/config.yaml`의 `inbox` 섹션으로 영구 제외 규칙을 관리한다.
