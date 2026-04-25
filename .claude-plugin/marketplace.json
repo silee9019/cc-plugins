@@ -30,7 +30,7 @@
       "name": "git-init",
       "source": "./git-init",
       "description": "GitHub repository initialization workflow (directory, gh repo create, .gitignore, CLAUDE.md, AGENTS.md link, initial commit)",
-      "version": "1.4.4",
+      "version": "1.4.5",
       "author": {
         "name": "silee9019"
       },
