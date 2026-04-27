@@ -108,7 +108,7 @@ AskUserQuestion으로 묻는다:
    ```
    - [ ] [[<daily_notes_path>/{YYYY-MM-DD}/{slug}|{표시 이름}]]
    ```
-   마감/연체/고정일정이 결부된 긴급 항목이면 ⚠ 라인 다음 위치, 일반 todo는 섹션 말미. legacy 두 섹션 파일은 `# 오늘 집중` 말미에 append (planning이 다음 호출에서 자연 마이그레이션).
+   마감/연체/고정일정이 결부된 긴급 항목은 `- [ ] ⚠` prefix로 ⚠ 그룹 위치, 일반 todo는 섹션 말미. 모든 신규 라인은 체크박스 형태로. legacy 두 섹션 파일은 `# 오늘 집중` 말미에 append (planning이 다음 호출에서 자연 마이그레이션).
 
 추가 완료 후 "Focus Today에 추가 + todo 파일 생성: {경로}" 출력.
 

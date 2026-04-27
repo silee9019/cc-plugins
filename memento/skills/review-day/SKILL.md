@@ -50,7 +50,7 @@ user-invocable: true
 
 ### Step 4: 완료/미완료 분류
 
-Focus Today `# 오늘 꼭(Focus)` 섹션에서 wikilink 체크박스를 추출하고, 각 링크가 가리키는 todo 파일의 frontmatter `status`를 교차 확인하여 분류한다 (플래그 라인 ⚠/⏰/🌙/🏠은 대상 아님). legacy 파일(`# 오늘 꼭` + `# 오늘 집중` 두 섹션)도 합산해 동일 처리.
+Focus Today `# 오늘 꼭(Focus)` 섹션의 모든 체크박스를 추출한다 (모든 라인이 체크박스). wikilink가 있는 항목은 가리키는 todo 파일 frontmatter `status`를 교차 확인하여 분류; wikilink 없이 아이콘 prefix만 있는 정보성 체크박스(`- [ ] ⚠ ...`, `- [ ] ⏰ ...`)는 todo 파일 이동 대상이 아니라 체크 상태만 갱신한다. legacy(평면 불릿 또는 두 섹션 `# 오늘 꼭` + `# 오늘 집중`) 파일도 합산해 동일 처리.
 
 **체크박스 패턴**:
 ```
