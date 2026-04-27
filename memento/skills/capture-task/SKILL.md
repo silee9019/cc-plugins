@@ -78,7 +78,7 @@ user-invocable: true
 
 AskUserQuestion으로 묻는다:
 
-- **"오늘 할 건가요?"** → Step 5 (Focus Today "오늘 집중"에 추가)
+- **"오늘 할 건가요?"** → Step 5 (Focus Today `# 오늘 꼭(Focus)`에 추가)
 - **"나중에 할 건가요?"** → Step 6 (백로그에 보관)
 
 사용자가 발화에서 명시한 경우 (예: "나중에 XXX 해야 함") 자동 판별하여 확인만 받는다.
@@ -104,11 +104,11 @@ AskUserQuestion으로 묻는다:
      ---
      ```
    - 본문: `# {제목}` + 1-2문장 요약 + (선택) 제안 조치
-4. Focus Today의 `# 오늘 집중` 섹션 말미에 wikilink 체크박스 append:
+4. Focus Today `# 오늘 꼭(Focus)` 섹션에 wikilink 체크박스 append:
    ```
    - [ ] [[<daily_notes_path>/{YYYY-MM-DD}/{slug}|{표시 이름}]]
    ```
-   단, 마감/연체/고정일정이 결부된 긴급 항목이면 `# 오늘 꼭` 섹션에 넣는다.
+   마감/연체/고정일정이 결부된 긴급 항목이면 ⚠ 라인 다음 위치, 일반 todo는 섹션 말미. legacy 두 섹션 파일은 `# 오늘 집중` 말미에 append (planning이 다음 호출에서 자연 마이그레이션).
 
 추가 완료 후 "Focus Today에 추가 + todo 파일 생성: {경로}" 출력.
 

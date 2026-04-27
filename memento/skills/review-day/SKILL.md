@@ -14,7 +14,7 @@ user-invocable: true
 1. **오늘 Focus Today 마감** - 완료/미완료 분류, 미완료 처리, 비일일노트 정리
 2. **내일 업무 준비** - `planning` skill을 `tomorrow --orchestrated`로 호출하여 내일 Focus Today 초안 생성
 
-**Review 섹션 자동 생성은 v2.16.0부터 폐지**. Focus Today는 "오늘 꼭 / 오늘 집중" 두 섹션만 유지. 회고가 필요한 사용자는 `10 Reflection/` 하위에 별도 파일로 직접 작성한다.
+**Review 섹션 자동 생성은 v2.16.0부터 폐지**. Focus Today는 v2.16.1부터 `# 오늘 꼭(Focus)` 단일 섹션 (legacy 두 섹션 자연 마이그레이션). 회고가 필요한 사용자는 `10 Reflection/` 하위에 별도 파일로 직접 작성한다.
 
 **다른 스킬과 구분**: 작업 완료 정리는 `checkpoint`, 진행 중 상태 저장은 `handoff`. review-day는 저녁/퇴근 시점의 하루 레벨 의례다.
 
@@ -50,7 +50,7 @@ user-invocable: true
 
 ### Step 4: 완료/미완료 분류
 
-Focus Today의 "오늘 집중" 섹션에서 wikilink 체크박스를 추출하고, 각 링크가 가리키는 todo 파일의 frontmatter `status`를 교차 확인하여 분류한다. "오늘 꼭" 섹션의 체크박스도 동일하게 처리한다 (플래그 라인 ⏰/⚠는 대상 아님).
+Focus Today `# 오늘 꼭(Focus)` 섹션에서 wikilink 체크박스를 추출하고, 각 링크가 가리키는 todo 파일의 frontmatter `status`를 교차 확인하여 분류한다 (플래그 라인 ⚠/⏰/🌙/🏠은 대상 아님). legacy 파일(`# 오늘 꼭` + `# 오늘 집중` 두 섹션)도 합산해 동일 처리.
 
 **체크박스 패턴**:
 ```
@@ -144,7 +144,7 @@ Step 6에서 결정된 처리(내일 이어서 / 백로그 / 완료 / 삭제)를
 1. **todo 파일 이동 실행**: 각 항목의 결정에 따라 `git mv` + frontmatter 업데이트.
    - `git mv` 실패 시(예: todo 파일이 실제로는 존재하지 않는 legacy 항목): 파일 이동은 스킵하고 Focus Today 체크박스만 갱신
    - Inbox 대상 폴더(`{TOMORROW}/` 또는 `{TODAY}/`) 없으면 `mkdir -p` 선행
-2. **Focus Today 체크박스 갱신** ("오늘 꼭"/"오늘 집중" 둘 다 해당):
+2. **Focus Today 체크박스 갱신** (`# 오늘 꼭(Focus)` 단일 섹션, legacy 두 섹션 모두 해당):
    - 완료: `- [ ]` → `- [x]`
    - 삭제: 줄 제거
    - 내일 이어서/백로그: 그대로 (wikilink는 이전 경로 기준이지만 source 필드에서 참조 가능)
@@ -212,7 +212,7 @@ Inbox에 `status: open`으로 남아 있는 항목 중 **이미 다른 경로로
    - 내일 Focus Today의 "오늘 집중" 섹션에 초안 작성
 3. **호출 결과 요약**을 내부 컨텍스트에 보관 → Step 13 최종 요약에 포함
 
-**건너뛰기 조건**: 내일 Focus Today에 이미 "오늘 집중"이 충분히 채워져 있으면 planning이 자체 판단으로 조용히 건너뛸 수 있다.
+**건너뛰기 조건**: 내일 Focus Today `# 오늘 꼭(Focus)`이 이미 충분히 채워져 있으면 planning이 자체 판단으로 조용히 건너뛸 수 있다.
 
 ### Step 12: WORKING.md 최종 갱신
 
@@ -255,7 +255,7 @@ Inbox에 `status: open`으로 남아 있는 항목 중 **이미 다른 경로로
 ## 원칙
 
 - 미완료 항목을 빠짐없이 처리 (여러 항목 한 번에 처리 가능하게)
-- **Review 섹션 자동 생성 폐지** (v2.16.0): Focus Today는 "오늘 꼭 / 오늘 집중" 2섹션만 유지. 회고가 필요하면 사용자가 `10 Reflection/`에 별도 파일로 직접 작성
+- **Review 섹션 자동 생성 폐지** (v2.16.0): Focus Today는 v2.16.1부터 `# 오늘 꼭(Focus)` 단일 섹션. 회고가 필요하면 사용자가 `10 Reflection/`에 별도 파일로 직접 작성
 - 이월 항목은 그대로 두어 planning에서 수집
 - 작업 완료 정리는 `checkpoint`, 진행 중 저장은 `handoff`
 - Step 11에서 planning tomorrow로 내일 준비 위임

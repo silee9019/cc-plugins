@@ -62,7 +62,7 @@
       "name": "memento",
       "source": "./memento",
       "description": "나의 기억이자 멘토. 세션 간 컨텍스트 보존(Memory: 세션 로그, 5-level 컴팩션 트리, 검색)과 하루 계획·캡처·회고(Mentor: planning, capture, checkpoint, review-day)를 하나의 네임스페이스에서 제공.",
-      "version": "2.14.0",
+      "version": "2.16.1",
       "author": {
         "name": "silee9019"
       },

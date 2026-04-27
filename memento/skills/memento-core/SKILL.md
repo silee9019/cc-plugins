@@ -129,13 +129,14 @@ The project ID is determined by the SessionStart hook (git remote → org-repo, 
 
 `atlassian_account_id`는 사용자에게 묻지 않는다. 나머지는 인터뷰로 수집하며 빈 값 허용.
 
-### Focus Today 구조 (v2.15.0+)
+### Focus Today 구조 (v2.16.1+)
 
-Focus Today는 `# 오늘 꼭` / `# 오늘 집중` 두 섹션만 사용한다. Log/Review 섹션은 폐지 (raw log, `10 Reflection/`가 각각 담당). 컨텍스트 전환 직전 "1초에 보는 랜딩 페이지" 용도.
+Focus Today는 `# 오늘 꼭(Focus)` 단일 섹션만 사용한다. Log/Review 섹션은 폐지 (raw log, `10 Reflection/`가 각각 담당). 컨텍스트 전환 직전 "1초에 보는 랜딩 페이지" 용도.
 
-- **오늘 꼭**: 마감/연체/고정일정/중요 todo. ⏰ 고정일정, ⚠ 연체/마감, `- [ ]` 반드시 오늘 해야 하는 todo를 한 블록에
-- **오늘 집중**: 오늘 실제로 집중할 todo 3-5건 cap. wikilink 체크박스. 순서 = 착수 순서
+- **오늘 꼭(Focus)**: 마감/연체/고정일정 + 오늘 집중할 todo를 한 블록에 우선순위 순서로. 8건 cap.
+- 아이콘 접두: ⚠ 연체/마감 (최상단), ⏰ 고정일정, 🌙 저녁 한정, 🏠 퇴근 후, `- [ ]` 일반 todo (wikilink 권장)
 - 초과분은 Inbox/WORKING.md로 돌려보낸다
+- legacy 파일(`# 오늘 꼭` + `# 오늘 집중`)은 자연 마이그레이션 — planning이 갱신할 때 단일 섹션으로 재작성
 
 ### 착수 시 Focus Today 즉시 업데이트 (MANDATORY)
 
@@ -148,7 +149,7 @@ Focus Today는 `# 오늘 꼭` / `# 오늘 집중` 두 섹션만 사용한다. Lo
 
 **즉시 수행**:
 1. todo 파일 frontmatter: `status: in-progress`, `started_at: {TODAY}`, `source` (이동한 경우) 갱신
-2. 오늘 Focus Today의 `# 오늘 집중` 섹션 말미에 체크박스 + wikilink append (긴급 항목은 `# 오늘 꼭`)
+2. 오늘 Focus Today `# 오늘 꼭(Focus)` 섹션에 체크박스 + wikilink append. 긴급/마감 항목은 ⚠ 라인 다음 위치, 일반 todo는 섹션 말미.
 3. 항목 순서가 우선순위를 반영하지 않으면 재배치
 
 **근거**: 착수 시 업데이트를 지연시키면 Focus Today와 실제 진행 상태가 어긋나서 planning 재호출 시 현황 파악이 불가능해진다. Focus Today는 "오늘 실제로 손이 간 것"의 실시간 인덱스여야 한다.
@@ -158,7 +159,7 @@ Focus Today는 `# 오늘 꼭` / `# 오늘 집중` 두 섹션만 사용한다. Lo
 **todo 하나 = 파일 하나** 원칙. Focus Today는 인덱스, 상세는 개별 파일.
 
 - **todo 파일 경로**: `<daily_notes_path>/{YYYY-MM-DD}/{slug}.md`
-- **Focus Today 체크박스**: `- [ ] [[<daily_notes_path>/{YYYY-MM-DD}/{slug}|{표시 이름}]]` wikilink 형태. `# 오늘 집중` 섹션 하위에 flat 체크박스로 나열 (순서 = 오늘 우선순위). 긴급/마감 항목은 `# 오늘 꼭`.
+- **Focus Today 체크박스**: `- [ ] [[<daily_notes_path>/{YYYY-MM-DD}/{slug}|{표시 이름}]]` wikilink 형태. `# 오늘 꼭(Focus)` 단일 섹션 하위에 우선순위 순서로 나열 (⚠/⏰/🌙/🏠 플래그 라인과 혼합).
 - **todo 파일 frontmatter**: `slug` / `category` / `priority` / `status` (open/in-progress/resolved/blocked/dismissed) / `created` / `started_at` / `resolved_at` / `source` (이동 전 Inbox 경로) / `jira` (선택) / `plan` (선택) / `repo` (선택)
 - **todo 파일 본문**: `# 제목` + 배경 / 실행 체크리스트(`- [ ]`) / 진행 로그(`- HH:MM ...`)
 

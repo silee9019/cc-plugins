@@ -36,7 +36,7 @@ user-invocable: true
 ## Step 2: project-id 및 경로 준비
 
 - `RAW_LOG` = `{MEMENTO_HOME}/projects/{project_id}/memory/{today-log}.md` (오늘, `daily_log_format` 적용. 기본: `YYYY-MM-DD-log.md`)
-- `TODAY_FOCUS` = `{vault_path}/{daily_notes_path}/{today-focus}.md` (`daily_note_format` 적용. 기본: `YYYY-MM-DD-focus.md`). Focus Today는 "오늘 꼭 / 오늘 집중" 두 섹션 구조.
+- `TODAY_FOCUS` = `{vault_path}/{daily_notes_path}/{today-focus}.md` (`daily_note_format` 적용. 기본: `YYYY-MM-DD-focus.md`). Focus Today는 v2.16.1부터 `# 오늘 꼭(Focus)` 단일 섹션 (legacy 두 섹션도 호환).
 - `DECISIONS_DIR` = `{MEMENTO_HOME}/user/decisions/`, 결정 파일 생성 시 `decision_note_format` 적용 (기본 `YYYY-MM-DD-decision-{slug}.md`)
 
 ## Step 3: 완료 항목 감지 + 처리
@@ -48,12 +48,12 @@ user-invocable: true
 - 관련 파일이 저장되고 검증됨
 - 결과물이 실제로 존재 (파일/커밋/PR)
 
-**처리** (todo 파일 = 파일 하나, Focus Today "오늘 집중"/"오늘 꼭"은 wikilink 인덱스):
+**처리** (todo 파일 = 파일 하나, Focus Today `# 오늘 꼭(Focus)`은 wikilink 인덱스):
 
 1. todo 파일 frontmatter 갱신: `status: resolved` + `resolved_at: {TODAY}`.
    - 경로 추정: Focus Today의 wikilink(`[[<daily_notes_path>/{TODAY}/{slug}|...]]`)를 파싱하거나, `<daily_notes_path>/{TODAY}/*.md` 중 제목/slug 일치하는 파일
    - 파일 이동(`99 Archives/Daily/`로 `git mv`)은 **checkpoint에서 수행하지 않음** — 하루 마감 의례 `review-day`가 일괄 수행
-2. Focus Today 체크박스 갱신: `- [ ]` → `- [x]` ("오늘 꼭" / "오늘 집중" 둘 다 해당). wikilink 구조는 유지
+2. Focus Today 체크박스 갱신: `- [ ]` → `- [x]` (`# 오늘 꼭(Focus)` 단일 섹션, legacy 두 섹션도 모두 해당). wikilink 구조는 유지
 3. 모호 항목: AskUserQuestion으로 한 건씩 확인
 
 **legacy 평문 체크박스**: 파일 없는 경우 체크박스만 `- [x]`로 갱신.
