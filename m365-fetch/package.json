@@ -1,6 +1,6 @@
 {
   "name": "@silee9019/cc-plugin-m365-fetch",
-  "version": "0.4.0",
+  "version": "0.4.5",
   "description": "cc-plugins m365-fetch plugin runtime (Teams + Outlook + Power Automate)",
   "private": true,
   "type": "module",
@@ -13,10 +13,10 @@
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@azure/msal-node": "^2.16.0",
-    "commander": "^12.1.0",
-    "date-fns": "^4.1.0",
-    "turndown": "^7.2.0",
-    "yaml": "^2.6.1"
+    "@azure/msal-node": "2.16.3",
+    "commander": "12.1.0",
+    "date-fns": "4.1.0",
+    "turndown": "7.2.4",
+    "yaml": "2.8.3"
   }
 }

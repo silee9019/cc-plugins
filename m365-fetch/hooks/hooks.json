@@ -1,0 +1,16 @@
+{
+  "description": "m365-fetch 의존성 lazy install (캐시 dir에 node_modules 없으면 pnpm install --frozen-lockfile)",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/ensure-deps.sh\"",
+            "timeout": 60000
+          }
+        ]
+      }
+    ]
+  }
+}
