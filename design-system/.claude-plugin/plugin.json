@@ -2,7 +2,7 @@
   "name": "design-system",
   "displayName": "design-system",
   "description": "디자인 시스템 워크플로우 통합: Pencil MCP(.pen 파일) 표준 루프, batch_design 함정 5종, google-labs-code design.md 형식, 화면 layout variant 7가지, 카드 폭 토큰, snapshot_layout 기반 전수 조사·표준화 절차. 시안 = SSOT, design.md = 토큰 머신가독 미러.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": { "name": "silee9019" },
   "keywords": [
     "design-system",

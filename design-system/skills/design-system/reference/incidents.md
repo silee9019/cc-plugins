@@ -80,6 +80,73 @@ S3 동영상 / S4 오디오 lane 분리 작업 중, 사용자가 별도 Scenario
 
 ---
 
+---
+
+## #002 — 잘못된 시안에 변경 적용 위험 + 메모리 검증으로 인한 거짓 PASS
+
+- **일시**: 2026-04-28 ~ 2026-04-29
+- **프로젝트**: mlx-meeting-scribe (시안: `design/webui-mockup.pen`)
+- **심각도**: 시간 낭비 + 데이터 부정합 위험 (실제 손실 없음)
+
+### 컨텍스트
+
+카드 폭 토큰 정합 작업(920→880, 640→600, 560→600)을 시작. 직전까지 사용자가 다른 프로젝트(`wedding-invite-mobile.pen`)를 작업 중이라 Pencil GUI 활성 탭이 그쪽에 가 있었다.
+
+### 원인 (단계별)
+
+1. 작업 시작 시 `mcp__pencil__open_document(/.../webui-mockup.pen)` 호출 → "Document opened" 응답
+2. 응답만 보고 곧장 `snapshot_layout` 호출 → 결과가 `wedding-invite-mobile.pen` 내용. 활성 편집기가 안 바뀐 것을 한 박자 늦게 인지.
+3. (별도 라운드) batch_design 적용 후 `batch_get` 으로 880/600 회수값 받고 "메모리 PASS" 라고 보고 → 사용자가 "07 setting이 안 바뀌었는데?" 지적
+4. 디스크 파일을 다시 파싱해보니 메모리값과 디스크값이 동일했고 사실은 적용돼 있었지만, 동시에 표준 외 폭(900, fill_container) 누락 노드가 발견됨 — 메모리 회수만으로는 잔여 누락을 못 잡았던 것
+5. 더해 "git show HEAD:" 로 검증을 시도해 working tree와 commit 상태를 헷갈린 사례도 있었다.
+
+### 핵심 문제
+
+A. `open_document` 응답 신뢰 — "Document opened" 가 곧 활성 편집기 전환을 보장하지 않는다. 호출 후 `get_editor_state` 재확인 없이 진행하면 다른 .pen에 변경이 적용될 수 있다 (이 사례는 적용 전 발견해서 손실 없음).
+
+B. `batch_get` / `snapshot_layout` 회수값 = Pencil 메모리. 디스크 .pen 파일은 별도 저장 시점이 있을 수 있고(자동 저장 동작은 환경에 따라 다름), 무엇보다 **검증 대상 노드만** 회수하므로 **잔여 비표준값**을 발견할 수 없다. "기대값에 도달했는가" 를 확인할 뿐 "표준에 정합한가" 를 확인하지 못함.
+
+B-1. **디스크 검증의 전제 = Pencil 이 저장했다**. 이번 환경에서는 batch_design 직후 auto-save가 동작했지만, 항상 보장되지 않는다. 따라서 디스크 파싱 전에 `git status design/` 또는 `stat -f %m` 으로 working tree 반영 여부를 먼저 확인해야 한다. 반영 없음이면 Cmd+S 요청 후 재검증.
+
+C. `git show HEAD:` 는 마지막 commit 시점 상태. working tree 변경은 이걸로 안 보인다.
+
+### 결과
+
+- 적용 자체는 23/23 PASS (디스크 실조사로 사후 확인)
+- 잔여 누락 3건(07 QKOpp/zFs7b fill_container, 05 MqE3i 900) 추가 발견 — 사용자 지적 후 디스크 전수 조사로 확정
+- 사용자 신뢰 1회 손상 ("앞으로 검증은 메모리 말고 실조사로")
+
+### 교훈
+
+1. **`.pen` 작업 첫 호출은 `get_editor_state` 고정**. 활성 편집기 의도 일치 확인 전엔 어떤 호출도 진행하지 않는다. `open_document` 는 응답이 아닌 후속 `get_editor_state` 결과로 성공을 판정한다.
+2. **검증은 디스크 .pen 파일 실조사**. `python3 / jq` 로 working tree 파일을 파싱해 (a) 변경 대상이 기대값인지, (b) **표준 외 잔여**가 있는지 둘 다 본다. 사용자 의심 발화에는 (b) 답변이 더 중요하다.
+3. **`git show HEAD:` 는 검증 도구가 아님**. 변경 전 상태를 본다. working tree 디스크 파일을 직접 읽는다.
+4. 메모리(batch_get)와 디스크가 분리될 가능성을 항상 상정하고, 둘 다 일치할 때 "PASS" 라 부른다.
+
+### 재발 방지 체크리스트
+
+- [ ] 첫 호출이 `mcp__pencil__get_editor_state` 였는가? 활성 편집기가 의도한 .pen 인가?
+- [ ] `open_document` 호출 직후 `get_editor_state` 로 재확인했는가?
+- [ ] 검증 시 **`git status design/`** 또는 **`stat -f %m`** 으로 디스크 저장 여부를 먼저 확인했는가? 변경 없으면 Cmd+S 요청.
+- [ ] 검증 시 디스크 .pen 파일을 python/jq 로 읽었는가? `batch_get` 회수값만 보지 않았는가?
+- [ ] 변경 대상 ID 검증 외에 **표준 외 잔여 width/height/padding 전수 조사** 도 했는가?
+- [ ] `git show HEAD:` 로 검증한 적이 없는가? (있다면 working tree 파일로 다시 검증)
+
+### 복구 방법
+
+이 사고는 데이터 손실이 없으므로 복구 절차는 다음과 같다:
+
+1. 디스크 실조사로 실제 적용 상태를 파악
+2. 잔여 누락분이 있으면 batch_design 추가 호출로 정합
+3. 사용자에게 "메모리 검증으로 거짓 PASS 했던 것" 사과 + 디스크 검증 결과 표 제출
+
+### 참조
+
+- HARD GATE: SKILL.md 의 활성 편집기 첫 호출 + 디스크 실조사 조항
+- Phase 1 (활성 편집기 검증), Phase 4 (디스크 실조사 + 잔여 전수 조사)
+
+---
+
 ## 신규 사고 추가 양식
 
 새로운 사고가 발생하면 위 #001 형식으로 다음을 추가:
