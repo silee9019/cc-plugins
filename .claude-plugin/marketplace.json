@@ -12,7 +12,7 @@
     {
       "name": "andrej-karpathy-skills",
       "source": "./andrej-karpathy-skills",
-      "description": "Behavioral guidelines to reduce common LLM coding mistakes: Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution",
+      "description": "Behavioral guidelines to reduce common LLM coding mistakes, derived from Andrej Karpathy's observations on LLM coding pitfalls",
       "version": "1.0.2",
       "author": {
         "name": "forrestchang"
@@ -29,7 +29,7 @@
     {
       "name": "git-init",
       "source": "./git-init",
-      "description": "GitHub repository initialization workflow (directory, gh repo create, .gitignore, CLAUDE.md, AGENTS.md link, initial commit)",
+      "description": "GitHub 저장소 초기화 워크플로우 (디렉토리 생성, gh repo create, .gitignore, README.md, CLAUDE.md, AGENTS.md 링크, 초기 커밋)",
       "version": "1.4.5",
       "author": {
         "name": "silee9019"
@@ -61,7 +61,7 @@
     {
       "name": "memento",
       "source": "./memento",
-      "description": "나의 기억이자 멘토. 세션 간 컨텍스트 보존(Memory: 세션 로그, 5-level 컴팩션 트리, 검색)과 하루 계획·캡처·회고(Mentor: planning, capture, checkpoint, review-day)를 하나의 네임스페이스에서 제공.",
+      "description": "나의 기억이자 멘토. 세션 컨텍스트를 잊지 않는 기억 장치(memento)이자 하루를 계획하고 따라가고 돌아보는 AI 동료(me + mento). Memory 레이어(세션 로그, 5-level 컴팩션 트리, 검색)와 Mentor 레이어(planning, capture, handoff, checkpoint, review-day/week/memento)를 하나의 네임스페이스에서 제공.",
       "version": "2.17.0",
       "author": {
         "name": "silee9019"
@@ -176,7 +176,7 @@
     {
       "name": "m365-fetch",
       "source": "./m365-fetch",
-      "description": "Microsoft 365 컨텍스트를 Claude Code 세션으로 불러오는 도구. Teams 채팅/채널(delegated Graph), Outlook 캘린더/메일(delegated Graph), Power Automate flow CRUD + runs(delegated Flow Service)를 하나의 CLI로 통합.",
+      "description": "Microsoft 365 컨텍스트를 Claude Code 세션으로 불러오는 도구. Teams 채팅/채널(delegated Graph), Outlook 캘린더/메일(delegated Graph), Power Automate flow CRUD(delegated Flow Service)를 하나의 CLI로 통합.",
       "version": "0.4.5",
       "author": {
         "name": "silee9019"
