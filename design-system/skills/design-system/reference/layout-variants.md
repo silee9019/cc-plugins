@@ -207,32 +207,40 @@
 
 큰 시안(시스템·컴포넌트 카탈로그·화면 다수·legacy 화면 등 혼재)은 좌표를 영역별로 분리한다. 시안 열어 줌아웃 했을 때 어떤 영역이 무엇인지가 한눈에 파악되도록.
 
-**system-first 온톨로지 순서** (좌→우 = 추상 시각 system → 구체 narrative):
+**system-first 온톨로지 순서** (좌→우 = 추상 시각 system → 구체 narrative, IA Map과 Storyboard는 같은 x에 위→아래 stacked):
 
 ```
                                 X axis (left → right)
 
-  ┌──────────┬─────────────────────┬──────────┬──────────────────────────┬──────────────┐
-  │  Design  │  Component          │  IA Map  │   Storyboard             │   Reference  │
-  │  System  │  Showcase           │          │   (Lanes R1·R2·…)        │   Archive    │
-  │ (tokens) │  (reusable+         │ (사이트맵│   (라벨+미니맵+풀사이즈) │   (legacy)   │
-  │          │   variants)         │  /구조도)│                          │              │
-  └──────────┴─────────────────────┴──────────┴──────────────────────────┴──────────────┘
-       1              2                3                  4                      5
-   foundation       parts          structure          screens               legacy
+  ┌──────────┬─────────────────────┬──────────────────────────┬──────────────┐
+  │  Design  │  Component          │  IA Map                  │   Reference  │
+  │  System  │  Showcase           │  (사이트맵·구조도)       │   Archive    │
+  │ (tokens) │  (reusable +        │  ──────────────────────  │   (legacy)   │
+  │          │   variants)         │  Storyboard              │              │
+  │          │                     │  (Lanes R1·R2·…)         │              │
+  │          │                     │  (라벨+미니맵+풀사이즈)  │              │
+  └──────────┴─────────────────────┴──────────────────────────┴──────────────┘
+       1              2                  3 (stacked)                  4
+   foundation       parts          structure → screens             legacy
 ```
 
-| # | 영역 | x 좌표 (예시) | 내용 | 의미·비고 |
-|:--:|:---|:---|:---|:---|
-| 1 | **Design System** | x: 6000~7000 | 토큰(color·typography·rounded·spacing) + 시스템 카탈로그 페이지 | 모든 디자인의 시각 foundation. 좌측 anchor |
-| 2 | **Component Showcase** | x: 8000~11000 | 각 reusable 컴포넌트의 sub-zone (main definition + variants 카드 grid) | DS를 사용해 조립한 부품. variants는 별도 zone 안 만들고 여기에 통합 |
-| 3 | **IA Map** | x: 11500~ (showcase 우측) | 사이트맵·정보 구조도·route 트리·navigation 모델 | 부품으로 조립할 화면들의 macro 구조 |
-| 4 | **Storyboard** | x: 12000~ | narrative 축 lanes(R1·R2·...) + 미니맵 + 풀사이즈 슬라이드 | IA Map을 narrative로 풀어낸 구체 화면 (메인 작업 영역) |
-| 5 | **Reference Archive** | x: 30000+ | legacy / narrative 무관 / 폐기 검토 | 메인에서 충분히 떨어진 외곽 (5000+ gap) |
+| # | 영역 | x 좌표 (예시) | y 배치 | 내용 | 의미·비고 |
+|:--:|:---|:---|:---|:---|:---|
+| 1 | **Design System** | x: 0~1280 (예) | 단일 row | 토큰(color·typography·rounded·spacing) + 시스템 카탈로그 페이지 | 모든 디자인의 시각 foundation. 좌측 anchor |
+| 2 | **Component Showcase** | x: 1800~7000 (예) | 단일 row | 각 reusable 컴포넌트의 sub-zone (main definition + variants 카드 grid) | DS를 사용해 조립한 부품. variants는 별도 zone 안 만들고 여기에 통합 |
+| 3a | **IA Map** | x: 7500~ (Showcase 우측) | **위쪽 row** | 사이트맵·정보 구조도·route 트리·navigation 모델 | 부품으로 조립할 화면들의 macro 구조 |
+| 3b | **Storyboard** | x: 7500~ (IA Map과 같은 x) | **아래쪽 row** (IA Map 콘텐츠 끝 + gap 아래) | narrative 축 lanes(R1·R2·...) + 미니맵 + 풀사이즈 슬라이드 | IA Map을 narrative로 풀어낸 구체 화면 (메인 작업 영역) |
+| 4 | **Reference Archive** | x: 30000+ | 단일 row | legacy / narrative 무관 / 폐기 검토 | 메인에서 충분히 떨어진 외곽 (5000+ gap) |
+
+**IA Map ↔ Storyboard stacking 룰**:
+- IA Map zone과 Storyboard zone은 **같은 x 시작점 + 같은 zone width**를 공유한다
+- IA Map은 위쪽 row, Storyboard는 아래쪽 row (`Storyboard.y = IA Map 콘텐츠 끝 y + gap 200~`)
+- IA Map의 macro 구조도(route 트리·사이트맵)와 그것을 풀어낸 Storyboard 슬라이드가 **같은 column 안에서 위→아래**로 자연스러운 narrative flow 형성. "어떤 구조로 만들지(IA Map)" → "그 구조의 화면 흐름(Storyboard)" 시각 인접
+- zone banner도 IA Map / Storyboard 각각 (V-10 룰), banner width = 두 zone 공유 width
 
 **system-first 채택 근거**:
 - Design System foundation을 우선 정립한 후 컴포넌트 → 화면으로 진행하는 시스템 우선 흐름
-- IA Map은 컴포넌트 정의 후 Storyboard로 진입하기 직전, "부품으로 어떤 화면들을 어떤 구조로 만들지" 의 macro 결정
+- IA Map은 컴포넌트 정의 후 Storyboard로 진입하기 직전, "부품으로 어떤 화면들을 어떤 구조로 만들지" 의 macro 결정 — 그래서 Storyboard 직전 stacked 배치로 구조 → 화면 narrative 시각 연결
 - 좌→우 순서 = 추상도(시스템) → 구체도(인스턴스)
 
 ### Component Showcase sub-zone 구조
