@@ -112,6 +112,28 @@ I(laneR1Cards, { type: "ref", ref: "<R1·2 카드 본체 id>", x: 0, y: 0 })
 
 **ref instance width/height**: Lane 카드와 동일(160×80) 유지. override 다르게 하면 `batch-design-pitfalls.md` 7번(ref fragment) 함정.
 
+## Lane Label column 사양
+
+각 Lane은 좌측에 세로형 label column을 둔다 (lane 식별 + 한 줄 설명).
+
+```
+┌────────────────────┐
+│ LANE R1            │ ← tag (fontSize 14, fontWeight 700, fill $fg-muted, letterSpacing 1.5)
+│                    │
+│ SDS 임포트          │ ← title (fontSize 32, fontWeight 700, fill $fg, fontFamily 헤딩 토큰)
+│                    │
+│ SDS docx 업로드·   │ ← desc (fontSize 16, fontWeight normal, fill $fg-secondary,
+│ pandoc 변환·…       │           lineHeight 1.5, textGrowth fixed-width)
+└────────────────────┘
+```
+
+규칙:
+- 컨테이너: `layout: "vertical"`, `gap: 8`, `padding: [24, 20]`, `fill: "$surface"`, **`justifyContent: "start"`** (top 정렬)
+- 컨테이너 width = 540 (storyboard column 표준), height = lane 영역 전체 (풀사이즈 row 수 × 1020 + 미니맵 row 수 × 160 + 여백)
+- 텍스트 3줄 구조: tag + title + desc
+- **top 정렬 필수**: lane height가 아무리 길어도 텍스트는 column 위쪽에 고정. `justifyContent: "center"` 두면 lane 안 콘텐츠와 vertical 위치가 어긋나 첫 슬라이드와 라벨 매칭이 흐려짐
+- 텍스트 크기는 lane 안 미니맵 카드(160×100 정도)·풀사이즈 슬라이드의 콘텐츠와 시각 위계를 명확히 구분할 만큼 큼 — title 32가 미니맵 카드의 11~12 fontSize 대비 약 3×, lane 식별이 줌아웃에서도 잘 보임
+
 ## 패턴 3 — lane 하단 풀사이즈 행 (옵션 A / C) — multi-row 적용
 
 lane 안 풀사이즈 화면들을 가로로 배치. **미니맵 row 와 1:1 대응되도록 풀사이즈도 multi-row** 로 둔다 (분기 흐름이 미니맵에만 보이고 풀사이즈는 평행 grid 가 되는 mental model 깨짐 방지).
