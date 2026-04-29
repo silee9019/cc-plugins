@@ -49,6 +49,7 @@ allowed-tools:
 - **`replace_all_matching_properties` 도구로 `$variable` 입력 금지** — escape 버그로 `\$variable` literal 저장 → 토큰이 깨짐. **batch_design U()만 사용**. (`reference/batch-design-pitfalls.md` 2번)
 - **모든 .pen 작업의 첫 호출은 `mcp__pencil__get_editor_state`** — 활성 편집기가 의도한 .pen이 아니면 다른 시안에 변경이 적용된다. `open_document`는 "Document opened" 응답을 줘도 활성 탭을 못 바꾸는 경우가 있으므로, 응답 신뢰 금지. 활성 편집기 의도 일치 확인 전까지 batch_design 호출 금지. (`reference/incidents.md` #002)
 - **batch_design 결과 검증은 디스크 .pen 파일 직접 파싱** — `batch_get`/`snapshot_layout` 회수값(=Pencil 메모리)이 아니라 working tree의 `design/*.pen` 을 python/jq로 읽어 확인한다. `git show HEAD:` 도 부적절(변경 전 상태). (`reference/incidents.md` #002)
+- **시안 캔버스에 ASCII art / monospace box-drawing 금지** — 트리는 `┌──┐`·`├──`·`└──`·monospace 들여쓰기 텍스트로 그리지 않는다. 시각 그루핑·계층·layout은 frame stroke·fill·padding·layout(horizontal/vertical)·gap·alignItems로 표현. ASCII 글리프는 `★`·`●` 같은 한 글자 인디케이터까지만 허용. (`reference/incidents.md` #003)
 
 ## Step 0 — 의도 정합성 (Priority-0)
 

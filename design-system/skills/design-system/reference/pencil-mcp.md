@@ -79,3 +79,30 @@ for c in d['children']:
 - 토큰 참조 = 문자열 값 앞에 `$` (예: `fill: "$bg-canvas"`)
 
 자세한 명명·배치 규약은 프로젝트 별 design.md 또는 시안 안 `OamJY`(Design System Slide) / `Zmdaq`(IA — Header Model) 같은 슬라이드 frame.
+
+## 인자 형식 함정 7종
+
+`batch_get` / `batch_design` 호출 시 인자 형식 위반은 misleading 에러로 나오는 경우가 많다. 첫 호출 전 본 표 1회 점검.
+
+| # | 함정 | 올바른 형식 | 잘못된 예 / 증상 |
+|---|---|---|---|
+| 1 | `filePath` required | `batch_get`·`batch_design` 양쪽 모두 명시 | 누락 시 "wrong .pen file" 에러 (실제 원인은 인자 누락) |
+| 2 | `patterns` 객체 배열 | `[{name: "regex"}, {reusable: true}, {type: "frame"}]` | 문자열 배열 `["IA Map"]` → "wrong .pen file" |
+| 3 | `nodeIds` string array | `["abc", "def"]` | 단일 string·객체 → "is not a string slice" |
+| 4 | `width`/`height` enum | `"fit_content"` / `"fill_container"` / `"fit_content(N)"` / 숫자 / `"$variable"` | `"hug-content"`(다른 도구 컨벤션) → Invalid properties |
+| 5 | `alignItems` enum | `"start"` / `"center"` / `"end"` | `"baseline"`·`"stretch"` → Invalid properties |
+| 6 | `text` 노드 padding 미지원 | text를 frame으로 wrap해 frame에 padding, 또는 부모 `gap` 의존 | text 노드에 직접 `padding: [...]` → unexpected property |
+| 7 | operations syntax | `D("nodeId")` / `U("nodeId", {...})` / `binding=I("parentId", {...})`. 인자 = 노드 ID 문자열(double quote) 또는 binding 변수명 | binding 미정의 ID를 quote 없이 사용 → 변수 not defined |
+
+체크리스트 (op 작성 직전):
+
+- [ ] `filePath` 인자 포함했는가?
+- [ ] `patterns` 가 객체 배열인가? (문자열 배열 X)
+- [ ] `width` 가 fit_content / fill_container / 숫자 / $variable 중 하나인가? (`hug-content` X)
+- [ ] `alignItems` 가 start/center/end 중 하나인가?
+- [ ] `text` 노드에 padding 직접 부여하지 않았는가? (frame으로 wrap)
+- [ ] 노드 ID 문자열은 double quote 으로 감쌌는가?
+
+ToolSearch로 schema 직접 확인하는 게 빠르다: `ToolSearch query:"select:mcp__pencil__batch_get,mcp__pencil__batch_design"`.
+
+**사고 사례**: `incidents.md` #003 — 2026-04-29 sds-web IA Map 작업 시 batch_get 4회 / batch_design 3회 연속 실패.
