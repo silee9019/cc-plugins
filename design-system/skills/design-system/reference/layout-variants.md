@@ -263,6 +263,55 @@
 - **stroke**: 일반 `$border-subtle` (Lane의 branch warning 표기 ❌)
 - **naming**: variant 카드 `Component/VariantLabel` — 예: `FileBrowser/Empty`, `FileBrowser/N items`, `ConversionTable/Loading`. (`reference/naming-rules.md`)
 
+### Variant·State 표현 모델 (ref + descendants override)
+
+Pencil `.pen` schema에는 **마스터 컴포넌트 자체에서 variant를 토글해 보는 정식 메커니즘이 없다** (Figma의 component property / variant matrix 같은 기능 부재). 마스터(`reusable: true` frame)는 default 트리 1개만 가지고, "다른 상태"는 ref instance 쪽 `descendants` override로 표현하는 모델.
+
+| 보고 싶은 곳 | 가능 여부 | 방법 |
+|:---|:---:|:---|
+| 마스터 컴포넌트 자체 (예: TCDpF) | ❌ | 마스터는 항상 default 트리 1개. variant 토글 불가 |
+| Component Showcase 캔버스 | ✓ | main(예: VsqcK) + variant card(예: MdzL3) 두 개를 sub-zone 안에 나란히 두는 현재 패턴이 사실상 "matrix 뷰" |
+| 시안 안 임의 위치 (Storyboard 슬라이드 등) | ✓ | `ref` + `descendants` override로 어디든 instance 추가 가능 |
+
+즉 "마스터 안에서 한 번에 모든 variant 보기"는 불가, "Showcase에 main + variant 카드 나열해서 한 번에 보기"가 우리 컨벤션이다.
+
+#### 권장 구현 패턴 (sds-web 사례)
+
+```js
+// main = TCDpF 마스터 그대로 ref (기본 상태)
+mainRef = I("VsqcK", { type: "ref", ref: "TCDpF", width: 360, height: "fill_container" })
+
+// variant card = 같은 마스터를 ref하되 특정 slot만 descendants override
+emptyRef = I("MdzL3", {
+  type: "ref",
+  ref: "TCDpF",
+  width: 360,
+  height: "fill_container",
+  descendants: {
+    "8EL7U": {  // override할 자식 slot의 ID
+      type: "frame",
+      name: "fListEmpty",
+      layout: "vertical",
+      alignItems: "center",
+      justifyContent: "center",
+      // ... 빈 상태 콘텐츠
+    }
+  }
+})
+```
+
+이 패턴의 효과:
+- **frame-level 속성 자동 전파**: main 마스터의 padding·stroke·crumb·width·title block 위치 등이 변경되면 모든 variant·instance에 자동 반영
+- **slot만 stale**: `descendants[<id>]`로 children 통째 override한 영역만 stale (`batch-design-pitfalls.md` #5)
+- **단일 SSOT**: 마스터 1개 + ref instance 다수 → 컴포넌트 정의가 한 곳에 모임
+
+#### 안티패턴 (피하기)
+
+- ❌ **variant card 안에 직접 frame을 그려넣기** (ref 없이) — main 마스터 변경이 전혀 전파되지 않음. 컴포넌트의 시각 정합성 잃음
+- ❌ **각 상태마다 별도 reusable component 등록** (FileBrowser/Empty를 별도 마스터로) — main ↔ variant 간 동기화 수동, 노력 큼. **단** 정말로 시각·구조가 크게 다른 경우(예: Mobile vs Desktop)는 별도 마스터가 정당
+
+variant 카드는 **항상 main 마스터를 ref + descendants override로 등록**한다. 직접 그린 frame 금지. 같은 룰이 Storyboard 슬라이드 안 instance에도 적용 — 슬라이드의 빈 상태·error 상태 등은 마스터 ref + descendants override로 표현.
+
 ### 분류 의사결정 트리 (Storyboard vs Showcase)
 
 ```

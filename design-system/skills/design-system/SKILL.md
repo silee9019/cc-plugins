@@ -61,7 +61,7 @@ allowed-tools:
 | 시안 편집 | "lane 분리", "배치 정리", "토큰 적용" | `reference/pencil-mcp.md` + `batch-design-pitfalls.md` |
 | narrative·자리배치 | "자리배치 다시", "스토리보드 정리", "축 바꿔", "재구성" | `reference/narrative-placement.md` + `storyboard-pattern.md` |
 | 스토리보드 도입 | "스토리보드 만들어", "시나리오 흐름", "미니맵" | `reference/storyboard-pattern.md` |
-| **Component variants** | "컴포넌트 상태", "visual state", "variant zone", "흐름 분기 아닌 상태", "showcase에 묶기" | `reference/layout-variants.md`(Canvas Zoning · Component Showcase) + `narrative-placement.md`(분기 vs variant 결정) |
+| **Component variants** | "컴포넌트 상태", "visual state", "variant zone", "흐름 분기 아닌 상태", "showcase에 묶기" | `reference/layout-variants.md`(Canvas Zoning · Component Showcase · **Variant·State 표현 모델**) + `narrative-placement.md`(분기 vs variant 결정) |
 | **IA Map** | "IA Map", "사이트맵", "정보 구조", "route 트리" | `reference/layout-variants.md`(Canvas Zoning · IA Map zone) |
 | **충돌·겹침 검사** | "충돌 검사", "겹침 검사", "lane overlap", "Y 좌표 겹침", "AABB" | Phase 4 + `audit-workflow.md` (script: `scripts/check_collisions.py`) |
 | naming 일괄 변경 | "이름 정리", "naming rule", "프레임 이름", "lane code 갱신" | `reference/naming-rules.md` |
