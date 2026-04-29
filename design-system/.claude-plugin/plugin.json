@@ -2,7 +2,7 @@
   "name": "design-system",
   "displayName": "design-system",
   "description": "디자인·기획·설계 프로세스 프레임워크 — Pencil MCP(.pen 파일) 기반 시안 SSOT 워크플로우, design.md 토큰 머신가독 미러, batch_design 함정 7종, 화면 layout variant·카드 폭 토큰, 스토리보드 텍스트 카드 패턴, narrative 축·자리배치, naming rule, Canvas Zoning(Design System / Component Showcase / IA Map / Storyboard / Reference Archive — system-first 순서), audit + 충돌 검사 자동화. 시안=SSOT, design.md=토큰 미러, 코드(CSS)=1:1 매핑.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "author": { "name": "silee9019" },
   "keywords": [
     "design-system",
