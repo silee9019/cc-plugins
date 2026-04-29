@@ -198,8 +198,8 @@
     {
       "name": "design-system",
       "source": "./design-system",
-      "description": "디자인 시스템 워크플로우 통합: Pencil MCP(.pen 파일) 표준 루프, batch_design 함정 5종, google-labs-code design.md 형식, 화면 layout variant 7가지, 카드 폭 토큰, 전수 조사·표준화 절차. 시안 = SSOT.",
-      "version": "0.2.0",
+      "description": "디자인 시스템 워크플로우 통합: Pencil MCP(.pen 파일) 표준 루프, batch_design 함정 7종, google-labs-code design.md 형식, 화면 layout variant 7가지, 카드 폭 토큰, 스토리보드 텍스트 카드 패턴(Lane=SSOT / 별개 스토리보드=ref 파생), narrative 축·자리배치, naming rule, Canvas Zoning, 전수 조사·표준화 절차. 시안 = SSOT.",
+      "version": "0.3.0",
       "author": {
         "name": "silee9019"
       },
@@ -214,7 +214,10 @@
         "card-width",
         "lane",
         "batch-design",
-        "ssot"
+        "ssot",
+        "storyboard",
+        "naming-rules",
+        "narrative-placement"
       ],
       "category": "design"
     }

@@ -106,7 +106,9 @@ A. `open_document` 응답 신뢰 — "Document opened" 가 곧 활성 편집기 
 
 B. `batch_get` / `snapshot_layout` 회수값 = Pencil 메모리. 디스크 .pen 파일은 별도 저장 시점이 있을 수 있고(자동 저장 동작은 환경에 따라 다름), 무엇보다 **검증 대상 노드만** 회수하므로 **잔여 비표준값**을 발견할 수 없다. "기대값에 도달했는가" 를 확인할 뿐 "표준에 정합한가" 를 확인하지 못함.
 
-B-1. **디스크 검증의 전제 = Pencil 이 저장했다**. 이번 환경에서는 batch_design 직후 auto-save가 동작했지만, 항상 보장되지 않는다. 따라서 디스크 파싱 전에 `git status design/` 또는 `stat -f %m` 으로 working tree 반영 여부를 먼저 확인해야 한다. 반영 없음이면 Cmd+S 요청 후 재검증.
+B-1. **디스크 검증의 전제 = Pencil 이 저장했다**. 환경에 따라 batch_design 직후 auto-save가 동작하기도 하고 안 하기도 한다. 따라서 디스크 파싱 전에 `git status design/` 또는 `stat -f %m` 으로 working tree 반영 여부를 먼저 확인해야 한다. 반영 없음이면 Cmd+S 요청 후 재검증.
+
+  **Fresh evidence 2026-04-29 (sds-web design.pen 자리배치 작업)**: batch_design 다수 호출 후 `git status` 가 clean, `stat` 결과 mtime이 마지막 commit 시각 그대로였다. Pencil MCP 가 메모리에만 적용하고 디스크 미저장 — 사용자에게 ⌘S 요청해야 디스크 반영. 즉 **auto-save 동작은 환경 의존이며 안 한다고 가정** 하는 편이 안전. 작업 종료 시점에 항상 사용자에게 Cmd+S 한 번 요청 후 commit·push 진행.
 
 C. `git show HEAD:` 는 마지막 commit 시점 상태. working tree 변경은 이걸로 안 보인다.
 

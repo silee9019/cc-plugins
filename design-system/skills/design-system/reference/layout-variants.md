@@ -203,6 +203,57 @@
 - 좌 + 메인 + 우 모두 사이드 → **Three-Column**
 - backdrop + 인터럽트 → **Dialog**
 
+## Canvas Zoning — 캔버스 영역 좌표 컨벤션
+
+큰 시안(시스템·컴포넌트 카탈로그·화면 다수·legacy 화면 등 혼재)은 좌표를 영역별로 분리한다. 시안 열어 줌아웃 했을 때 어떤 영역이 무엇인지가 한눈에 파악되도록.
+
+| 영역 | x 좌표 | 내용 | 비고 |
+|:---|:---|:---|:---|
+| Design System | x: 6000~7000 | 토큰·컴포넌트 카탈로그 (1280×NNNN 큰 페이지) | 좌측 anchor |
+| Reusable Components | x: 8000~10000 | App Header / Cards / Dialogs 등 reusable=true 컴포넌트 | Design System 우측 |
+| Storyboard 메인 | x: 12000~ | narrative 축 lane들 (라벨 + 미니맵 + 풀사이즈) | 메인 작업 영역 |
+| Wireframe v1+ | y 분리 또는 별도 영역 | 정식 화면이 아닌 wireframe 산출물 | 스토리보드와 시각 분리 |
+| Reference Archive | x: 30000+ | legacy / narrative 무관 / 폐기 검토 대상 | 메인에서 충분히 떨어진 외곽 |
+
+### 좌표 사이 pitch 표준
+
+- 슬라이드 가로 pitch: 화면 width + 40 (예: 1320 → 1360)
+- 슬라이드 세로 pitch (lane 분리): 화면 height + 200 (예: 920 → 1120) 또는 lane 미니맵·라벨 포함 시 +1000~ (예: 920 → 1920)
+- 영역 간 분리: 5000~10000 (줌아웃 시 영역 경계 즉시 인지)
+
+### 영역 라벨
+
+각 영역의 좌상단에 큰 텍스트 라벨을 둔다 (fontSize 32+, fontWeight 700, fontFamily heading 토큰). 시안 첫 진입 시 "여기는 무슨 영역" 이 명시적으로 보이게.
+
+### 영역 추가 시 결정 사항
+
+새 영역(예: "v2 Wireframes", "Migration Plan") 이 생기면:
+- 기존 영역 옆에 둘지(시각적 인접성), 아래에 둘지(시간 흐름)
+- 경계 분리(5000+)·라벨·border (subtle 1px stroke 권장)
+- README 또는 design.md 에 영역 좌표 표 갱신
+
+### Lane 확장 시 다른 lane 일괄 y 이동 워크플로우
+
+한 lane 에 multi-row(미니맵 분기 row 또는 풀사이즈 row)가 추가되어 lane height 가 커질 때:
+
+1. **변경 전 인벤토리** — `snapshot_layout(maxDepth: 0)` 으로 현재 모든 lane 의 y / height 수집
+2. **새 height 계산** — 변경 lane 의 신규 height = (미니맵 row 수 × 160) + (풀사이즈 row 수 × 1020) + 여백 (lane 라벨 내부 padding 포함)
+3. **delta 산출** — `Δy = 새 height - 기존 height + lane 간 gap`
+4. **batch 갱신** (한 batch 안):
+   - 변경 lane 자체: `U(laneId, { height: <새 height> })`
+   - 변경 lane 의 라벨 frame: `U(laneLabelId, { height: <새 height>, y: <기존 그대로> })` (y 동일, height 만)
+   - 그 아래 모든 lane: `U(<lane-id>, { y: <기존 y + Δy> })` 일괄
+   - 그 아래 모든 lane 의 라벨 frame: `U(<labelId>, { y: <기존 y + Δy> })` 일괄
+5. **검증** — `snapshot_layout` 로 lane 좌표 무충돌 (인접 lane 간 gap 유지) 확인
+
+흔한 누락:
+- **lane 라벨 frame의 height 갱신 누락** — lane height 변경됐는데 라벨 frame 은 옛 height 인 채. 시각적으로 라벨이 lane 아래쪽 빈 공간 안 채움
+- **그 아래 lane 의 라벨 frame y 이동 누락** — 데이터 lane 은 이동됐는데 라벨 frame 은 옛 y 에 남아 다른 lane 위에 겹침
+
+라벨 frame 은 lane 본체와 같은 grid 에 있는 별도 frame 이므로 본체와 함께 짝으로 갱신.
+
+---
+
 ## 매핑 사례 (mlx-meeting-scribe 시안)
 
 | 화면 | variant | 카드 폭 | 사이드바 |
