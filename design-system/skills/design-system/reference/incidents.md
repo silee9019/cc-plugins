@@ -201,6 +201,58 @@ CND-1191 IA Map 영역(Showcase 우측 placeholder, x=7500~10000)에 Sitemap & R
 
 ---
 
+## #004 — 스킬 늦은 로드로 권장 인자 누락 + M op 부작용으로 heading 8개 두 위치 동시 존재
+
+- **일시**: 2026-04-29 ~ 2026-04-30
+- **프로젝트**: imagoworks dentbird Connect monorepo / `tools/sds-web/design.pen` (CND-1191)
+- **심각도**: 시간 낭비 + 시각 사고 (heading 중복) + 사용자 신뢰 비용
+
+### 컨텍스트
+
+CND-1191 Showcase 정합 작업 중 사용자 요구로 collision check 실행 → `wrap fit_content` 일괄 적용 → KJeCU 마스터 분리 → zone heading banner wrap 추가. 본 세션에서 design-system 스킬을 명시 로드하지 않고 작업 시작.
+
+### 원인
+
+1. **스킬 늦은 로드**: 세션 시작 시점에 design-system 스킬을 `Skill` tool로 명시 로드하지 않아 SKILL.md Phase 4 #5의 collision script 권장 인자(`--top-level-only --min-width 300`)가 컨텍스트에 없었음. `--top-level-only` 빠뜨려 reusable 좌표 (0,0) 더하기로 781 false positive collision 폭발.
+2. **M op pitfall #1 (자식 두 위치 동시 존재)**: zone heading 8개를 banner wrap으로 감쌀 때 `M(headingId, wrap, 0)` 단독 사용. M은 자식을 새 부모 children에 추가하지만 원본 부모(document) children list에서 빼지 않아 heading 8개가 wrap 안 + document top-level **두 위치에 동시 존재** → 시각상 두 곳에서 그려짐. 사용자가 "ConfirmDialog 타이틀 따로 만들어진 건 뭐야?"라고 사고 발견.
+3. **응답 가독성·오타**: AskUserQuestion 옵션 라벨/설명에 영문/한글/dash 혼재 + 길이 과다로 사용자가 "오타가 많다, 뭐라고 쓴지 못 알아보겠다"라고 가독성 문제 지적.
+4. **Pencil ⌘S 자동 저장 안 함**: batch_design 누적 후 commit 시도 시 git working tree 변경 없음 ("nothing to add"). Pencil이 디스크에 자동 기록하지 않은 상태에서 `git status`/`stat` 검증 누락 → 사용자에게 GUI Cmd+S 별도 요청 필요.
+
+### 결과
+
+- collision check false positive 781건 → 권장 인자 적용으로 2건으로 축소 후 fix
+- zone heading 8개 두 위치 중복 → 새 text I + 원본 D 패턴으로 fix (사용자 발견 후 사후 대응)
+- 사용자 가독성 지적 후 응답 옵션 압축
+- 사용자 ⌘S 안내로 디스크 반영 → commit
+
+### 교훈
+
+1. **스킬은 첫 호출 시점에 명시 로드** — `.pen` 작업·"slide/variant/showcase/lane/design.pen" 발화 감지 시 즉시 design-system 스킬을 `Skill` tool로 명시 로드. 이후 SKILL.md Phase 4 권장 인자를 컨텍스트에 두고 진행.
+2. **M op은 안전 패턴만** — heading text 같은 단순 노드를 reparent할 때도 `M` 단독 금지. **`I(parent, {새 text})` + `D(원본)` 패턴**이 안전. M은 마스터 reparent(M-α V-1) 같은 명시적 안전 시나리오에서만 사용.
+3. **AskUserQuestion 옵션은 한 줄, 한 언어, 단순 부호** — description은 한 줄 이내, 한국어 단일 언어, dash·tilde·대괄호·괄호 혼재 절제. 길어지면 본문 응답으로 풀어 설명.
+4. **batch_design 후 git status 즉시 검증** — Phase 4 #1 "저장 여부 선검증" 룰 강화. Pencil 자동 저장에 의존하지 말고 매 commit 직전 `git status` + `stat -f %m` 둘 다 확인 후 사용자 ⌘S 요청.
+
+### 재발 방지 체크리스트
+
+- [ ] `.pen` 작업 시작 시 `Skill` tool로 design-system 스킬 명시 로드 완료
+- [ ] collision check 호출 시 권장 인자 `--top-level-only --min-width 300` 포함
+- [ ] heading text reparent 시 M 단독 금지, `I + D` 패턴 사용
+- [ ] AskUserQuestion 옵션 description 한 줄 한국어 단일 언어 작성 후 셀프 가독성 검증
+- [ ] commit 직전 `git status tools/.../design.pen` + `stat -f %m` 검증, 변경 없으면 사용자 ⌘S 요청 후 재검증
+
+### 복구 방법
+
+본 사고는 fix 후 commit으로 정상화. heading 두 위치 동시 존재는 새 text I + 원본 D로 단일 위치로 정리.
+
+### 참조
+
+- 본 세션 핸드오프: `2026-04-29-2302-handoff-design-system-v06-룰-정비.md` 후속
+- HARD GATE 신규 6 룰 (V-6 ~ V-10 + Meta): `SKILL.md`
+- batch_design pitfalls #1: `reference/batch-design-pitfalls.md`
+- Phase 4 #1 강화: `SKILL.md`
+
+---
+
 ## 신규 사고 추가 양식
 
 새로운 사고가 발생하면 위 #001 형식으로 다음을 추가:
