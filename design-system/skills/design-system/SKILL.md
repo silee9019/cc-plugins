@@ -53,6 +53,7 @@ allowed-tools:
 - **마스터 default = 가장 일반적 상태** — 마스터 컴포넌트(`reusable: true`)의 default 트리는 selected/hover/loading 같은 특수 상태가 아닌 "가장 보편적이고 다른 상태의 base가 되는 모습"으로 정의. 특수 상태는 ref instance의 descendants override. 위반 시 lane 안 시각 중복 발생. (`reference/layout-variants.md` "마스터 default = 가장 일반적 상태" 섹션)
 - **한 Lane 내 시각 중복 금지** — 스토리보드 lane 안 슬라이드는 모두 시각 변별 가능해야 한다. 의도가 다른데 픽셀 동일이면 통합하거나 visual override로 변별. 한 슬라이드로 그 단계가 충분히 설명되는가가 기준. (`reference/layout-variants.md` "한 Lane 내 시각 중복 금지")
 - **작은 시각 변화도 lane + Showcase 양쪽 표현** — 다이얼로그·overlay 같은 부분 영역 변화도 lane에는 풀사이즈 슬라이드로 + Showcase에는 variant 카드로 등록. 두 위치의 descendants override는 동일하게 유지. (`reference/layout-variants.md` "작은 시각 변화도 Storyboard lane + Showcase variant 양쪽 표현")
+- **Variant 카드 = wrap frame 형식** — Showcase main + variants 카드는 모두 outer wrap frame(`Component — <Name> [/ <VariantLabel>]`) + titleRow(COMPONENT kicker + title + ref ID meta) + 본체(마스터 또는 ref + override). bare ref 단독 금지. 사양·좌표·순서·라벨링 V-1~V-5 룰. (`reference/layout-variants.md` "Variant 배치 컨벤션 (V-1 ~ V-5)")
 
 ## Step 0 — 의도 정합성 (Priority-0)
 
