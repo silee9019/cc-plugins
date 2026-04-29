@@ -124,6 +124,7 @@ batch 4 — layout 누락 보강 (3~5 op)
 - `mcp__pencil__snapshot_layout(parentId: <screen>, maxDepth: 2)` — 좌표·폭 무충돌
 - `mcp__pencil__get_screenshot(<screen>)` — 시각 회귀 없음
 - design.md 토큰 갱신 (필요 시) → `npx -p @google/design.md design.md lint` errors 0
+- **충돌(겹침) 정량 검증** — `snapshot_layout` 결과를 임시 파일로 저장 후 `python3 ${CLAUDE_PLUGIN_ROOT}/skills/design-system/scripts/check_collisions.py --filter "^Slide " --min-width 1000 --top-level-only /tmp/snap.json`. AABB 알고리즘. Lane 확장·시프트·재배치 후 표준화 마무리 단계에서 자동 호출 권장. exit 0 = no collisions, exit 1 = N collision(s) + 겹침 영역(px) 보고
 
 ## 결과 보고 형식
 

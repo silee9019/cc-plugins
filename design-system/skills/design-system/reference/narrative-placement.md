@@ -39,6 +39,20 @@
 - 답하지 않거나, 답한다 해도 이전 컨셉 잔재라 새 narrative 흐름을 흐리는가 → Reference Archive
 - 어디 둬도 어색한 화면(테마 데모 등 narrative 무관) → Reference Archive
 
+**분기 vs visual variant 결정** (lane main/branch 분류 전 한 단계 더):
+
+```
+이 슬라이드는 ...
+├─ 다음 흐름 step이 다른가? (분기 outcome)
+│  └─ Yes → Lane branch row (warning stroke + "BRANCH" 태그)
+└─ No (다음 흐름 동일) →
+   ├─ 같은 컴포넌트의 visual variant인가? (data·상태 차이)
+   │  └─ Yes → Lane이 아닌 **Component Showcase zone**의 해당 컴포넌트 sub-zone에 variant 카드로 (`layout-variants.md` Canvas Zoning 참조)
+   └─ No → Lane main (대표 1장)
+```
+
+같은 컴포넌트의 빈 상태/data 변형(`FileBrowser/Empty` vs `FileBrowser/N items`)은 lane 분기가 아니므로 lane을 흐리지 않게 Component Showcase로 분리.
+
 분류 결과는 **사용자에게 표 + 권장안** 으로 제출하고 OK 받은 뒤 자리배치 진행. (옵션 제안 형식은 user-scope CLAUDE.md "결정·옵션 제안" 룰 적용 — 표 + 권장안 볼드+밑줄)
 
 ## Step 3 — 자리배치 도출

@@ -203,17 +203,77 @@
 - 좌 + 메인 + 우 모두 사이드 → **Three-Column**
 - backdrop + 인터럽트 → **Dialog**
 
-## Canvas Zoning — 캔버스 영역 좌표 컨벤션
+## Canvas Zoning — 캔버스 영역 좌표 컨벤션 (System-first 5 영역)
 
 큰 시안(시스템·컴포넌트 카탈로그·화면 다수·legacy 화면 등 혼재)은 좌표를 영역별로 분리한다. 시안 열어 줌아웃 했을 때 어떤 영역이 무엇인지가 한눈에 파악되도록.
 
-| 영역 | x 좌표 | 내용 | 비고 |
-|:---|:---|:---|:---|
-| Design System | x: 6000~7000 | 토큰·컴포넌트 카탈로그 (1280×NNNN 큰 페이지) | 좌측 anchor |
-| Reusable Components | x: 8000~10000 | App Header / Cards / Dialogs 등 reusable=true 컴포넌트 | Design System 우측 |
-| Storyboard 메인 | x: 12000~ | narrative 축 lane들 (라벨 + 미니맵 + 풀사이즈) | 메인 작업 영역 |
-| Wireframe v1+ | y 분리 또는 별도 영역 | 정식 화면이 아닌 wireframe 산출물 | 스토리보드와 시각 분리 |
-| Reference Archive | x: 30000+ | legacy / narrative 무관 / 폐기 검토 대상 | 메인에서 충분히 떨어진 외곽 |
+**system-first 온톨로지 순서** (좌→우 = 추상 시각 system → 구체 narrative):
+
+```
+                                X axis (left → right)
+
+  ┌──────────┬─────────────────────┬──────────┬──────────────────────────┬──────────────┐
+  │  Design  │  Component          │  IA Map  │   Storyboard             │   Reference  │
+  │  System  │  Showcase           │          │   (Lanes R1·R2·…)        │   Archive    │
+  │ (tokens) │  (reusable+         │ (사이트맵│   (라벨+미니맵+풀사이즈) │   (legacy)   │
+  │          │   variants)         │  /구조도)│                          │              │
+  └──────────┴─────────────────────┴──────────┴──────────────────────────┴──────────────┘
+       1              2                3                  4                      5
+   foundation       parts          structure          screens               legacy
+```
+
+| # | 영역 | x 좌표 (예시) | 내용 | 의미·비고 |
+|:--:|:---|:---|:---|:---|
+| 1 | **Design System** | x: 6000~7000 | 토큰(color·typography·rounded·spacing) + 시스템 카탈로그 페이지 | 모든 디자인의 시각 foundation. 좌측 anchor |
+| 2 | **Component Showcase** | x: 8000~11000 | 각 reusable 컴포넌트의 sub-zone (main definition + variants 카드 grid) | DS를 사용해 조립한 부품. variants는 별도 zone 안 만들고 여기에 통합 |
+| 3 | **IA Map** | x: 11500~ (showcase 우측) | 사이트맵·정보 구조도·route 트리·navigation 모델 | 부품으로 조립할 화면들의 macro 구조 |
+| 4 | **Storyboard** | x: 12000~ | narrative 축 lanes(R1·R2·...) + 미니맵 + 풀사이즈 슬라이드 | IA Map을 narrative로 풀어낸 구체 화면 (메인 작업 영역) |
+| 5 | **Reference Archive** | x: 30000+ | legacy / narrative 무관 / 폐기 검토 | 메인에서 충분히 떨어진 외곽 (5000+ gap) |
+
+**system-first 채택 근거**:
+- Design System foundation을 우선 정립한 후 컴포넌트 → 화면으로 진행하는 시스템 우선 흐름
+- IA Map은 컴포넌트 정의 후 Storyboard로 진입하기 직전, "부품으로 어떤 화면들을 어떤 구조로 만들지" 의 macro 결정
+- 좌→우 순서 = 추상도(시스템) → 구체도(인스턴스)
+
+### Component Showcase sub-zone 구조
+
+각 reusable 컴포넌트마다 sub-zone:
+
+```
+  ┌──────────────────────────────────────────────────────┐
+  │  ▌ FileBrowser                                       │ ← sub-zone 헤딩
+  │                                                      │
+  │   [FileBrowser]   [FB/Empty]   [FB/1 item]   [FB/N]  │ ← main + variants
+  │     (reusable)     (variant)    (variant)     (...)  │
+  │                                                      │
+  └──────────────────────────────────────────────────────┘
+
+  (gap ~120px)
+
+  ┌──────────────────────────────────────────────────────┐
+  │  ▌ ConversionTable                                   │
+  │                                                      │
+  │   [ConversionTable]   [CT/Loading]   [CT/Completed]  │
+  │                                                      │
+  └──────────────────────────────────────────────────────┘
+```
+
+- **main reusable**: 기존 `reusable=true` 컴포넌트 정의 (변경 없음)
+- **variants**: 같은 컴포넌트의 visual variant 카드. 자연 크기 허용 (강제 1320×920 없음). 컴포넌트 본연 크기에 맞춰 자유
+- **stroke**: 일반 `$border-subtle` (Lane의 branch warning 표기 ❌)
+- **naming**: variant 카드 `Component/VariantLabel` — 예: `FileBrowser/Empty`, `FileBrowser/N items`, `ConversionTable/Loading`. (`reference/naming-rules.md`)
+
+### 분류 의사결정 트리 (Storyboard vs Showcase)
+
+```
+이 슬라이드는 ...
+├─ 다음 흐름 step이 다른가? (분기 outcome)
+│  └─ Yes → Storyboard zone, Lane branch row
+└─ No (다음 흐름 동일) →
+   ├─ 같은 컴포넌트의 visual variant인가? (data·상태 차이)
+   │  └─ Yes → Component Showcase zone, 해당 컴포넌트의 sub-zone에 variant 카드로
+   └─ No → Storyboard zone, Lane main (대표 1장)
+```
 
 ### 좌표 사이 pitch 표준
 
