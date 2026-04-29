@@ -393,6 +393,12 @@ pitch = card-width + 40 (gap)
 
 **Sub-zone 간 vertical pitch**: 가장 큰 카드 outer height + 40~80 gap (heading 26 + heading-card gap 18 포함). 인접 sub-zone heading이 위 sub-zone 카드 끝보다 아래(더 큰 y)에 위치하도록 검증.
 
+**정렬 anchor = top-left corner** (Pencil frame `x`, `y`):
+- 같은 row mate끼리 `y` 동일 (top 정렬). 카드 outer height 다르면 아래 끝은 자유 — 작은 카드는 위에 정렬되고 아래 공간 비워둠
+- 같은 column mate끼리 `x` 동일 (left 정렬)
+- center/bottom-right anchor 사용 안 함 (Pencil 좌표계와 어긋남, 단순성 손실)
+- 검증 도구 `scripts/check_collisions.py --align-tolerance N` 이 같은 가정으로 outlier 검출
+
 ##### V-3. Variant 순서
 
 main 첫 번째. variants는 다음 우선순위:
