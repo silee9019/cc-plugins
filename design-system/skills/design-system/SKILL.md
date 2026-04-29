@@ -50,6 +50,9 @@ allowed-tools:
 - **모든 .pen 작업의 첫 호출은 `mcp__pencil__get_editor_state`** — 활성 편집기가 의도한 .pen이 아니면 다른 시안에 변경이 적용된다. `open_document`는 "Document opened" 응답을 줘도 활성 탭을 못 바꾸는 경우가 있으므로, 응답 신뢰 금지. 활성 편집기 의도 일치 확인 전까지 batch_design 호출 금지. (`reference/incidents.md` #002)
 - **batch_design 결과 검증은 디스크 .pen 파일 직접 파싱** — `batch_get`/`snapshot_layout` 회수값(=Pencil 메모리)이 아니라 working tree의 `design/*.pen` 을 python/jq로 읽어 확인한다. `git show HEAD:` 도 부적절(변경 전 상태). (`reference/incidents.md` #002)
 - **시안 캔버스에 ASCII art / monospace box-drawing 금지** — 트리는 `┌──┐`·`├──`·`└──`·monospace 들여쓰기 텍스트로 그리지 않는다. 시각 그루핑·계층·layout은 frame stroke·fill·padding·layout(horizontal/vertical)·gap·alignItems로 표현. ASCII 글리프는 `★`·`●` 같은 한 글자 인디케이터까지만 허용. (`reference/incidents.md` #003)
+- **마스터 default = 가장 일반적 상태** — 마스터 컴포넌트(`reusable: true`)의 default 트리는 selected/hover/loading 같은 특수 상태가 아닌 "가장 보편적이고 다른 상태의 base가 되는 모습"으로 정의. 특수 상태는 ref instance의 descendants override. 위반 시 lane 안 시각 중복 발생. (`reference/layout-variants.md` "마스터 default = 가장 일반적 상태" 섹션)
+- **한 Lane 내 시각 중복 금지** — 스토리보드 lane 안 슬라이드는 모두 시각 변별 가능해야 한다. 의도가 다른데 픽셀 동일이면 통합하거나 visual override로 변별. 한 슬라이드로 그 단계가 충분히 설명되는가가 기준. (`reference/layout-variants.md` "한 Lane 내 시각 중복 금지")
+- **작은 시각 변화도 lane + Showcase 양쪽 표현** — 다이얼로그·overlay 같은 부분 영역 변화도 lane에는 풀사이즈 슬라이드로 + Showcase에는 variant 카드로 등록. 두 위치의 descendants override는 동일하게 유지. (`reference/layout-variants.md` "작은 시각 변화도 Storyboard lane + Showcase variant 양쪽 표현")
 
 ## Step 0 — 의도 정합성 (Priority-0)
 

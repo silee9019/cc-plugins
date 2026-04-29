@@ -312,6 +312,40 @@ emptyRef = I("MdzL3", {
 
 variant 카드는 **항상 main 마스터를 ref + descendants override로 등록**한다. 직접 그린 frame 금지. 같은 룰이 Storyboard 슬라이드 안 instance에도 적용 — 슬라이드의 빈 상태·error 상태 등은 마스터 ref + descendants override로 표현.
 
+#### 마스터 default = 가장 일반적 상태
+
+마스터 컴포넌트(`reusable: true`)의 default 트리는 **선택 없음·빈 상태·idle 등 "가장 보편적이며 다른 상태들의 base가 되는 모습"**으로 정의한다. selected·hover·focused·loading 같은 특수 상태는 ref instance에서 descendants override로 표현.
+
+이유: 마스터가 default를 selected/특수 상태로 두면, ref instance가 아무것도 override하지 않을 때 그 특수 상태가 그대로 노출된다 → "다른 ref instance도 같은 마스터인데 특수 상태가 default"라는 모순. lane 안 시각 중복의 흔한 원인.
+
+위반 패턴 (CND-1191 사례): TCDpF 마스터 default에 한 행이 selected(stroke-left + convert button 노출)인 채로 두고, "선택 전 화면" R1-01과 "선택 후 화면" R1-03이 둘 다 마스터 ref 그대로 → 시각 동일.
+
+수정 패턴: 마스터의 selected stroke·active button 노출 제거 → "선택 없음"이 default. R1-03만 ref + descendants override로 selected 부여 (`stroke: { left: 3 }`, `convertBtn enabled: true`).
+
+#### 한 Lane 내 시각 중복 금지
+
+스토리보드 lane 안의 슬라이드들은 **모두 시각적으로 변별 가능해야 한다**. 두 슬라이드가 의도(라벨·메타)는 다르지만 픽셀이 동일하면 lane에 두지 않는다 — 개발자가 둘을 별개로 만들어야 한다는 신호가 안 잡힘. 한 슬라이드로 충분히 그 단계를 설명할 수 있는가가 기준.
+
+다른 lane 또는 다른 컨텍스트(예: lane vs Showcase)에서는 같은 시각의 재등장 허용. **lane 안 중복만 금지**.
+
+검증: 인접 슬라이드를 batch_get으로 비교해 frame-level 속성 + descendants override가 모두 동일한 ref instance가 있으면 시각 중복. 마스터 default를 정비(위 룰)하거나 한 슬라이드에 visual override를 부여해 변별. 통합 가능하면 통합.
+
+#### 작은 시각 변화도 Storyboard lane + Showcase variant 양쪽 표현
+
+다이얼로그·overlay·toast 등 **부분 영역 시각 변화도 lane 흐름에서는 별도 풀사이즈 슬라이드로 표현**한다. 변화량이 작아 보이지만 흐름에서는 결정적 단계 — 사용자가 어떤 단계를 거쳐 도달했는지 lane으로 읽혀야 한다.
+
+동시에 **같은 variant를 Showcase에도 카드로 등록**해 main + variants 매트릭스 뷰 보존. Storyboard lane ref와 Showcase variant 카드 양쪽이 같은 마스터를 ref + 동일 descendants override를 가짐 = 의도된 중복(흐름 가독성 + 시스템 매트릭스 동시 충족).
+
+| 위치 | 표현 | 목적 |
+|:---|:---|:---|
+| Storyboard lane | 마스터 ref + override를 풀사이즈 frame 안에 배치 | 흐름 단계 가독성 |
+| Component Showcase sub-zone | 같은 마스터 ref + 같은 override를 카드 한 장으로 | 시스템 매트릭스 (main + variants) |
+
+일관성 유지 (도구 미지원, 수동 검증):
+- Storyboard slide의 dialog ref instance와 Showcase variant 카드의 descendants override 키·값이 동일해야 함
+- 한쪽이 변경되면 양쪽 동기화
+- variant 사례: ConfirmDialog/Block, ConfirmDialog/Progress, ConfirmDialog/Failure, ConfirmDialog/Complete (CND-1191 sds-web)
+
 ### 분류 의사결정 트리 (Storyboard vs Showcase)
 
 ```
