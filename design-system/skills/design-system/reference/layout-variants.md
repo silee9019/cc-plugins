@@ -485,17 +485,20 @@ gap을 두 종류로 분리하여 zone 그룹화를 시각적으로 강조한다
 
 | gap 종류 | 값 | 적용처 |
 |---|---|---|
-| **인접 객체 gap** | **40** | slide 가로/세로 pitch, 카드 row 사이, banner ↔ zone 콘텐츠, lane label column ↔ 카드 row, 인접 zone 가로 분리 (예: Showcase 우측 끝 → IA Map 좌측 시작) |
-| **stacked zone 간 gap** | **400** | 같은 column 안에서 위→아래로 stacked된 zone 사이 (예: IA Map 콘텐츠 끝 → Storyboard banner). 인접 객체 gap의 10× — zone 그룹 시각 분리 강조 |
+| **인접 객체 gap** | **40** | slide 가로/세로 pitch, 카드 row 사이, banner ↔ zone 콘텐츠, lane label column ↔ 카드 row |
+| **인접 zone 가로 분리** | **520** | 인접 zone 사이 가로 gap (예: DS 끝 → Showcase 시작, Showcase 끝 → IA Map+Storyboard 시작). zone 그룹 시각 분리 |
+| **stacked zone 간 vertical gap** | **400** | 같은 column 안에서 위→아래로 stacked된 zone 사이 (예: IA Map 콘텐츠 끝 → Storyboard banner) |
 
 **적용 세부**:
 - 슬라이드 가로 pitch: 화면 width + 40 (예: 1320 → 1360)
 - 슬라이드 세로 pitch: 화면 height + 40 (lane 분리 동일)
-- zone 간 가로 분리: 인접 zone 시작점 = 이전 zone 콘텐츠 끝 x + 40
+- zone 간 가로 분리: 인접 zone 시작점 = 이전 zone 콘텐츠 끝 x + **520** (모든 zone 가로 분리에 동일 적용)
 - IA Map ↔ Storyboard stacked y gap = 400 (위 zone 콘텐츠 끝 + 400 = 아래 zone banner y)
 - Storyboard lane 좌측 들여쓰기 = 0 — lane label column x = zone x (zone banner x와 같은 시작점)
 - banner ↔ zone 콘텐츠 gap = 40 (모든 zone 균일)
 - Reference Archive zone만 예외적 large gap (5000+) — legacy 명시 격리 의도
+
+**근거**: 이전 룰 zone 가로 분리 = 40 (slide gap과 동일)은 zone 그룹 경계가 시각적으로 구분되지 않는 사고 발생. DS ↔ Showcase 사이 자연 발생한 520 간격이 시각상 적절하다는 사용자 판단으로 다른 zone 가로에도 통일. 인접 객체 gap(40)의 13×.
 
 **균일성 룰**: 같은 종류의 gap은 모든 위치에서 같은 값을 사용한다. zone마다 banner-content gap이 137·362·586으로 들쑥날쑥하면 "균일하지 않음" 위반.
 
