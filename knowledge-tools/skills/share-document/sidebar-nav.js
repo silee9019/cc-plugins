@@ -67,23 +67,23 @@
     // Top/bottom jump buttons — translucent overlays on nav top/bottom edges
     var jumpTop = document.createElement('button');
     jumpTop.className = 'toc-jump top';
-    jumpTop.setAttribute('aria-label', 'Scroll to top');
+    jumpTop.setAttribute('aria-label', 'Jump to first heading');
     jumpTop.innerHTML = ICON_UP;
     jumpTop.addEventListener('click', function () {
-      clickedId = null;
-      lastActiveId = null;
-      smoothScrollTo(0);
+      // Mirror TOC-link click behavior on the FIRST visible TOC link
+      var first = links.filter(function (l) { return l.offsetParent !== null; })[0];
+      if (first) first.click();
     });
     toc.appendChild(jumpTop);
 
     var jumpBottom = document.createElement('button');
     jumpBottom.className = 'toc-jump bottom';
-    jumpBottom.setAttribute('aria-label', 'Scroll to bottom');
+    jumpBottom.setAttribute('aria-label', 'Jump to last heading');
     jumpBottom.innerHTML = ICON_DOWN;
     jumpBottom.addEventListener('click', function () {
-      clickedId = null;
-      lastActiveId = null;
-      smoothScrollTo(document.documentElement.scrollHeight);
+      var visible = links.filter(function (l) { return l.offsetParent !== null; });
+      var last = visible[visible.length - 1];
+      if (last) last.click();
     });
     toc.appendChild(jumpBottom);
 
@@ -107,13 +107,13 @@
       '  <button class="step" data-act="inc" aria-label="Increase level">+</button>',
       '</div>',
       '<div class="ctrl-row">',
-      '  <div class="seg" role="radiogroup" aria-label="Content width">',
-      '    <button data-opt="width" data-val="narrow" role="radio" aria-label="Narrow">' + ICON_NARROW + '</button>',
-      '    <button data-opt="width" data-val="wide" role="radio" aria-label="Wide">' + ICON_WIDE + '</button>',
+      '  <div class="seg" data-opt="width" data-values="narrow,wide" role="button" tabindex="0" aria-label="Toggle content width">',
+      '    <span data-opt="width" data-val="narrow">' + ICON_NARROW + '</span>',
+      '    <span data-opt="width" data-val="wide">' + ICON_WIDE + '</span>',
       '  </div>',
-      '  <div class="seg" role="radiogroup" aria-label="Theme">',
-      '    <button data-opt="theme" data-val="light" role="radio" aria-label="Light">' + ICON_LIGHT + '</button>',
-      '    <button data-opt="theme" data-val="dark" role="radio" aria-label="Dark">' + ICON_DARK + '</button>',
+      '  <div class="seg" data-opt="theme" data-values="light,dark" role="button" tabindex="0" aria-label="Toggle theme">',
+      '    <span data-opt="theme" data-val="light">' + ICON_LIGHT + '</span>',
+      '    <span data-opt="theme" data-val="dark">' + ICON_DARK + '</span>',
       '  </div>',
       '</div>'
     ].join('');
@@ -130,8 +130,8 @@
     function applySegmented(opt, val) {
       if (opt === 'width') document.body.dataset.width = val;
       else if (opt === 'theme') document.documentElement.dataset.theme = val;
-      footer.querySelectorAll('button[data-opt="' + opt + '"]').forEach(function (b) {
-        b.setAttribute('aria-pressed', b.dataset.val === val ? 'true' : 'false');
+      footer.querySelectorAll('[data-opt="' + opt + '"][data-val]').forEach(function (s) {
+        s.classList.toggle('is-active', s.dataset.val === val);
       });
       savePref(opt, val);
     }
@@ -145,23 +145,23 @@
         if (next !== cur) applyDepth(String(next));
         return;
       }
-      var seg = e.target.closest('button[data-opt]');
-      if (seg) applySegmented(seg.dataset.opt, seg.dataset.val);
+      // Anywhere inside a .seg group toggles the option (not per-button)
+      var segGroup = e.target.closest('.seg[data-opt]');
+      if (segGroup) {
+        var opt = segGroup.dataset.opt;
+        var values = segGroup.dataset.values.split(',');
+        var cur2 = loadPref(opt, values[0]);
+        var next2 = cur2 === values[0] ? values[1] : values[0];
+        applySegmented(opt, next2);
+      }
     });
 
-    // Keyboard nav within segmented groups
-    footer.querySelectorAll('[role="radiogroup"]').forEach(function (group) {
-      group.addEventListener('keydown', function (e) {
-        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-        var btns = Array.prototype.slice.call(group.querySelectorAll('button[role="radio"]'));
-        var idx = btns.indexOf(document.activeElement);
-        if (idx === -1) return;
+    // Keyboard: Enter / Space on focused .seg toggles
+    footer.querySelectorAll('.seg').forEach(function (seg) {
+      seg.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
         e.preventDefault();
-        var next = e.key === 'ArrowRight'
-          ? (idx + 1) % btns.length
-          : (idx - 1 + btns.length) % btns.length;
-        btns[next].focus();
-        btns[next].click();
+        seg.click();
       });
     });
 
