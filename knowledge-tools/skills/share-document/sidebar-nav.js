@@ -332,6 +332,20 @@
   });
   optObserver.observe(document.body, { attributes: true, attributeFilter: ['data-toc-depth', 'data-width'] });
 
+  // Hide sticky h2 once it has slid past its sticky-top (i.e., its
+  // containing section is ending). Otherwise the bottom strip of the
+  // out-going h2 peeks below the h1 — visible glitch during transition.
+  var bodyH2 = document.querySelectorAll('body section h2');
+  function updateLeavingHeaders() {
+    for (var i = 0; i < bodyH2.length; i++) {
+      var h = bodyH2[i];
+      var rect = h.getBoundingClientRect();
+      var stickyTop = parseFloat(getComputedStyle(h).top) || 0;
+      if (rect.top < stickyTop - 1) h.classList.add('h-leaving');
+      else h.classList.remove('h-leaving');
+    }
+  }
+
   var rafPending = false;
   window.addEventListener('scroll', function () {
     if (rafPending) return;
@@ -339,6 +353,7 @@
     requestAnimationFrame(function () {
       rafPending = false;
       updateActive();
+      updateLeavingHeaders();
     });
   }, { passive: true });
 
