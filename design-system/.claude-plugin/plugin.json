@@ -2,7 +2,7 @@
   "name": "design-system",
   "displayName": "design-system",
   "description": "디자인·기획·설계 프로세스 프레임워크 — Pencil MCP(.pen 파일) 기반 시안 SSOT 워크플로우, design.md 토큰 머신가독 미러, batch_design 함정 7종, 화면 layout variant·카드 폭 토큰, 스토리보드 텍스트 카드 패턴, narrative 축·자리배치, naming rule, Canvas Zoning(Design System / Component Showcase / IA Map + Storyboard stacked / Reference Archive — system-first 순서, IA Map과 Storyboard 같은 x에 위→아래 stacked), audit + 충돌·정렬 검사 자동화(min-gap 40 + alignment outlier 검출, top-left anchor), 세 종류 gap 룰(인접 객체 40 / 인접 zone 가로 520 / stacked zone vertical 400), Storyboard lane 좌측 들여쓰기 0(lane label column x = zone x), Variant 컨벤션 V-1~V-10(wrap hug 기본, wrap body 필수, 한 wrap = 하나 variant, sub-component 단일 마스터, zone heading banner = zone 가로 전체 width), 스킬 자체 개선 메타 룰. 시안=SSOT, design.md=토큰 미러, 코드(CSS)=1:1 매핑.",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "author": { "name": "silee9019" },
   "keywords": [
     "design-system",
