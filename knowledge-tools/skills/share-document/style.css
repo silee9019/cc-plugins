@@ -357,10 +357,14 @@ nav#TOC a.active::before {
 }
 
 /* TOC depth filter with slide animation: collapse below `body[data-toc-depth]`.
-   Each <li> animates max-height + opacity + translateY for in/out reveal. */
-nav#TOC > .toc-scroll > ul li {
+   max-height applies to LEAF li only (no nested ul). Parent li must stay
+   tall enough to show all children — otherwise overflow:hidden + max-height
+   6rem clips them at depth>=2. */
+nav#TOC > .toc-scroll > ul li:not(:has(> ul)) {
   max-height: 6rem;
   overflow: hidden;
+}
+nav#TOC > .toc-scroll > ul li {
   transition:
     max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     padding-top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
