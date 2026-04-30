@@ -2,70 +2,88 @@
 name: share-document
 display_name: share-document
 description: |
-  마크다운 문서를 공유용 HTML로 변환. pandoc + 내장 CSS 사용.
-  트리거: "문서 공유", "HTML 변환", "공유용 HTML", "share document", "pandoc 변환"
+  마크다운 문서를 공유용 standalone HTML로 변환. pandoc + 사이드바 미니맵 네비게이션(스크롤 연동 현재 위치 강조). mermaid 블록은 Unicode box-drawing ASCII 다이어그램으로 변환.
+  트리거: "문서 공유", "HTML 변환", "공유용 HTML", "share document", "pandoc 변환", "mermaid ascii"
 user_invocable: true
 ---
 
 # Share Document
 
-마크다운 파일을 공유용 스타일이 적용된 standalone HTML로 변환한다.
+마크다운 파일을 공유용 standalone HTML로 변환한다. 결과물에는 좌측 사이드바 미니맵(목차 + 스크롤 연동 활성 섹션 강조)이 포함된다.
 
 ## 의존성
 
-- `pandoc` (설치 확인: `which pandoc`)
+- `pandoc` (설치 확인: `which pandoc`. 없으면 `brew install pandoc`)
 
 ## 인자
 
 | 인자 | 필수 | 설명 |
 |------|------|------|
 | 파일 경로 | Y | 변환할 마크다운 파일의 절대/상대 경로 |
+| `--no-open` | N | 변환만 하고 브라우저는 열지 않음 |
+| `--depth N` | N | 네비 TOC에 노출할 헤더 레벨 (기본 2, h1~hN까지) |
 
 ## Steps
 
-### 1. pandoc 확인
+### 1. mermaid → Unicode box-drawing 변환 (LLM 수행)
 
-```bash
-which pandoc
+pandoc은 mermaid 코드블록을 텍스트로만 출력하므로, 입력 마크다운 안의 모든 ```` ```mermaid ```` 코드블록을 LLM이 직접 **Unicode box-drawing 문자**(`─ │ ┌ ┐ └ ┘ ├ ┤ ┬ ┴ ┼ ═ ║ ╔ ╗ ╚ ╝ ╠ ╣ ╦ ╩ ╬ ▶ ◀ ▲ ▼`, U+2500~U+257F)로 그린 ASCII 다이어그램으로 교체한다.
+
+**변환 원칙:**
+- 원본 mermaid 블록은 ```` ``` ```` (언어 지정 없음) 코드 펜스로 교체. monospace 폰트 유지
+- 노드 = 박스(`┌─ ─┐ │ └─ ─┘`), 결정/분기 = 더블 라인(`╔═ ╗ ║ ╚═ ╝`)
+- 화살표 = `─►`, `◄─`, `▼`, `▲`, `↓`, `↑`. 분기 시 `├─►` / `└─►`
+- 노드명/라벨은 mermaid 원본 그대로 유지 (번역 금지)
+- 큰 다이어그램은 의미 단위 sub-diagram 2~3개로 분할 (가로 80자 이내)
+- subgraph는 영역 박스(`╔═══ Subgraph Name ═══╗`)로 표시
+- 변환 후 정렬·연결선 끊김·박스 비대칭 자체 검증
+- 원본 mermaid 코드는 변환 결과 직후 `<details>...<summary>원본 mermaid</summary>` 로 접어서 보존
+
+**예시 변환:**
+
+mermaid:
+```mermaid
+flowchart LR
+  A[Start] --> B{Decision}
+  B -->|Yes| C[Action 1]
+  B -->|No| D[Action 2]
 ```
 
-없으면 `brew install pandoc` 안내 후 중단.
-
-### 2. 입력 파일 확인
-
-파일 존재 여부 확인. 없으면 에러 메시지 출력 후 중단.
-
-### 3. 전처리 (Obsidian→pandoc 호환)
-
-리스트 항목 앞에 빈 줄이 없으면 삽입. Obsidian은 빈 줄 없이도 리스트를 렌더링하지만 pandoc은 엄격하게 파싱한다.
-
-```bash
-sh "${CLAUDE_PLUGIN_ROOT}/scripts/preprocess.sh" "<input.md>" > /tmp/share-doc-preprocessed.md
+Unicode box-drawing:
+```
+┌───────┐    ╔══════════╗    ┌──────────┐
+│ Start │───►║ Decision ║─Y─►│ Action 1 │
+└───────┘    ╚════╤═════╝    └──────────┘
+                  │N         ┌──────────┐
+                  └─────────►│ Action 2 │
+                             └──────────┘
 ```
 
-`${CLAUDE_PLUGIN_ROOT}`는 플러그인 루트 경로로 자동 해석된다:
-- 개발: `cc-plugins/knowledge-tools/`
-- 설치: `~/.claude/plugins/cache/cc-plugins/knowledge-tools/<version>/`
+### 2. 빌드 스크립트 실행
 
-### 4. pandoc 변환
+전처리(Obsidian→pandoc 호환), pandoc 변환(`--toc` 자동 생성), 사이드바 JS 주입, 브라우저 열기를 한 번에 수행.
 
 ```bash
-STYLE_CSS="${CLAUDE_PLUGIN_ROOT}/skills/share-document/style.css"
-pandoc /tmp/share-doc-preprocessed.md \
-  -t html5 \
-  --standalone \
-  --css="$STYLE_CSS" \
-  --embed-resources \
-  -o "<output>.html"
+sh "${CLAUDE_PLUGIN_ROOT}/scripts/build-html.sh" "<input.md>"
 ```
 
-- 출력 파일: 입력 파일과 동일 디렉토리, 확장자만 `.html`로 변경
-- `--embed-resources`: CSS를 HTML에 인라인 삽입 (단일 파일 공유 가능)
+옵션: `--no-open` 추가 시 변환만 수행하고 브라우저는 열지 않음.
 
-### 5. 정리 및 결과
+스크립트가 처리하는 것:
+- `scripts/preprocess.sh` — Obsidian 리스트 호환성 보정
+- `pandoc --toc --toc-depth=3 --embed-resources` — TOC 포함 standalone HTML 생성
+- `skills/share-document/style.css` 임베드 — 사이드바 미니맵 스타일
+- `skills/share-document/sidebar-nav.js` 임베드 — IntersectionObserver 기반 스크롤 연동 활성 섹션 강조 + 사이드바 자동 스크롤
+- macOS `open` / Linux `xdg-open` / Windows `start` — 기본 브라우저 자동 실행
 
-```bash
-rm -f /tmp/share-doc-preprocessed.md
-```
+### 3. 결과
 
-생성된 HTML 파일 경로를 출력한다.
+스크립트는 출력 HTML 경로를 stdout으로 출력한다 (입력 파일과 동일 디렉토리, 확장자만 `.html`). 단일 파일이라 그대로 공유 가능.
+
+## 사이드바 미니맵 동작
+
+- 좌측 280px 고정 폭 패널에 h1~h3 목차 표시
+- 스크롤하면 현재 화면에 보이는 섹션이 **파란 배경 + 좌측 굵은 보더**로 강조 (IntersectionObserver `rootMargin: -10% 0 -70% 0`)
+- 활성 섹션이 사이드바 영역 밖이면 사이드바도 자동 스크롤하여 따라옴
+- 화면 폭 900px 미만에서는 사이드바 숨김 (모바일 호환)
+- 인쇄 시 사이드바 숨김

@@ -1,26 +1,373 @@
 * { box-sizing: border-box; }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-  color: #1a1a1a;
-  line-height: 1.7;
-  background: #fff;
+html {
+  /* scroll-behavior intentionally not smooth — JS smoothScrollTo() owns timing */
+  scroll-padding-top: 0;
 }
 
-h1.title { display: none; }
-h2 { font-size: 1.6rem; border-bottom: 2px solid #2563eb; padding-bottom: 0.4rem; margin-top: 2rem; color: #1e40af; }
-h3 { font-size: 1.25rem; margin-top: 1.8rem; color: #1e40af; }
-h4 { font-size: 1.05rem; margin-top: 1.2rem; color: #374151; }
+:root {
+  --bg: #fff;
+  --text: #1a1a1a;
+  --text-muted: #475569;
+  --text-faint: #94a3b8;
+  --link: #1e40af;
+  --link-strong: #0f172a;
+  --accent: #2563eb;
+  --accent-soft: rgba(37, 99, 235, 0.08);
+  --border: #e2e8f0;
+  --border-soft: #e5e7eb;
+  --th-bg: #f1f5f9;
+  --tr-alt: #f8fafc;
+  --quote-bg: #eff6ff;
+  --content-max: 800px;
+}
 
-hr { border: none; border-top: 1px solid #e5e7eb; margin: 2rem 0; }
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+  --link: #93c5fd;
+  --link-strong: #f1f5f9;
+  --accent: #3b82f6;
+  --accent-soft: rgba(59, 130, 246, 0.16);
+  --border: #334155;
+  --border-soft: #1e293b;
+  --th-bg: #1e293b;
+  --tr-alt: #172033;
+  --quote-bg: #172033;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 3rem 2.5rem 4rem;
+  color: var(--text);
+  line-height: 1.7;
+  background: var(--bg);
+  transition: background 0.2s, color 0.2s, max-width 0.2s;
+}
+
+body[data-width="wide"] { --content-max: 1200px; }
+
+/* ── Floating TOC (anchored to LEFT side of centered content) ── */
+nav#TOC {
+  position: fixed;
+  top: 10vh;
+  /* anchor TOC to the left edge of the centered content */
+  right: calc(50% + var(--content-max) / 2 + 24px);
+  width: 320px;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  border: none;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  z-index: 10;
+}
+/* The actual scrollable region holding the <ul> */
+nav#TOC > .toc-scroll {
+  flex: 1 1 auto;
+  position: relative; /* offsetParent for inner links so offsetTop is reliable */
+  overflow-y: auto;
+  padding: 1.5rem 1rem 0.5rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
+  overscroll-behavior: contain;
+}
+nav#TOC > .toc-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
+nav#TOC:hover a { opacity: 1 !important; }
+
+/* Top/bottom jump buttons — clipped to nav left edge, vertically centered as a stacked pair */
+nav#TOC .toc-jump {
+  position: absolute;
+  left: -1.7rem;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  z-index: 30;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+nav#TOC .toc-jump:hover { color: var(--link); border-color: var(--accent); }
+nav#TOC .toc-jump.top { top: calc(50% - 24px); }
+nav#TOC .toc-jump.bottom { top: calc(50% + 2px); }
+
+/* Depth stepper footer — pinned outside scroll */
+nav#TOC .toc-footer {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  background: var(--bg);
+}
+nav#TOC .toc-footer .opt-label {
+  font-weight: 600;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.68rem;
+}
+nav#TOC .toc-footer button {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  min-width: 1.6rem;
+}
+nav#TOC .toc-footer button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--link);
+}
+nav#TOC .toc-footer button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+nav#TOC .toc-footer .opt-value {
+  font-weight: 700;
+  color: var(--link-strong);
+  min-width: 1.6rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+nav#TOC ul {
+  list-style: none;
+  padding-left: 0.9rem;
+  margin: 0;
+}
+nav#TOC > .toc-scroll > ul { padding-left: 0; }
+/* "목차" label scrolls with links */
+nav#TOC > .toc-scroll > ul::before {
+  content: '목차';
+  display: block;
+  margin-bottom: 0.5rem;
+  padding-left: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+nav#TOC li {
+  margin: 0;
+  position: relative;
+  /* reserve a fixed slot for the absolute-positioned link below */
+  padding-top: 2.22rem;
+}
+/* All link size-affecting properties (border, padding, font-size) are
+   pre-allocated so :hover and .active never change box dimensions. */
+nav#TOC a {
+  /* always absolute over li's reserved slot — never affects layout on hover */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0.45rem 0.6rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-left-width: 3px;
+  transition: color 0.1s, border-color 0.1s, opacity 0.2s, background 0.1s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.4;
+  text-align: left;
+  font-size: 0.85rem;
+  border-radius: 4px;
+}
+/* Hover: link is already absolute; expand rightward (drop right anchor, set width). */
+nav#TOC a:hover {
+  right: auto;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  z-index: 100;
+  color: var(--link-strong);
+  background: var(--bg);
+  border-color: var(--border);
+  border-left-color: var(--accent);
+  box-shadow: 4px 4px 14px rgba(0, 0, 0, 0.14);
+}
+nav#TOC a.active {
+  color: var(--link-strong);
+  border-left-color: var(--accent);
+  font-weight: 700;
+  background: linear-gradient(to right, var(--accent-soft), transparent 80%);
+  opacity: 1 !important;
+}
+
+/* TOC depth filter — controlled by body[data-toc-depth] */
+body[data-toc-depth="1"] nav#TOC ul ul,
+body[data-toc-depth="2"] nav#TOC ul ul ul,
+body[data-toc-depth="3"] nav#TOC ul ul ul ul {
+  display: none;
+}
+
+/* Hide nav when viewport can't fit content + sidebar without overlap.
+   Required width = content_max + 24 (gap) + 320 (nav) + 24 (right margin) ≈ content_max + 368 */
+@media (max-width: 1180px) {
+  nav#TOC { display: none; }
+}
+@media (max-width: 1568px) {
+  body[data-width="wide"] nav#TOC { display: none; }
+}
+
+/* ── Options panel (top-right, always visible) ── */
+#options-panel {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+#options-panel .opt-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+/* Segmented radio toggle (2-option group) */
+#options-panel .opt-group.toggle {
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px;
+  background: var(--tr-alt);
+}
+#options-panel .opt-group.toggle button {
+  border: none;
+  border-radius: 4px;
+  padding: 0.2rem 0.55rem;
+  background: transparent;
+  color: var(--text-faint);
+}
+#options-panel .opt-group.toggle button:hover:not([aria-pressed="true"]) {
+  color: var(--link);
+  background: transparent;
+}
+#options-panel .opt-group.toggle button[aria-pressed="true"] {
+  background: var(--bg);
+  color: var(--link-strong);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+#options-panel .opt-label {
+  font-weight: 600;
+  color: var(--text-faint);
+  margin-right: 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.68rem;
+}
+#options-panel button {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6rem;
+  transition: background 0.1s, color 0.1s, border-color 0.1s, opacity 0.1s;
+}
+#options-panel button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--link);
+}
+#options-panel button[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+#options-panel button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+#options-panel .opt-value {
+  font-weight: 700;
+  color: var(--link-strong);
+  min-width: 1.6rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+#options-panel .opt-divider {
+  width: 1px;
+  height: 1.2rem;
+  background: var(--border);
+}
+
+/* ── Body content ── */
+h1.title { display: none; }
+h1 {
+  font-size: 1.6rem;
+  line-height: 1.2;
+  color: var(--link);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  margin: 0 -2.5rem;
+  padding: 0.7rem 2.5rem 0.5rem;
+  border-bottom: 2px solid var(--accent);
+  z-index: 5;
+}
+h2 {
+  font-size: 1.25rem;
+  line-height: 1.2;
+  color: var(--link);
+  position: sticky;
+  top: var(--h1-sticky-h, 3.5rem);
+  background: var(--bg);
+  margin: 1.5rem -2.5rem 0;
+  padding: 0.55rem 2.5rem 0.4rem;
+  border-bottom: 1px solid var(--border);
+  z-index: 4;
+}
+h3 { font-size: 1.1rem; margin-top: 1.4rem; color: var(--link); }
+h4 { font-size: 1.0rem; margin-top: 1.1rem; color: var(--text-muted); }
+
+hr { border: none; border-top: 1px solid var(--border-soft); margin: 2rem 0; }
 
 table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
-th { background: #f1f5f9; text-align: left; padding: 0.6rem 0.8rem; border: 1px solid #e2e8f0; font-weight: 600; }
-td { padding: 0.6rem 0.8rem; border: 1px solid #e2e8f0; vertical-align: top; }
-tr:nth-child(even) td { background: #f8fafc; }
+th { background: var(--th-bg); text-align: left; padding: 0.6rem 0.8rem; border: 1px solid var(--border); font-weight: 600; }
+td { padding: 0.6rem 0.8rem; border: 1px solid var(--border); vertical-align: top; }
+tr:nth-child(even) td { background: var(--tr-alt); }
 
 ul, ol { padding-left: 1.5rem; }
 li { margin-bottom: 0.3rem; }
@@ -29,27 +376,27 @@ ul.task-list[class] { list-style: none; padding-left: 0; }
 ul.task-list li { padding: 0.1rem 0; margin-bottom: 0.1rem; line-height: 1.4; }
 ul.task-list li input[type="checkbox"] {
   font-size: inherit;
-  width: 1em;
-  height: 1em;
+  width: 1em; height: 1em;
   margin-right: 0.6em;
   vertical-align: middle;
-  accent-color: #2563eb;
+  accent-color: var(--accent);
 }
 
-strong { color: #1e293b; }
+strong { color: var(--link-strong); }
 
 blockquote {
-  border-left: 3px solid #2563eb;
+  border-left: 3px solid var(--accent);
   margin: 1rem 0;
   padding: 0.5rem 1rem;
-  background: #eff6ff;
-  color: #1e40af;
+  background: var(--quote-bg);
+  color: var(--link);
   font-size: 0.95rem;
 }
 
 p { margin: 0.6rem 0; }
 
 @media print {
+  nav#TOC, #options-panel { display: none; }
   body { max-width: 100%; padding: 1rem; }
   h2, h3 { page-break-after: avoid; }
 }

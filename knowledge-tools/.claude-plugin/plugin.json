@@ -1,8 +1,8 @@
 {
   "name": "knowledge-tools",
   "displayName": "knowledge-tools",
-  "description": "지식 도구 모음: 설계 회의(design-meeting — 페르소나 기반 다자 토론으로 정의·결정 확립)와 문서 공유(마크다운→HTML 변환)",
-  "version": "0.3.2",
+  "description": "지식 도구 모음: 설계 회의(design-meeting — 페르소나 기반 다자 토론으로 정의·결정 확립)와 문서 공유(마크다운→HTML 변환, mermaid→Unicode box-drawing 변환 포함)",
+  "version": "0.4.0",
   "author": { "name": "silee9019" },
   "keywords": ["design-meeting", "ontology", "decision", "naming", "definition", "multi-agent", "deliberation", "markdown", "html", "pandoc", "share", "document"],
   "skills": "./skills/"
