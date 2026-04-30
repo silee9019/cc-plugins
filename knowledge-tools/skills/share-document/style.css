@@ -78,8 +78,8 @@ nav#TOC > .toc-scroll {
   padding: 1.5rem 0 0.5rem;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
-          mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 7%, #000 93%, transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0, #000 7%, #000 93%, transparent 100%);
   overscroll-behavior: contain;
 }
 nav#TOC > .toc-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
