@@ -68,11 +68,11 @@ nav#TOC::after {
 /* ── Floating TOC (anchored to LEFT side of centered content) ── */
 nav#TOC {
   position: fixed;
-  top: 10vh;
+  top: 8vh;
   /* anchor TOC to the left edge of the centered content */
   right: calc(50% + var(--content-max) / 2 + 24px);
   width: 320px;
-  height: 80vh;
+  height: 72vh;
   display: flex;
   flex-direction: column;
   background: transparent;
@@ -123,74 +123,110 @@ nav#TOC .toc-jump {
 }
 nav#TOC .toc-jump:hover { opacity: 1; color: var(--link); }
 nav#TOC .toc-jump.top { top: 0; }
-nav#TOC .toc-jump.bottom { bottom: 2.4rem; /* clear footer */ }
+nav#TOC .toc-jump.bottom { bottom: 0; }
 nav#TOC .toc-jump.is-disabled {
   opacity: 0;
   pointer-events: none;
 }
 
-/* Footer area — pinned below scroll. Stacks: level stepper + option panel */
-nav#TOC .toc-footer {
-  flex: 0 0 auto;
-  border-top: 1px solid var(--border);
-  padding: 0.5rem 0.6rem;
+/* Controls panel — fixed at bottom-left of nav column */
+#toc-controls {
+  position: fixed;
+  bottom: 1.5rem;
+  /* same horizontal anchor as nav#TOC (right of viewport, mirroring nav) */
+  right: calc(50% + var(--content-max) / 2 + 24px);
+  width: 320px;
+  z-index: 30;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.78rem;
-  color: var(--text-muted);
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.7rem 0.85rem;
   background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
-nav#TOC .toc-footer .toc-level-row,
-nav#TOC .toc-footer .toc-opt-row {
+#toc-controls .ctrl-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
+  justify-content: space-between;
+  gap: 0.6rem;
 }
-nav#TOC .toc-footer .opt-label {
+#toc-controls .opt-label {
   font-weight: 600;
   color: var(--text-faint);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
+  margin-right: auto;
 }
-nav#TOC .toc-footer button {
+#toc-controls .opt-value {
+  font-weight: 700;
+  color: var(--link-strong);
+  min-width: 1.6rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+}
+/* Stepper buttons */
+#toc-controls button.step {
   appearance: none;
   border: 1px solid var(--border);
-  background: transparent;
+  background: var(--bg);
   color: var(--text-muted);
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
   cursor: pointer;
   font: inherit;
-  font-size: 0.78rem;
-  width: 1.7rem;
-  height: 1.7rem;
+  font-size: 1rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-nav#TOC .toc-footer button:hover:not(:disabled) {
+#toc-controls button.step:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--link);
 }
-nav#TOC .toc-footer button:disabled {
+#toc-controls button.step:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
-nav#TOC .toc-footer .opt-value {
-  font-weight: 700;
-  color: var(--link-strong);
-  min-width: 1.4rem;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
+/* Segmented (sliding) toggle — both options visible, active highlighted */
+#toc-controls .seg {
+  display: inline-flex;
+  align-items: center;
+  background: var(--tr-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 0;
 }
-/* Pure-toggle buttons in footer (single button, click anywhere toggles) */
-nav#TOC .toc-footer .opt-toggle {
-  width: 1.7rem;
-  height: 1.7rem;
+#toc-controls .seg button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  width: 2.4rem;
+  height: 1.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.18s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s, box-shadow 0.18s;
+}
+#toc-controls .seg button:hover:not([aria-pressed="true"]) {
+  color: var(--link);
+}
+#toc-controls .seg button[aria-pressed="true"] {
+  background: var(--bg);
+  color: var(--link-strong);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* All <ul> have padding-left: 0 so every <li> spans the same row width.
@@ -389,7 +425,7 @@ blockquote {
 p { margin: 0.6rem 0; }
 
 @media print {
-  nav#TOC { display: none; }
+  nav#TOC, #toc-controls { display: none; }
   body { max-width: 100%; padding: 1rem; }
   h2, h3 { page-break-after: avoid; }
 }

@@ -33,11 +33,17 @@
     try { localStorage.setItem(STORAGE_PREFIX + key, val); } catch (e) {}
   }
 
-  // SVG icons (cleaner shapes for narrow/wide)
-  var ICON_NARROW = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="8" height="16" rx="1.5"/></svg>';
-  var ICON_WIDE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1.5"/></svg>';
-  var ICON_LIGHT = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
-  var ICON_DARK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  // SVG icons
+  function svgIcon(path, size) {
+    size = size || 16;
+    return '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>';
+  }
+  var ICON_NARROW = svgIcon('<rect x="8" y="4" width="8" height="16" rx="1.5"/>');
+  var ICON_WIDE = svgIcon('<rect x="3" y="4" width="18" height="16" rx="1.5"/>');
+  var ICON_LIGHT = svgIcon('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>');
+  var ICON_DARK = svgIcon('<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>');
+  var ICON_UP = svgIcon('<polyline points="18 15 12 9 6 15"/>', 18);
+  var ICON_DOWN = svgIcon('<polyline points="6 9 12 15 18 9"/>', 18);
 
   // ─── TOC chrome: scroll wrapper, jump buttons, depth stepper footer ─────
   var DEPTH_MIN = 1;
@@ -62,7 +68,7 @@
     var jumpTop = document.createElement('button');
     jumpTop.className = 'toc-jump top';
     jumpTop.setAttribute('aria-label', 'Scroll to top');
-    jumpTop.textContent = '▲';
+    jumpTop.innerHTML = ICON_UP;
     jumpTop.addEventListener('click', function () {
       clickedId = null;
       lastActiveId = null;
@@ -73,7 +79,7 @@
     var jumpBottom = document.createElement('button');
     jumpBottom.className = 'toc-jump bottom';
     jumpBottom.setAttribute('aria-label', 'Scroll to bottom');
-    jumpBottom.textContent = '▼';
+    jumpBottom.innerHTML = ICON_DOWN;
     jumpBottom.addEventListener('click', function () {
       clickedId = null;
       lastActiveId = null;
@@ -90,22 +96,28 @@
     window.addEventListener('scroll', updateJumpVisibility, { passive: true });
     window.addEventListener('resize', updateJumpVisibility);
 
-    // Footer with level stepper + width/theme toggles
+    // Controls panel — fixed bottom-left of viewport (separate from nav)
     var footer = document.createElement('div');
-    footer.className = 'toc-footer';
+    footer.id = 'toc-controls';
     footer.innerHTML = [
-      '<div class="toc-level-row">',
-      '  <span class="opt-label">Level</span>',
-      '  <button data-act="dec" aria-label="Decrease level">−</button>',
+      '<div class="ctrl-row">',
+      '  <span class="opt-label">TOC Level</span>',
+      '  <button class="step" data-act="dec" aria-label="Decrease level">−</button>',
       '  <span class="opt-value" data-display="depth">2</span>',
-      '  <button data-act="inc" aria-label="Increase level">+</button>',
+      '  <button class="step" data-act="inc" aria-label="Increase level">+</button>',
       '</div>',
-      '<div class="toc-opt-row">',
-      '  <button class="opt-toggle" data-toggle="width" aria-label="Toggle content width"></button>',
-      '  <button class="opt-toggle" data-toggle="theme" aria-label="Toggle theme"></button>',
+      '<div class="ctrl-row">',
+      '  <div class="seg" role="radiogroup" aria-label="Content width">',
+      '    <button data-opt="width" data-val="narrow" role="radio" aria-label="Narrow">' + ICON_NARROW + '</button>',
+      '    <button data-opt="width" data-val="wide" role="radio" aria-label="Wide">' + ICON_WIDE + '</button>',
+      '  </div>',
+      '  <div class="seg" role="radiogroup" aria-label="Theme">',
+      '    <button data-opt="theme" data-val="light" role="radio" aria-label="Light">' + ICON_LIGHT + '</button>',
+      '    <button data-opt="theme" data-val="dark" role="radio" aria-label="Dark">' + ICON_DARK + '</button>',
+      '  </div>',
       '</div>'
     ].join('');
-    toc.appendChild(footer);
+    document.body.appendChild(footer);
 
     function applyDepth(val) {
       document.body.dataset.tocDepth = val;
@@ -115,20 +127,13 @@
       savePref('depth', val);
     }
 
-    function applyWidth(val) {
-      document.body.dataset.width = val;
-      var btn = footer.querySelector('button[data-toggle="width"]');
-      btn.innerHTML = val === 'wide' ? ICON_WIDE : ICON_NARROW;
-      btn.title = val === 'wide' ? 'Wide (click to switch to Narrow)' : 'Narrow (click to switch to Wide)';
-      savePref('width', val);
-    }
-
-    function applyTheme(val) {
-      document.documentElement.dataset.theme = val;
-      var btn = footer.querySelector('button[data-toggle="theme"]');
-      btn.innerHTML = val === 'dark' ? ICON_DARK : ICON_LIGHT;
-      btn.title = val === 'dark' ? 'Dark (click to switch to Light)' : 'Light (click to switch to Dark)';
-      savePref('theme', val);
+    function applySegmented(opt, val) {
+      if (opt === 'width') document.body.dataset.width = val;
+      else if (opt === 'theme') document.documentElement.dataset.theme = val;
+      footer.querySelectorAll('button[data-opt="' + opt + '"]').forEach(function (b) {
+        b.setAttribute('aria-pressed', b.dataset.val === val ? 'true' : 'false');
+      });
+      savePref(opt, val);
     }
 
     footer.addEventListener('click', function (e) {
@@ -140,24 +145,31 @@
         if (next !== cur) applyDepth(String(next));
         return;
       }
-      var toggle = e.target.closest('button[data-toggle]');
-      if (toggle) {
-        var t = toggle.dataset.toggle;
-        if (t === 'width') {
-          var w = loadPref('width', 'narrow');
-          applyWidth(w === 'wide' ? 'narrow' : 'wide');
-        } else if (t === 'theme') {
-          var th = loadPref('theme', 'light');
-          applyTheme(th === 'dark' ? 'light' : 'dark');
-        }
-      }
+      var seg = e.target.closest('button[data-opt]');
+      if (seg) applySegmented(seg.dataset.opt, seg.dataset.val);
+    });
+
+    // Keyboard nav within segmented groups
+    footer.querySelectorAll('[role="radiogroup"]').forEach(function (group) {
+      group.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        var btns = Array.prototype.slice.call(group.querySelectorAll('button[role="radio"]'));
+        var idx = btns.indexOf(document.activeElement);
+        if (idx === -1) return;
+        e.preventDefault();
+        var next = e.key === 'ArrowRight'
+          ? (idx + 1) % btns.length
+          : (idx - 1 + btns.length) % btns.length;
+        btns[next].focus();
+        btns[next].click();
+      });
     });
 
     var initialDepth = parseInt(loadPref('depth', '2'), 10) || 2;
     initialDepth = Math.max(DEPTH_MIN, Math.min(DEPTH_MAX, initialDepth));
     applyDepth(String(initialDepth));
-    applyWidth(loadPref('width', 'narrow'));
-    applyTheme(loadPref('theme', 'light'));
+    applySegmented('width', loadPref('width', 'narrow'));
+    applySegmented('theme', loadPref('theme', 'light'));
 
     return scroll;
   }
