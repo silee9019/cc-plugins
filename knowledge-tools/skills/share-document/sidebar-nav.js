@@ -110,6 +110,8 @@
     jumpTop.setAttribute('aria-label', 'Scroll to top');
     jumpTop.textContent = '▲';
     jumpTop.addEventListener('click', function () {
+      clickedId = null;
+      lastActiveId = null;
       smoothScrollTo(0);
     });
     toc.appendChild(jumpTop);
@@ -119,6 +121,8 @@
     jumpBottom.setAttribute('aria-label', 'Scroll to bottom');
     jumpBottom.textContent = '▼';
     jumpBottom.addEventListener('click', function () {
+      clickedId = null;
+      lastActiveId = null;
       smoothScrollTo(document.documentElement.scrollHeight);
     });
     toc.appendChild(jumpBottom);
@@ -271,11 +275,19 @@
 
   function determineActive() {
     if (!orderedIds.length) return null;
+    var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    var atBottom = window.scrollY + 1 >= maxScroll;
+    if (atBottom) {
+      // Bottom edge: pick the LAST visible heading regardless of its
+      // distance from current scroll line (body padding-bottom or short
+      // last section can keep it below the normal threshold).
+      for (var k = orderedIds.length - 1; k >= 0; k--) {
+        var lk = idToLink[orderedIds[k]];
+        if (lk && lk.offsetParent !== null) return orderedIds[k];
+      }
+    }
     var threshold = window.scrollY + 80;
     var bestId = null;
-    // Walk in document order; skip headings whose TOC link is currently hidden
-    // (filtered by depth). This naturally maps deep sections to their visible
-    // ancestor in the TOC.
     for (var i = 0; i < orderedIds.length; i++) {
       var id = orderedIds[i];
       if (positions[id] > threshold) break;
@@ -284,7 +296,6 @@
       bestId = id;
     }
     if (bestId) return bestId;
-    // before any visible heading: use first visible
     for (var j = 0; j < orderedIds.length; j++) {
       var l = idToLink[orderedIds[j]];
       if (l && l.offsetParent !== null) return orderedIds[j];
