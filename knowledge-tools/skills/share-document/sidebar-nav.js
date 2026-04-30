@@ -342,7 +342,21 @@
     });
   }, { passive: true });
 
-  var STICKY_OFFSET = 0;
+  // Offset accounts for currently-sticky headers ABOVE the target.
+  // Body has h1+h2 sticky; for h3+ targets we must scroll past both.
+  function getStickyOffsetFor(target) {
+    if (!target) return 0;
+    var tag = target.tagName;
+    if (tag === 'H1') return 0;
+    var h1el = document.querySelector('h1');
+    var h1H = h1el ? h1el.getBoundingClientRect().height : 50;
+    if (tag === 'H2') return 0; // h2 itself becomes the sticky, lands at top
+    // H3 / H4 / etc — clear h1 + h2 sticky stack
+    var h2el = document.querySelector('h2');
+    var h2H = h2el ? h2el.getBoundingClientRect().height : 40;
+    return h1H + h2H;
+  }
+
   links.forEach(function (a) {
     a.addEventListener('click', function (e) {
       var href = a.getAttribute('href');
@@ -351,7 +365,8 @@
       var pos = positions[id];
       if (typeof pos !== 'number') return;
       e.preventDefault();
-      var top = Math.max(0, pos - STICKY_OFFSET);
+      var target = document.getElementById(id);
+      var top = Math.max(0, pos - getStickyOffsetFor(target));
       smoothScrollTo(top);
       if (history.replaceState) history.replaceState(null, '', '#' + id);
       clickedId = id;
