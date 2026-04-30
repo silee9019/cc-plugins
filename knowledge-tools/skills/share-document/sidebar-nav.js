@@ -23,6 +23,12 @@
     scrollAnimId = requestAnimationFrame(step);
   }
 
+  // ─── Visibility check (li can be collapsed via max-height:0 animation) ──
+  function isLinkVisible(link) {
+    var li = link.closest('li');
+    return !!(li && li.offsetHeight > 1);
+  }
+
   // ─── Storage helpers ─────────────────────────────────────────────────────
   var STORAGE_PREFIX = 'share-doc:';
   function loadPref(key, def) {
@@ -71,7 +77,7 @@
     jumpTop.innerHTML = ICON_UP;
     jumpTop.addEventListener('click', function () {
       // Mirror TOC-link click behavior on the FIRST visible TOC link
-      var first = links.filter(function (l) { return l.offsetParent !== null; })[0];
+      var first = links.filter(function (l) { return isLinkVisible(l); })[0];
       if (first) first.click();
     });
     toc.appendChild(jumpTop);
@@ -81,7 +87,7 @@
     jumpBottom.setAttribute('aria-label', 'Jump to last heading');
     jumpBottom.innerHTML = ICON_DOWN;
     jumpBottom.addEventListener('click', function () {
-      var visible = links.filter(function (l) { return l.offsetParent !== null; });
+      var visible = links.filter(function (l) { return isLinkVisible(l); });
       var last = visible[visible.length - 1];
       if (last) last.click();
     });
@@ -240,7 +246,7 @@
     if (!ul) return;
     ul.style.paddingTop = '0px';
     ul.style.paddingBottom = '0px';
-    var visible = links.filter(function (a) { return a.offsetParent !== null; });
+    var visible = links.filter(function (a) { return isLinkVisible(a); });
     if (!visible.length) return;
     var firstLink = visible[0];
     var lastLink = visible[visible.length - 1];
@@ -257,7 +263,7 @@
   function applyDistanceFade(activeLink) {
     // Distance counted across VISIBLE links only — hidden depth items
     // shouldn't inflate the gap between adjacent visible rows.
-    var visible = links.filter(function (l) { return l.offsetParent !== null; });
+    var visible = links.filter(function (l) { return isLinkVisible(l); });
     var activeVi = visible.indexOf(activeLink);
     var SHARP_RANGE = 6;
     var BASE = 0.7;
@@ -267,7 +273,7 @@
       return BASE;
     }
     links.forEach(function (l) {
-      if (l.offsetParent === null) { l.style.opacity = ''; return; }
+      if (!isLinkVisible(l)) { l.style.opacity = ''; return; }
       var i = visible.indexOf(l);
       var d = activeVi < 0 ? Infinity : Math.abs(i - activeVi);
       l.style.opacity = String(opAt(d));
@@ -294,7 +300,7 @@
       // last section can keep it below the normal threshold).
       for (var k = orderedIds.length - 1; k >= 0; k--) {
         var lk = idToLink[orderedIds[k]];
-        if (lk && lk.offsetParent !== null) return orderedIds[k];
+        if (lk && isLinkVisible(lk)) return orderedIds[k];
       }
     }
     var threshold = window.scrollY + 80;
@@ -303,13 +309,13 @@
       var id = orderedIds[i];
       if (positions[id] > threshold) break;
       var link = idToLink[id];
-      if (!link || link.offsetParent === null) continue;
+      if (!link || !isLinkVisible(link)) continue;
       bestId = id;
     }
     if (bestId) return bestId;
     for (var j = 0; j < orderedIds.length; j++) {
       var l = idToLink[orderedIds[j]];
-      if (l && l.offsetParent !== null) return orderedIds[j];
+      if (l && isLinkVisible(l)) return orderedIds[j];
     }
     return null;
   }
@@ -376,12 +382,14 @@
   // Clear click override so a previously-clicked deep link doesn't lock the
   // active state to a now-hidden TOC entry.
   var optObserver = new MutationObserver(function () {
+    // Wait for li slide animation (300ms) to complete before measuring,
+    // otherwise li.offsetHeight returns mid-transition values.
     setTimeout(function () {
       clickedId = null;
       setExactFitPadding();
       lastActiveId = null;
       updateActive();
-    }, 50);
+    }, 320);
   });
   optObserver.observe(document.body, { attributes: true, attributeFilter: ['data-toc-depth', 'data-width'] });
 
