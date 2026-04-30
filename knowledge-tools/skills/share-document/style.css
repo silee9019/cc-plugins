@@ -152,12 +152,18 @@ nav#TOC .toc-footer .opt-value {
   font-variant-numeric: tabular-nums;
 }
 
+/* All <ul> have padding-left: 0 so every <li> spans the same row width.
+   Visual indent comes from padding-left on the absolute <a> below. */
 nav#TOC ul {
   list-style: none;
-  padding-left: 0.9rem;
+  padding-left: 0;
   margin: 0;
 }
-nav#TOC > .toc-scroll > ul { padding-left: 0; }
+/* Per-depth indent on the link itself — keeps the full row hoverable */
+nav#TOC > .toc-scroll > ul a { padding-left: 0.6rem; }
+nav#TOC > .toc-scroll > ul ul a { padding-left: 1.5rem; }
+nav#TOC > .toc-scroll > ul ul ul a { padding-left: 2.4rem; }
+nav#TOC > .toc-scroll > ul ul ul ul a { padding-left: 3.3rem; }
 /* "목차" label scrolls with links */
 nav#TOC > .toc-scroll > ul::before {
   content: '목차';
