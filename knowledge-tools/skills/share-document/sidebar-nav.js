@@ -85,7 +85,14 @@
   }
 
   // ─── TOC chrome: scroll wrapper, jump buttons, depth stepper footer ─────
-  var DEPTH_MIN = 1, DEPTH_MAX = 4;
+  var DEPTH_MIN = 1;
+  // Max depth = deepest heading level present in body content
+  var DEPTH_MAX = (function () {
+    for (var lvl = 6; lvl >= 1; lvl--) {
+      if (document.querySelector('section h' + lvl)) return lvl;
+    }
+    return 1;
+  })();
 
   function buildTocChrome(toc) {
     // Wrap existing <ul> in a scrollable container
@@ -144,7 +151,9 @@
       if (next !== cur) applyDepth(String(next));
     });
 
-    applyDepth(loadPref('depth', '2'));
+    var initialDepth = parseInt(loadPref('depth', '2'), 10) || 2;
+    initialDepth = Math.max(DEPTH_MIN, Math.min(DEPTH_MAX, initialDepth));
+    applyDepth(String(initialDepth));
 
     return scroll;
   }
@@ -306,12 +315,34 @@
     updateActive();
   }
 
+  // Sync CSS --h1-sticky-h to actual h1 height so sticky h2 lands exactly
+  // at h1.bottom (no 단차 / no overlap).
+  function syncStickyH1() {
+    var h1 = document.querySelector('section h1');
+    if (!h1) return;
+    var h = h1.getBoundingClientRect().height;
+    document.documentElement.style.setProperty('--h1-sticky-h', h + 'px');
+  }
+
   function init() {
+    syncStickyH1();
     refresh();
+
+    // Re-sync whenever the h1 box actually changes size (font load, zoom,
+    // theme toggle, dev-tools edits, etc.) — robust to any layout shift.
+    if (window.ResizeObserver) {
+      var sampleH1 = document.querySelector('section h1');
+      if (sampleH1) new ResizeObserver(syncStickyH1).observe(sampleH1);
+    }
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(syncStickyH1);
+    }
   }
 
   if (document.readyState === 'complete') init();
   else window.addEventListener('load', init);
+
+  window.addEventListener('resize', syncStickyH1);
 
   var resizeTimer;
   window.addEventListener('resize', function () {
@@ -357,18 +388,25 @@
     });
   }, { passive: true });
 
-  // Offset accounts for currently-sticky headers ABOVE the target.
-  // Body has h1+h2 sticky; for h3+ targets we must scroll past both.
+  // Offset accounts for sticky headers ABOVE the target. With pandoc
+  // --section-divs the TOC anchor often points to a <section>; resolve to
+  // the first inner heading to know the actual target level.
   function getStickyOffsetFor(target) {
     if (!target) return 0;
-    var tag = target.tagName;
-    if (tag === 'H1') return 0;
-    var h1el = document.querySelector('h1');
-    var h1H = h1el ? h1el.getBoundingClientRect().height : 50;
-    if (tag === 'H2') return 0; // h2 itself becomes the sticky, lands at top
-    // H3 / H4 / etc — clear h1 + h2 sticky stack
-    var h2el = document.querySelector('h2');
-    var h2H = h2el ? h2el.getBoundingClientRect().height : 40;
+    var heading = target;
+    if (target.tagName === 'SECTION') {
+      heading = target.querySelector(':scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6');
+    }
+    if (!heading) return 0;
+    var tag = heading.tagName;
+    // sticky in body content: only h1 and h2 are sticky.
+    if (tag === 'H1') return 0; // h1 itself sticks at top:0
+    var h1Sample = document.querySelector('section h1');
+    var h1H = h1Sample ? h1Sample.getBoundingClientRect().height : 50;
+    if (tag === 'H2') return h1H; // h2 lands just below sticky h1
+    // h3 / h4 / ... — clear h1 + the immediately-preceding-section h2
+    var h2Sample = document.querySelector('section h2');
+    var h2H = h2Sample ? h2Sample.getBoundingClientRect().height : 40;
     return h1H + h2H;
   }
 
