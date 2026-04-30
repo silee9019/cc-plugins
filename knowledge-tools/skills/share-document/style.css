@@ -205,9 +205,12 @@ nav#TOC a {
   font-size: 0.85rem;
   border-radius: 4px;
 }
-/* Hover: link is already absolute; expand rightward (drop right anchor, set width). */
+/* Hover: link is already absolute; expand rightward (drop right anchor, set width).
+   min-width keeps the box at least row-wide for short titles — prevents
+   shrink-then-grow flicker when mouse hovers in the empty right area. */
 nav#TOC a:hover {
   right: auto;
+  min-width: 100%;
   width: max-content;
   max-width: calc(100vw - 32px);
   white-space: normal;
