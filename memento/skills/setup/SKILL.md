@@ -289,6 +289,10 @@ atlassian_account_id: "<ATLASSIAN_AID>"
 repos_base_path: "<REPOS_BASE>"
 atlassian_site_url: "<ATLASSIAN_URL>"
 atlassian_cloud_id: "<ATLASSIAN_CLOUD>"
+# 팀 월간 보고 (옵션 — report-team-monthly 스킬용. 미설정 시 스킬이 기본값 적용)
+team_name_ko: "<TEAM_NAME_KO>"
+team_jira_project: "<TEAM_JIRA_PROJECT>"
+team_products: '<TEAM_PRODUCTS_JSON>'
 ---
 ```
 
