@@ -133,18 +133,36 @@
       savePref('depth', val);
     }
 
+    var SEG_ANIM_MS = 450;
     function applySegmented(opt, val) {
-      if (opt === 'width') document.body.dataset.width = val;
-      else if (opt === 'theme') document.documentElement.dataset.theme = val;
-      footer.querySelectorAll('[data-opt="' + opt + '"][data-val]').forEach(function (s) {
-        s.classList.toggle('is-active', s.dataset.val === val);
-      });
-      // Slide indicator: state 0 = first value, 1 = second value
+      // First: slide indicator + active label (visual only)
       var seg = footer.querySelector('.seg[data-opt="' + opt + '"]');
       if (seg) {
         var values = seg.dataset.values.split(',');
         seg.dataset.state = values.indexOf(val) === 0 ? '0' : '1';
       }
+      footer.querySelectorAll('[data-opt="' + opt + '"][data-val]').forEach(function (s) {
+        s.classList.toggle('is-active', s.dataset.val === val);
+      });
+      savePref(opt, val);
+      // Then: apply functional change after slide animation completes
+      setTimeout(function () {
+        if (opt === 'width') document.body.dataset.width = val;
+        else if (opt === 'theme') document.documentElement.dataset.theme = val;
+      }, SEG_ANIM_MS);
+    }
+    // Initial application happens before any animation, so apply functional immediately
+    function applySegmentedImmediate(opt, val) {
+      if (opt === 'width') document.body.dataset.width = val;
+      else if (opt === 'theme') document.documentElement.dataset.theme = val;
+      var seg = footer.querySelector('.seg[data-opt="' + opt + '"]');
+      if (seg) {
+        var values = seg.dataset.values.split(',');
+        seg.dataset.state = values.indexOf(val) === 0 ? '0' : '1';
+      }
+      footer.querySelectorAll('[data-opt="' + opt + '"][data-val]').forEach(function (s) {
+        s.classList.toggle('is-active', s.dataset.val === val);
+      });
       savePref(opt, val);
     }
 
@@ -180,8 +198,8 @@
     var initialDepth = parseInt(loadPref('depth', '2'), 10) || 2;
     initialDepth = Math.max(DEPTH_MIN, Math.min(DEPTH_MAX, initialDepth));
     applyDepth(String(initialDepth));
-    applySegmented('width', loadPref('width', 'narrow'));
-    applySegmented('theme', loadPref('theme', 'light'));
+    applySegmentedImmediate('width', loadPref('width', 'narrow'));
+    applySegmentedImmediate('theme', loadPref('theme', 'light'));
 
     return scroll;
   }
