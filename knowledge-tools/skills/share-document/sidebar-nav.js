@@ -133,6 +133,12 @@
       footer.querySelectorAll('[data-opt="' + opt + '"][data-val]').forEach(function (s) {
         s.classList.toggle('is-active', s.dataset.val === val);
       });
+      // Slide indicator: state 0 = first value, 1 = second value
+      var seg = footer.querySelector('.seg[data-opt="' + opt + '"]');
+      if (seg) {
+        var values = seg.dataset.values.split(',');
+        seg.dataset.state = values.indexOf(val) === 0 ? '0' : '1';
+      }
       savePref(opt, val);
     }
 
