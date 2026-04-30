@@ -230,14 +230,23 @@
     ul.style.paddingBottom = bottomPad + 'px';
   }
 
-  function applyDistanceFade(activeIndex) {
-    var falloff = [1, 0.9, 0.75, 0.6, 0.45];
-    var base = 0.25;
-    links.forEach(function (l, i) {
+  function applyDistanceFade(activeLink) {
+    // Distance counted across VISIBLE links only — hidden depth items
+    // shouldn't inflate the gap between adjacent visible rows.
+    var visible = links.filter(function (l) { return l.offsetParent !== null; });
+    var activeVi = visible.indexOf(activeLink);
+    var SHARP_RANGE = 6;
+    var BASE = 0.7;
+    function opAt(d) {
+      if (d === 0) return 1;
+      if (d <= SHARP_RANGE) return 1 - (d / SHARP_RANGE) * (1 - BASE);
+      return BASE;
+    }
+    links.forEach(function (l) {
       if (l.offsetParent === null) { l.style.opacity = ''; return; }
-      var d = Math.abs(i - activeIndex);
-      var op = d < falloff.length ? falloff[d] : base;
-      l.style.opacity = String(op);
+      var i = visible.indexOf(l);
+      var d = activeVi < 0 ? Infinity : Math.abs(i - activeVi);
+      l.style.opacity = String(opAt(d));
     });
   }
 
@@ -282,7 +291,7 @@
     if (!active) return;
     links.forEach(function (l) { l.classList.remove('active'); });
     active.classList.add('active');
-    applyDistanceFade(links.indexOf(active));
+    applyDistanceFade(active);
     centerActive(active);
   }
 

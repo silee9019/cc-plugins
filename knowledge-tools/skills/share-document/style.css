@@ -51,6 +51,20 @@ body {
 
 body[data-width="wide"] { --content-max: 1200px; }
 
+/* Thin vertical divider between nav and content (both ends fade out) */
+nav#TOC::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(100% + 12px);
+  width: 1px;
+  background: var(--border);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 15%, #000 85%, transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0, #000 15%, #000 85%, transparent 100%);
+  pointer-events: none;
+}
+
 /* ── Floating TOC (anchored to LEFT side of centered content) ── */
 nav#TOC {
   position: fixed;
