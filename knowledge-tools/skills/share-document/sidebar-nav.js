@@ -23,7 +23,7 @@
     scrollAnimId = requestAnimationFrame(step);
   }
 
-  // ─── Options panel (always-visible top-right controls) ───────────────────
+  // ─── Storage helpers ─────────────────────────────────────────────────────
   var STORAGE_PREFIX = 'share-doc:';
   function loadPref(key, def) {
     try { var v = localStorage.getItem(STORAGE_PREFIX + key); return v == null ? def : v; }
@@ -33,56 +33,11 @@
     try { localStorage.setItem(STORAGE_PREFIX + key, val); } catch (e) {}
   }
 
-  function buildOptionsPanel() {
-    var panel = document.createElement('div');
-    panel.id = 'options-panel';
-    panel.innerHTML = [
-      '<div class="opt-group toggle" title="Content width" role="radiogroup" aria-label="Content width">',
-      '  <button data-opt="width" data-val="narrow" role="radio" aria-label="Narrow"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5v14M15 5v14"/></svg></button>',
-      '  <button data-opt="width" data-val="wide" role="radio" aria-label="Wide"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 5v14M21 5v14M7 12h10M7 9l-3 3 3 3M17 9l3 3-3 3"/></svg></button>',
-      '</div>',
-      '<div class="opt-divider"></div>',
-      '<div class="opt-group toggle" title="Theme" role="radiogroup" aria-label="Theme">',
-      '  <button data-opt="theme" data-val="light" role="radio" aria-label="Light">☀</button>',
-      '  <button data-opt="theme" data-val="dark" role="radio" aria-label="Dark">☾</button>',
-      '</div>'
-    ].join('');
-    document.body.appendChild(panel);
-
-    function setOpt(opt, val) {
-      if (opt === 'width') document.body.dataset.width = val;
-      else if (opt === 'theme') document.documentElement.dataset.theme = val;
-      panel.querySelectorAll('button[data-opt="' + opt + '"]').forEach(function (b) {
-        b.setAttribute('aria-pressed', b.dataset.val === val ? 'true' : 'false');
-      });
-      savePref(opt, val);
-    }
-
-    panel.addEventListener('click', function (e) {
-      var btn = e.target.closest('button[data-opt]');
-      if (!btn || btn.disabled) return;
-      setOpt(btn.dataset.opt, btn.dataset.val);
-    });
-
-    // Keyboard navigation within radiogroup toggles (ArrowLeft/Right)
-    panel.querySelectorAll('[role="radiogroup"]').forEach(function (group) {
-      group.addEventListener('keydown', function (e) {
-        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-        var btns = Array.prototype.slice.call(group.querySelectorAll('button[role="radio"]'));
-        var idx = btns.indexOf(document.activeElement);
-        if (idx === -1) return;
-        e.preventDefault();
-        var next = e.key === 'ArrowRight'
-          ? (idx + 1) % btns.length
-          : (idx - 1 + btns.length) % btns.length;
-        btns[next].focus();
-        btns[next].click();
-      });
-    });
-
-    setOpt('width', loadPref('width', 'narrow'));
-    setOpt('theme', loadPref('theme', 'light'));
-  }
+  // SVG icons (cleaner shapes for narrow/wide)
+  var ICON_NARROW = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="8" height="16" rx="1.5"/></svg>';
+  var ICON_WIDE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1.5"/></svg>';
+  var ICON_LIGHT = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
+  var ICON_DARK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 
   // ─── TOC chrome: scroll wrapper, jump buttons, depth stepper footer ─────
   var DEPTH_MIN = 1;
@@ -95,7 +50,6 @@
   })();
 
   function buildTocChrome(toc) {
-    // Wrap existing <ul> in a scrollable container
     var topUl = toc.querySelector(':scope > ul');
     if (!topUl) return null;
 
@@ -104,7 +58,7 @@
     toc.insertBefore(scroll, topUl);
     scroll.appendChild(topUl);
 
-    // Top/bottom jump buttons (always visible)
+    // Top/bottom jump buttons — translucent overlays on nav top/bottom edges
     var jumpTop = document.createElement('button');
     jumpTop.className = 'toc-jump top';
     jumpTop.setAttribute('aria-label', 'Scroll to top');
@@ -127,50 +81,89 @@
     });
     toc.appendChild(jumpBottom);
 
-    // Footer with depth stepper
+    function updateJumpVisibility() {
+      var maxY = document.documentElement.scrollHeight - window.innerHeight;
+      jumpTop.classList.toggle('is-disabled', window.scrollY <= 1);
+      jumpBottom.classList.toggle('is-disabled', window.scrollY >= maxY - 1);
+    }
+    updateJumpVisibility();
+    window.addEventListener('scroll', updateJumpVisibility, { passive: true });
+    window.addEventListener('resize', updateJumpVisibility);
+
+    // Footer with level stepper + width/theme toggles
     var footer = document.createElement('div');
     footer.className = 'toc-footer';
     footer.innerHTML = [
-      '<span class="opt-label">Level</span>',
-      '<button data-act="dec" aria-label="Decrease level">−</button>',
-      '<span class="opt-value" data-display="depth">L2</span>',
-      '<button data-act="inc" aria-label="Increase level">+</button>'
+      '<div class="toc-level-row">',
+      '  <span class="opt-label">Level</span>',
+      '  <button data-act="dec" aria-label="Decrease level">−</button>',
+      '  <span class="opt-value" data-display="depth">2</span>',
+      '  <button data-act="inc" aria-label="Increase level">+</button>',
+      '</div>',
+      '<div class="toc-opt-row">',
+      '  <button class="opt-toggle" data-toggle="width" aria-label="Toggle content width"></button>',
+      '  <button class="opt-toggle" data-toggle="theme" aria-label="Toggle theme"></button>',
+      '</div>'
     ].join('');
     toc.appendChild(footer);
 
     function applyDepth(val) {
       document.body.dataset.tocDepth = val;
-      footer.querySelector('[data-display="depth"]').textContent = 'L' + val;
+      footer.querySelector('[data-display="depth"]').textContent = String(val);
       footer.querySelector('button[data-act="dec"]').disabled = parseInt(val, 10) <= DEPTH_MIN;
       footer.querySelector('button[data-act="inc"]').disabled = parseInt(val, 10) >= DEPTH_MAX;
       savePref('depth', val);
     }
 
+    function applyWidth(val) {
+      document.body.dataset.width = val;
+      var btn = footer.querySelector('button[data-toggle="width"]');
+      btn.innerHTML = val === 'wide' ? ICON_WIDE : ICON_NARROW;
+      btn.title = val === 'wide' ? 'Wide (click to switch to Narrow)' : 'Narrow (click to switch to Wide)';
+      savePref('width', val);
+    }
+
+    function applyTheme(val) {
+      document.documentElement.dataset.theme = val;
+      var btn = footer.querySelector('button[data-toggle="theme"]');
+      btn.innerHTML = val === 'dark' ? ICON_DARK : ICON_LIGHT;
+      btn.title = val === 'dark' ? 'Dark (click to switch to Light)' : 'Light (click to switch to Dark)';
+      savePref('theme', val);
+    }
+
     footer.addEventListener('click', function (e) {
-      var btn = e.target.closest('button[data-act]');
-      if (!btn || btn.disabled) return;
-      var cur = parseInt(loadPref('depth', '2'), 10) || 2;
-      var delta = btn.dataset.act === 'inc' ? 1 : -1;
-      var next = Math.max(DEPTH_MIN, Math.min(DEPTH_MAX, cur + delta));
-      if (next !== cur) applyDepth(String(next));
+      var step = e.target.closest('button[data-act]');
+      if (step && !step.disabled) {
+        var cur = parseInt(loadPref('depth', '2'), 10) || 2;
+        var delta = step.dataset.act === 'inc' ? 1 : -1;
+        var next = Math.max(DEPTH_MIN, Math.min(DEPTH_MAX, cur + delta));
+        if (next !== cur) applyDepth(String(next));
+        return;
+      }
+      var toggle = e.target.closest('button[data-toggle]');
+      if (toggle) {
+        var t = toggle.dataset.toggle;
+        if (t === 'width') {
+          var w = loadPref('width', 'narrow');
+          applyWidth(w === 'wide' ? 'narrow' : 'wide');
+        } else if (t === 'theme') {
+          var th = loadPref('theme', 'light');
+          applyTheme(th === 'dark' ? 'light' : 'dark');
+        }
+      }
     });
 
     var initialDepth = parseInt(loadPref('depth', '2'), 10) || 2;
     initialDepth = Math.max(DEPTH_MIN, Math.min(DEPTH_MAX, initialDepth));
     applyDepth(String(initialDepth));
+    applyWidth(loadPref('width', 'narrow'));
+    applyTheme(loadPref('theme', 'light'));
 
     return scroll;
   }
 
   // ─── TOC sidebar logic ───────────────────────────────────────────────────
   var toc = document.getElementById('TOC');
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', buildOptionsPanel);
-  } else {
-    buildOptionsPanel();
-  }
-
   if (!toc) return;
 
   // Build chrome (scroll wrapper, jump buttons, depth footer) before

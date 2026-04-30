@@ -92,56 +92,69 @@ nav#TOC > .toc-scroll {
   padding: 1.5rem 0 0.5rem;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  /* Sharp band ~96% (extended by 2 rows). Faded band only goes down to 0.55
-     opacity so off-focus rows stay partially readable. */
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, #000 2%, #000 98%, rgba(0,0,0,0.55) 100%);
-          mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, #000 2%, #000 98%, rgba(0,0,0,0.55) 100%);
+  /* Smooth fade at edges instead of hard cut. Multi-stop gradient avoids
+     the abrupt "text suddenly cut off" effect. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.35) 3%, rgba(0,0,0,0.7) 6%, #000 10%, #000 90%, rgba(0,0,0,0.7) 94%, rgba(0,0,0,0.35) 97%, transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.35) 3%, rgba(0,0,0,0.7) 6%, #000 10%, #000 90%, rgba(0,0,0,0.7) 94%, rgba(0,0,0,0.35) 97%, transparent 100%);
   overscroll-behavior: contain;
 }
 nav#TOC > .toc-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
 nav#TOC:hover a { opacity: 1 !important; }
 
-/* Top/bottom jump buttons — clipped to nav left edge, vertically centered as a stacked pair */
+/* Top/bottom jump buttons — translucent overlay on nav top/bottom edges.
+   Auto fade in/out based on scrollability. */
 nav#TOC .toc-jump {
   position: absolute;
-  left: -1.7rem;
-  width: 22px;
-  height: 22px;
-  display: inline-flex;
+  left: 0;
+  right: 0;
+  height: 36px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border);
-  background: var(--bg);
+  border: none;
+  background: transparent;
   color: var(--text-muted);
-  border-radius: 4px;
   cursor: pointer;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   z-index: 30;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  opacity: 0.4;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
 }
-nav#TOC .toc-jump:hover { color: var(--link); border-color: var(--accent); }
-nav#TOC .toc-jump.top { top: calc(50% - 24px); }
-nav#TOC .toc-jump.bottom { top: calc(50% + 2px); }
+nav#TOC .toc-jump:hover { opacity: 1; color: var(--link); }
+nav#TOC .toc-jump.top { top: 0; }
+nav#TOC .toc-jump.bottom { bottom: 2.4rem; /* clear footer */ }
+nav#TOC .toc-jump.is-disabled {
+  opacity: 0;
+  pointer-events: none;
+}
 
-/* Depth stepper footer — pinned outside scroll */
+/* Footer area — pinned below scroll. Stacks: level stepper + option panel */
 nav#TOC .toc-footer {
   flex: 0 0 auto;
   border-top: 1px solid var(--border);
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  background: var(--bg);
+}
+nav#TOC .toc-footer .toc-level-row,
+nav#TOC .toc-footer .toc-opt-row {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  background: var(--bg);
 }
 nav#TOC .toc-footer .opt-label {
   font-weight: 600;
   color: var(--text-faint);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
 }
 nav#TOC .toc-footer button {
   appearance: none;
@@ -153,7 +166,11 @@ nav#TOC .toc-footer button {
   cursor: pointer;
   font: inherit;
   font-size: 0.78rem;
-  min-width: 1.6rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 nav#TOC .toc-footer button:hover:not(:disabled) {
   border-color: var(--accent);
@@ -166,9 +183,14 @@ nav#TOC .toc-footer button:disabled {
 nav#TOC .toc-footer .opt-value {
   font-weight: 700;
   color: var(--link-strong);
-  min-width: 1.6rem;
+  min-width: 1.4rem;
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+/* Pure-toggle buttons in footer (single button, click anywhere toggles) */
+nav#TOC .toc-footer .opt-toggle {
+  width: 1.7rem;
+  height: 1.7rem;
 }
 
 /* All <ul> have padding-left: 0 so every <li> spans the same row width.
@@ -292,101 +314,6 @@ body[data-toc-depth="3"] nav#TOC ul ul ul ul {
   body[data-width="wide"] nav#TOC { display: none; }
 }
 
-/* ── Options panel (top-right, always visible) ── */
-#options-panel {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 0.6rem;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  font-size: 0.78rem;
-  color: var(--text-muted);
-}
-#options-panel .opt-group {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-/* Segmented radio toggle (2-option group) */
-#options-panel .opt-group.toggle {
-  gap: 0;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 2px;
-  background: var(--tr-alt);
-}
-#options-panel .opt-group.toggle button {
-  border: none;
-  border-radius: 4px;
-  padding: 0.2rem 0.55rem;
-  background: transparent;
-  color: var(--text-faint);
-}
-#options-panel .opt-group.toggle button:hover:not([aria-pressed="true"]) {
-  color: var(--link);
-  background: transparent;
-}
-#options-panel .opt-group.toggle button[aria-pressed="true"] {
-  background: var(--bg);
-  color: var(--link-strong);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-}
-#options-panel .opt-label {
-  font-weight: 600;
-  color: var(--text-faint);
-  margin-right: 0.15rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: 0.68rem;
-}
-#options-panel button {
-  appearance: none;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-muted);
-  padding: 0.25rem 0.5rem;
-  border-radius: 5px;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.78rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.6rem;
-  transition: background 0.1s, color 0.1s, border-color 0.1s, opacity 0.1s;
-}
-#options-panel button:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--link);
-}
-#options-panel button[aria-pressed="true"] {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-#options-panel button:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-#options-panel .opt-value {
-  font-weight: 700;
-  color: var(--link-strong);
-  min-width: 1.6rem;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-#options-panel .opt-divider {
-  width: 1px;
-  height: 1.2rem;
-  background: var(--border);
-}
 
 /* ── Body content ── */
 h1.title {
@@ -462,7 +389,7 @@ blockquote {
 p { margin: 0.6rem 0; }
 
 @media print {
-  nav#TOC, #options-panel { display: none; }
+  nav#TOC { display: none; }
   body { max-width: 100%; padding: 1rem; }
   h2, h3 { page-break-after: avoid; }
 }
