@@ -246,17 +246,12 @@
   // Set virtual padding inside ul so first/last *visible* link can land
   // EXACTLY at anchorRatio without scroll bounce/clamp.
   var ANCHOR_RATIO = 0.15;
-  // offsetTop walks up offsetParent chain — needed because li now has
-  // position:relative (for hover absolute), so a.offsetTop is no longer
-  // relative to the scroll wrapper.
+  // Position of `el` within `container`'s scroll content. Use bounding rects
+  // so nested li padding (L3 inside L2 inside topLi) doesn't compound wrong.
   function offsetTopIn(el, container) {
-    var top = 0;
-    var node = el;
-    while (node && node !== container) {
-      top += node.offsetTop;
-      node = node.offsetParent;
-    }
-    return top;
+    return el.getBoundingClientRect().top
+      - container.getBoundingClientRect().top
+      + container.scrollTop;
   }
 
   function setExactFitPadding() {

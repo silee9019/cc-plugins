@@ -136,7 +136,7 @@
       "name": "knowledge-tools",
       "source": "./knowledge-tools",
       "description": "지식 도구 모음: 설계 회의(design-meeting — 페르소나 기반 다자 토론으로 정의·결정 확립)와 문서 공유(마크다운→HTML 변환, mermaid→Unicode box-drawing 변환 포함)",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "author": {
         "name": "silee9019"
       },
@@ -198,8 +198,8 @@
     {
       "name": "design-system",
       "source": "./design-system",
-      "description": "디자인·기획·설계 프로세스 프레임워크 — Pencil MCP(.pen 파일) 기반 시안 SSOT 워크플로우, design.md 토큰 머신가독 미러, batch_design 함정 7종, 화면 layout variant·카드 폭 토큰, 스토리보드 텍스트 카드 패턴, narrative 축·자리배치, naming rule, Canvas Zoning(Design System / Component Showcase / IA Map + Storyboard stacked / Reference Archive — system-first 순서, IA Map과 Storyboard 같은 x에 위→아래 stacked), audit + 충돌·정렬 검사 자동화(min-gap 40 + alignment outlier 검출, top-left anchor), 세 종류 gap 룰(인접 객체 40 / 인접 zone 가로 520 / stacked zone vertical 400), Storyboard lane 좌측 들여쓰기 0(lane label column x = zone x), Variant 컨벤션 V-1~V-10(wrap hug 기본, wrap body 필수, 한 wrap = 하나 variant, sub-component 단일 마스터, zone heading banner = zone 가로 전체 width), 신규 reusable 요소 Design System zone 등록 의무, 스킬 자체 개선 메타 룰. 시안=SSOT, design.md=토큰 미러, 코드(CSS)=1:1 매핑.",
-      "version": "0.12.0",
+      "description": "디자인·기획·설계 프로세스 프레임워크 — Pencil MCP(.pen 파일) 기반 시안 SSOT 워크플로우, design.md 토큰 머신가독 미러, batch_design 함정 7종, 화면 layout variant·카드 폭 토큰, 스토리보드 텍스트 카드 패턴, narrative 축·자리배치, naming rule, Canvas Zoning(Design System / Component Showcase / IA Map + Storyboard stacked / Reference Archive — system-first 순서, IA Map과 Storyboard 같은 x에 위→아래 stacked), audit + 충돌·정렬 검사 자동화(min-gap 40 + alignment outlier 검출, top-left anchor), 세 종류 gap 룰(인접 객체 40 / 인접 zone 가로 520 / stacked zone vertical 400), Storyboard lane 좌측 들여쓰기 0(lane label column x = zone x), Variant 컨벤션 V-1~V-10(wrap hug 기본, wrap body 필수, 한 wrap = 하나 variant, sub-component 단일 마스터, zone heading banner = zone 가로 전체 width), 신규 reusable 요소 Design System zone 등록 의무, batch_design 후 lint 자동 실행 의무(layout&alignment + zone banner width + minimap↔slide sync + lane label height — lint_pen.py aggregator), 의도 기반 lint 카테고리 명명, lint mismatch 4-case resolution(자동 PASS·silent skip 금지, case 3 = placeholder 추가 우선·allowlist 차선), Placeholder 풀스크린 패턴(minimal TODO 마커 — kicker+code+caption 3-text 구조), 스킬 자체 개선 메타 룰. 시안=SSOT, design.md=토큰 미러, 코드(CSS)=1:1 매핑.",
+      "version": "0.17.0",
       "author": {
         "name": "silee9019"
       },
